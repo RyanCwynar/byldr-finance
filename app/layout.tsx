@@ -1,4 +1,4 @@
-import "@/css/globals.css";
+import "@/app/globals.css";
 
 import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
