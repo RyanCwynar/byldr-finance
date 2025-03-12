@@ -14,7 +14,7 @@ export const getDailyMetrics = query({
     return await ctx.db
       .query("dailyMetrics")
       .withIndex("by_date")
-      .order("desc")
+      .order("asc")
       .collect();
   }
 });

@@ -35,10 +35,14 @@ export default function NetWorthChart({ metrics }: NetWorthChartProps) {
   const chartData = useMemo(() => {
     if (!metrics) return [];
 
-    return metrics.map(m => ({
-      date: new Date(m.date).toLocaleDateString(),
-      netWorth: m.netWorth
-    }));
+    // Sort by date to ensure proper ordering
+    return metrics
+      .sort((a, b) => a.date - b.date)
+      .map(m => ({
+        timestamp: m.date, // Keep original timestamp for scaling
+        date: new Date(m.date).toLocaleDateString(),
+        netWorth: m.netWorth
+      }));
   }, [metrics]);
 
   if (!chartData.length) {
@@ -57,12 +61,19 @@ export default function NetWorthChart({ metrics }: NetWorthChartProps) {
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
+        <XAxis 
+          dataKey="timestamp"
+          scale="time"
+          type="number"
+          domain={['auto', 'auto']}
+          tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+        />
         <YAxis 
           tickFormatter={(value) => `$${value.toLocaleString()}`}
         />
         <Tooltip 
           formatter={(value: number) => [`$${value.toLocaleString()}`, 'Net Worth']}
+          labelFormatter={(timestamp) => new Date(timestamp).toLocaleString()}
         />
         <Legend />
         <Line
@@ -71,7 +82,8 @@ export default function NetWorthChart({ metrics }: NetWorthChartProps) {
           name="Net Worth"
           stroke="#4ade80"
           strokeWidth={2}
-          dot={false}
+          dot={{ r: 4 }} // Add dots with radius 4
+          activeDot={{ r: 8 }} // Larger dot for active (hovered) point
         />
       </LineChart>
     </ResponsiveContainer>
