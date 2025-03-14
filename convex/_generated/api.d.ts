@@ -15,8 +15,10 @@ import type {
 } from "convex/server";
 import type * as assets from "../assets.js";
 import type * as crons from "../crons.js";
-import type * as finance from "../finance.js";
+import type * as holdings from "../holdings.js";
+import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
+import type * as quotes from "../quotes.js";
 import type * as wallets from "../wallets.js";
 
 /**
@@ -30,8 +32,10 @@ import type * as wallets from "../wallets.js";
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   crons: typeof crons;
-  finance: typeof finance;
+  holdings: typeof holdings;
+  holdingsNode: typeof holdingsNode;
   metrics: typeof metrics;
+  quotes: typeof quotes;
   wallets: typeof wallets;
 }>;
 export declare const api: FilterApi<

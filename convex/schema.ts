@@ -8,10 +8,18 @@ export default defineSchema({
     address: v.string(), // The wallet address
     chainType: v.string(), // "evm", "solana", or "bitcoin"
     value: v.optional(v.number()), // Current value in USD
+    assets: v.optional(v.number()), // Current assets value in USD
+    debts: v.optional(v.number()), // Current debts value in USD
     metadata: v.optional(v.object({
       lastUpdated: v.number(), // When the value was last updated
     })),
   }).index("by_address", ["address"]),
+
+  quotes: defineTable({
+    symbol: v.string(),
+    price: v.number(),
+    lastUpdated: v.number(),
+  }).index("by_symbol", ["symbol"]),
 
   // Store individual token holdings for each wallet
   holdings: defineTable({
@@ -20,21 +28,21 @@ export default defineSchema({
     quantity: v.number(), // Amount of tokens held
     chain: v.string(), // Chain name - only relevant for L2 chains, defaults to mainnet 
     lastUpdated: v.number(), // When the holding was last updated
+    ignore: v.optional(v.boolean()), // Whether to ignore this holding
+    isDebt: v.optional(v.boolean()), // Whether this holding is a debt
+    quoteSymbol: v.optional(v.string()), // The quote symbol for the holding might be different from specified symbol
   })
     .index("by_wallet", ["walletId"])
     .index("by_symbol", ["symbol"])
-    .index("by_symbol_and_wallet", ["symbol", "walletId"]),
+    .index("by_symbol_and_wallet_and_chain", ["symbol", "walletId", "chain"]),
 
   // Store daily financial metrics
   dailyMetrics: defineTable({
     date: v.number(), // Unix timestamp for the day
     netWorth: v.number(), // Total portfolio value in USD
-    prices: v.object({
-      ethereum: v.number(), // ETH price in USD
-      bitcoin: v.number(), // BTC price in USD  
-      solana: v.number(), // SOL price in USD
-      avalanche: v.number(), // AVAX price in USD
-    }),
+    assets: v.number(), // Total assets value in USD
+    debts: v.number(), // Total debts value in USD
+    prices: v.record(v.string(), v.number()), // Symbol -> USD price mapping
     // Optional metadata
     metadata: v.optional(v.object({
       dataSource: v.string(),

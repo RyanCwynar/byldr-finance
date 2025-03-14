@@ -1,12 +1,9 @@
-import { action, query, mutation } from "./_generated/server";
+import { action, query, mutation, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { DailyMetric } from "@/components/net-worth-chart";
-
-interface Wallet {
-  chainType: string;
-  address: string;
-}
+import { listHoldingsHelper } from "./holdings";
+import { getQuotesHelper } from "./quotes";
 
 // Query to get historical metrics
 export const getDailyMetrics = query({
@@ -19,175 +16,91 @@ export const getDailyMetrics = query({
   }
 });
 
-// Helper function to calculate net worth - now expects an action context
-export async function calculateNetWorthHelper(ctx: any) {
-  console.debug("Starting net worth calculation");
+// Helper function to get total value of all assets
+export async function getAssetsTotalHelper(ctx: QueryCtx) {
+  const assets = await ctx.db.query("assets").collect();
+  const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
+  return { assetsTotal };
+}
 
-  // Get crypto prices first
-  let ethPrice = 0, btcPrice = 0, solPrice = 0, avaxPrice = 0;
-  try {
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,avalanche-2&vs_currencies=usd"
-    );
-    const data = await response.json();
-    ethPrice = data.ethereum.usd;
-    btcPrice = data.bitcoin.usd;
-    solPrice = data.solana.usd;
-    avaxPrice = data["avalanche-2"].usd;
-    console.debug("Fetched prices:", { ethPrice, btcPrice, solPrice, avaxPrice });
-  } catch (error) {
-    console.error("Failed to fetch crypto prices:", error);
-    return { netWorth: 0, prices: { ethereum: 0, bitcoin: 0, solana: 0, avalanche: 0 } };
-  }
-
-  let totalValue = 0;
-
-  // Get all wallets
-  const { wallets } = await ctx.runQuery(api.wallets.listWallets, {});
-  console.info("Found wallets:", wallets.length);
-
-  // Process Ethereum wallets
-  const ethWallets = wallets.filter((w: Wallet) => w.chainType === "ethereum");
-  console.info("Processing ETH wallets:", ethWallets.length);
-  for (const wallet of ethWallets) {
-    try {
-      const balance = await ctx.runAction(api.finance.getWalletBalance, { 
-        walletAddress: wallet.address,
-        ethPrice // Pass the fetched ETH price
-      });
-      const walletValue = parseFloat(balance.totalUsdValue);
-      console.debug(`Wallet ${wallet.address} value:`, walletValue);
-      
-      if (balance.totalUsdValue) {
-        // Update wallet value and metadata
-        await ctx.runMutation(api.wallets.updateWallet, {
-          id: wallet._id,
-          value: walletValue,
-          metadata: {
-            lastUpdated: Date.now()
-          }
-        });
-
-        totalValue += walletValue;
-        console.info(`Added wallet value: ${walletValue}, new total: ${totalValue}`);
-      }
-    } catch (error) {
-      console.error(`Error getting balance for ETH wallet ${wallet.address}:`, error);
-    }
-  }
-
-  // Process Bitcoin wallets
-  const btcWallets = wallets.filter((w: Wallet) => w.chainType === "bitcoin");
-
-  console.info("Processing BTC wallets:", btcWallets.length);
-  for (const wallet of btcWallets) {
-    try {
-      // Get BTC balance using BlockCypher API
-      const balance = await ctx.runAction(api.finance.getBitcoinWalletBalance, {
-        xpub: wallet.address
-      });
-      
-      const btcBalance = Number(balance.confirmedBalance); // Convert satoshis to BTC
-      // Update BTC holding for this wallet
-      await ctx.runMutation(api.wallets.upsertHolding, {
-        walletId: wallet._id,
-        symbol: "BTC",
-        quantity: btcBalance,
-        chain: "mainnet"
-      });
-      const walletValue = btcBalance * btcPrice;
-
-      // Update wallet value and metadata
-      await ctx.runMutation(api.wallets.updateWallet, {
-        id: wallet._id,
-        value: walletValue,
-        metadata: {
-          lastUpdated: Date.now()
-        }
-      });
-
-      totalValue += walletValue;
-      console.info(`Added BTC wallet value:`, {
-        address: wallet.address,
-        btcBalance,
-        btcPrice,
-        walletValue,
-        newTotal: totalValue
-      });
-    } catch (error) {
-      console.error(`Error getting balance for BTC wallet ${wallet.address}:`, error);
-    }
-  }
-
-  // Get assets and debts totals
-  const { assetsTotal } = await ctx.runQuery(api.metrics.getAssetsTotal, {});
-  const { debtsTotal } = await ctx.runQuery(api.metrics.getDebtsTotal, {});
-  
-  console.info("Assets total:", assetsTotal);
-  console.info("Debts total:", debtsTotal);
-
-  totalValue += assetsTotal;
-  totalValue -= debtsTotal;
-
-  console.log("Final net worth calculation:", {
-    totalValue,
-    assetsTotal,
-    debtsTotal,
-    prices: {
-      ethereum: ethPrice,
-      bitcoin: btcPrice,
-      solana: solPrice,
-      avalanche: avaxPrice,
-    }
-  });
-
-  return {
-    netWorth: totalValue,
-    prices: {
-      ethereum: ethPrice,
-      bitcoin: btcPrice,
-      solana: solPrice,
-      avalanche: avaxPrice,
-    }
-  };
+// Helper function to get total value of all debts
+export async function getDebtsTotalHelper(ctx: QueryCtx) {
+  const debts = await ctx.db.query("debts").collect();
+  const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
+  return { debtsTotal };
 }
 
 // Query to get total value of all assets
 export const getAssetsTotal = query({
   handler: async (ctx) => {
-    const assets = await ctx.db.query("assets").collect();
-    const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
-    return { assetsTotal };
+    return await getAssetsTotalHelper(ctx);
   }
 });
 
 // Query to get total value of all debts 
 export const getDebtsTotal = query({
   handler: async (ctx) => {
-    const debts = await ctx.db.query("debts").collect();
-    const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
-    return { debtsTotal };
+    return await getDebtsTotalHelper(ctx);
   }
 });
 
-// Action to get current net worth and store daily metrics
-export const getCurrentNetWorth = action({
-  handler: async (ctx) => {
-    // Calculate net worth
-    const stats = await calculateNetWorthHelper(ctx);
+// Mutation to take a snapshot of net worth with additional metrics
+export const snapshotDailyMetrics = mutation({
+  handler: async (ctx): Promise<{
+    netWorth: number,
+    assets: number,
+    debts: number
+  }> => {
+    // Get holdings value using helper
+    const holdings = await listHoldingsHelper(ctx, { includeDebts: true });
+    const quotes = await getQuotesHelper(ctx);
 
-    // Store the daily metrics
-    await ctx.runMutation(api.metrics.storeDailyMetrics, {
-      netWorth: stats.netWorth,
-      prices: {
-        ethereum: stats.prices.ethereum ?? 0,
-        bitcoin: stats.prices.bitcoin ?? 0,
-        solana: stats.prices.solana ?? 0,
-        avalanche: stats.prices.avalanche ?? 0
+    // Calculate holdings totals
+    let holdingsAssets = 0;
+    let holdingsDebts = 0;
+    
+    holdings.forEach(holding => {
+      const symbol = holding.quoteSymbol || holding.symbol;
+      const price = quotes[symbol] || 0;
+      const value = holding.quantity * price;
+      
+      if (holding.isDebt) {
+        holdingsDebts += value;
+      } else {
+        holdingsAssets += value;
       }
     });
 
-    return stats.netWorth;
+    // Get assets and debts from tables
+    const assets = await ctx.db.query("assets").collect();
+    const debts = await ctx.db.query("debts").collect();
+    
+    const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
+    const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
+
+    // Calculate final totals
+    const totalAssets = holdingsAssets + assetsTotal;
+    const totalDebts = holdingsDebts + debtsTotal;
+    const netWorth = totalAssets - totalDebts;
+
+    // Store the daily metrics
+    await ctx.db.insert("dailyMetrics", {
+      date: Date.now(),
+      netWorth,
+      assets: totalAssets,
+      debts: totalDebts,
+      prices: quotes,
+      metadata: {
+        dataSource: "CoinGecko",
+        lastUpdated: Date.now(),
+      }
+    });
+
+    return {
+      netWorth,
+      assets: totalAssets,
+      debts: totalDebts
+    };
   }
 });
 
@@ -204,50 +117,4 @@ export const getCachedNetWorth = query({
     return latestMetric?.netWorth ?? 0;
   }
 });
-
-// Mutation to store daily metrics in the database
-export const storeDailyMetrics = mutation({
-  args: {
-    netWorth: v.number(),
-    prices: v.object({
-      ethereum: v.number(),
-      bitcoin: v.number(),
-      solana: v.number(),
-      avalanche: v.number(),
-    }),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("dailyMetrics", {
-      date: Date.now(),
-      netWorth: args.netWorth,
-      prices: args.prices,
-      metadata: {
-        dataSource: "CoinGecko",
-        lastUpdated: Date.now(),
-      }
-    });
-  }
-});
-
-// Action to fetch current prices and update metrics
-export const updateDailyMetrics = action({
-  handler: async (ctx) => {
-    // Calculate net worth
-    const stats = await calculateNetWorthHelper(ctx);
-
-    // Store the data using the mutation
-    await ctx.runMutation(api.metrics.storeDailyMetrics, {
-      netWorth: stats.netWorth,
-      prices: {
-        ethereum: stats.prices.ethereum ?? 0,
-        bitcoin: stats.prices.bitcoin ?? 0, 
-        solana: stats.prices.solana ?? 0,
-        avalanche: stats.prices.avalanche ?? 0
-      }
-    });
-
-    return stats.netWorth;
-  }
-});
-
 

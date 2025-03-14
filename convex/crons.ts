@@ -3,17 +3,20 @@ import { api } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Run metrics update twice daily at 9am and 5pm UTC
+// Snapshot daily metrics every 20 minutes
 crons.cron(
-  "update net worth morning",
-  "0 9 * * *", // Every day at 9am UTC
-  api.metrics.getCurrentNetWorth
+  "snapshot metrics",
+  "*/20 * * * *", // Every 20 minutes
+  api.metrics.snapshotDailyMetrics
 );
 
+
+// Update quotes every 10 minutes
 crons.cron(
-  "update net worth evening", 
-  "0 17 * * *", // Every day at 5pm UTC
-  api.metrics.getCurrentNetWorth
+  "update quotes",
+  "*/10 * * * *", // Every 10 minutes
+  api.quotes.updateQuotes
 );
+
 
 export default crons;

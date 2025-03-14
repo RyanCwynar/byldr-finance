@@ -16,12 +16,9 @@ import {
 export interface DailyMetric {
   date: number;
   netWorth: number;
-  prices: {
-    ethereum: number;
-    bitcoin: number;
-    solana: number;
-    avalanche: number;
-  };
+  assets: number;
+  debts: number;
+  prices: Record<string, number>;
   metadata?: {
     dataSource: string;
     lastUpdated: number;
