@@ -1,5 +1,6 @@
 "use node";
 import { action } from "./_generated/server";
+import { api } from "./_generated/api";
 import { v } from "convex/values";
 import Moralis from "moralis";
 
@@ -54,6 +55,10 @@ export const getWalletBalance = action({
     }
 
     try {
+      const wallet = await ctx.runQuery(api.wallets.getWalletByAddress, { address: walletAddress });
+      if (!wallet) {
+        throw new Error("Wallet not found");
+      }
       const chainPromises = Object.entries(SUPPORTED_CHAINS).map(
         async ([chainName, chainId]) => {
           console.debug(`Processing chain: ${chainName}`, { chainId });
@@ -96,20 +101,19 @@ export const getWalletBalance = action({
             console.info(`Native USD value for ${chainName}:`, nativeUsdValue);
           }
 
-          // let totalUsdValue = Number(nativeUsdValue);
           let totalUsdValue = 0;
           console.debug(`Starting token processing for ${chainName}, base value:`, totalUsdValue);
           
-          tokenBalances.result.forEach(token => {
+          for (const token of tokenBalances.result) {
             if (!token.balance || !token.decimals) {
               console.debug(`Skipping token due to missing data:`, { symbol: token.symbol, balance: token.balance, decimals: token.decimals });
-              return;
+              continue;
             }
             
             // Skip spam tokens and ETHG
             if (token.possible_spam || token.symbol?.includes("ETHG")) {
               console.debug(`Skipping spam/ETHG token:`, { symbol: token.symbol, isSpam: token.possible_spam });
-              return;
+              continue;
             }
             
             const tokenBalance = Number(token.balance) / Math.pow(10, token.decimals);
@@ -120,24 +124,36 @@ export const getWalletBalance = action({
               isDebt: isVariableDebtToken(token)
             });
 
+            let tokenValue = 0;
+            let effectivePrice = 0;
+
             if (isAaveWrappedEth(token)) {
-              const tokenValue = tokenBalance * nativeEthPrice;
-              token.usd_price = nativeEthPrice;
-              token.usd_value = tokenValue;
+              tokenValue = tokenBalance * nativeEthPrice;
+              effectivePrice = nativeEthPrice;
               totalUsdValue += tokenValue;
               console.info(`Added Aave ETH value:`, { symbol: token.symbol, value: tokenValue, newTotal: totalUsdValue });
             } else if (isVariableDebtToken(token)) {
-              const debtValue = tokenBalance;
-              token.usd_price = 1;
-              token.usd_value = debtValue;
-              totalUsdValue -= debtValue;
-              console.info(`Subtracted debt value:`, { symbol: token.symbol, value: debtValue, newTotal: totalUsdValue });
+              tokenValue = tokenBalance;
+              effectivePrice = 1;
+              totalUsdValue -= tokenValue;
+              console.info(`Subtracted debt value:`, { symbol: token.symbol, value: tokenValue, newTotal: totalUsdValue });
             } else if (token.usdPrice) {
-              const tokenValue = tokenBalance * Number(token.usdPrice);
+              effectivePrice = Number(token.usdPrice);
+              tokenValue = tokenBalance * effectivePrice;
               totalUsdValue += tokenValue;
               console.debug(`Added token value:`, { symbol: token.symbol, value: tokenValue, newTotal: totalUsdValue });
             }
-          });
+
+            // Only upsert holdings with value > 0
+            if (Math.abs(tokenValue) > 0) {
+              await ctx.runMutation(api.wallets.upsertHolding, {
+                walletId: wallet._id,
+                symbol: token.symbol || "",
+                chain: chainName,
+                quantity: tokenBalance,
+              });
+            }
+          }
 
           console.info(`Chain ${chainName} total value:`, totalUsdValue);
           return {
@@ -169,39 +185,36 @@ export const getWalletBalance = action({
       console.debug("Formatting final response");
       const response = {
         totalUsdValue,
-        balances: results.reduce((acc, result) => {
+        balances: results.reduce((acc: Record<string, any>, result) => {
           acc[result.chainName] = {
             nativeBalance: {
               balance: result.nativeBalance.balance,
               token: result.nativeBalance.token,
               usdValue: result.nativeBalance.usdValue
             },
-            tokens: result.tokens.map(token => {
-              // Ensure all values are primitive types (string, number, boolean)
-              return {
-                token_address: token.token_address?.toString() || "",
-                name: token.name?.toString() || "",
-                symbol: token.symbol?.toString() || "",
-                logo: token.logo?.toString() || null,
-                thumbnail: token.thumbnail?.toString() || null,
-                decimals: Number(token.decimals) || 0,
-                balance: token.balance?.toString() || "0",
-                possible_spam: Boolean(token.possible_spam),
-                verified_contract: Boolean(token.verified_contract),
-                usd_price: Number(token.usd_price) || 0,
-                usd_price_24hr_percent_change: Number(token.usd_price_24hr_percent_change) || 0,
-                usd_price_24hr_usd_change: Number(token.usd_price_24hr_usd_change) || 0,
-                usd_value_24hr_usd_change: Number(token.usd_value_24hr_usd_change) || 0,
-                usd_value: Number(token.usd_value) || 0,
-                portfolio_percentage: Number(token.portfolio_percentage) || 0,
-                balance_formatted: token.balance_formatted?.toString() || "0",
-                native_token: Boolean(token.native_token),
-                total_supply: token.total_supply?.toString() || null,
-                total_supply_formatted: token.total_supply_formatted?.toString() || null,
-                percentage_relative_to_total_supply: token.percentage_relative_to_total_supply !== null ? 
-                  Number(token.percentage_relative_to_total_supply) : null
-              };
-            }),
+            tokens: result.tokens.map(token => ({
+              token_address: token.token_address?.toString() || "",
+              name: token.name?.toString() || "",
+              symbol: token.symbol?.toString() || "",
+              logo: token.logo?.toString() || null,
+              thumbnail: token.thumbnail?.toString() || null,
+              decimals: Number(token.decimals) || 0,
+              balance: token.balance?.toString() || "0",
+              possible_spam: Boolean(token.possible_spam),
+              verified_contract: Boolean(token.verified_contract),
+              usd_price: Number(token.usd_price) || 0,
+              usd_price_24hr_percent_change: Number(token.usd_price_24hr_percent_change) || 0,
+              usd_price_24hr_usd_change: Number(token.usd_price_24hr_usd_change) || 0,
+              usd_value_24hr_usd_change: Number(token.usd_value_24hr_usd_change) || 0,
+              usd_value: Number(token.usd_value) || 0,
+              portfolio_percentage: Number(token.portfolio_percentage) || 0,
+              balance_formatted: token.balance_formatted?.toString() || "0",
+              native_token: Boolean(token.native_token),
+              total_supply: token.total_supply?.toString() || null,
+              total_supply_formatted: token.total_supply_formatted?.toString() || null,
+              percentage_relative_to_total_supply: token.percentage_relative_to_total_supply !== null ? 
+                Number(token.percentage_relative_to_total_supply) : null
+            })),
             totalUsdValue: result.totalUsdValue.toFixed(2)
           };
           return acc;
@@ -213,25 +226,6 @@ export const getWalletBalance = action({
       console.error("Error fetching wallet balances:", error);
       throw error;
     }
-  }
-});
-
-export const getWalletNetWorth = action({
-  args: {
-    walletAddress: v.string(),
-  },
-  handler: async (ctx, {
-    walletAddress,
-  }) => {
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
-      throw new Error("Invalid Ethereum address");
-    }
-
-    const netWorth = await Moralis.EvmApi.wallets.getWalletNetWorth({
-      address: walletAddress,
-    });
-
-    return netWorth.raw;
   }
 });
 

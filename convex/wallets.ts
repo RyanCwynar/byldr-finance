@@ -26,11 +26,15 @@ export const addWallet = mutation({
       throw new Error("Wallet already exists");
     }
 
-    // Insert new wallet
+    // Insert new wallet with all required fields
     return await ctx.db.insert("wallets", {
       name,
       address,
       chainType,
+      value: 0,
+      metadata: {
+        lastUpdated: Date.now()
+      }
     });
   }
 });
@@ -39,17 +43,24 @@ export const addWallet = mutation({
 export const updateWallet = mutation({
   args: {
     id: v.id("wallets"),
-    name: v.optional(v.string())
+    name: v.optional(v.string()),
+    value: v.optional(v.number()),
+    metadata: v.optional(v.object({
+      lastUpdated: v.number()
+    }))
   },
-  handler: async (ctx, { id, name }) => {
+  handler: async (ctx, { id, name, value, metadata }) => {
     const wallet = await ctx.db.get(id);
     if (!wallet) {
       throw new Error("Wallet not found");
     }
 
-    return await ctx.db.patch(id, {
-      name,
-    });
+    const updates: any = {};
+    if (name !== undefined) updates.name = name;
+    if (value !== undefined) updates.value = value;
+    if (metadata !== undefined) updates.metadata = metadata;
+
+    return await ctx.db.patch(id, updates);
   }
 });
 
@@ -91,8 +102,15 @@ export async function listWalletsHelper(ctx: { db: DatabaseReader }) {
   const query = ctx.db.query("wallets");
   const wallets = await query.collect();
 
+  // Sort wallets by value, handling undefined values
+  const sortedWallets = wallets.sort((a, b) => {
+    const valueA = a.value ?? 0;
+    const valueB = b.value ?? 0;
+    return valueB - valueA; // Sort in descending order
+  });
+
   return {
-    wallets
+    wallets: sortedWallets
   };
 }
 
@@ -100,5 +118,71 @@ export async function listWalletsHelper(ctx: { db: DatabaseReader }) {
 export const listWallets = query({
   handler: async (ctx) => {
     return await listWalletsHelper(ctx);
+  }
+});
+// Upsert a holding (create or update)
+export const upsertHolding = mutation({
+  args: {
+    walletId: v.id("wallets"),
+    symbol: v.string(),
+    quantity: v.number(),
+    chain: v.optional(v.string())
+  },
+  handler: async (ctx, { walletId, symbol, quantity, chain }) => {
+    // Check if wallet exists
+    const wallet = await ctx.db.get(walletId);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+
+    // Try to find existing holding
+    const existingHolding = await ctx.db
+      .query("holdings")
+      .withIndex("by_symbol_and_wallet", q => 
+        q.eq("symbol", symbol).eq("walletId", walletId)
+      )
+      .first();
+
+    if (existingHolding) {
+      // Update existing holding
+      return await ctx.db.patch(existingHolding._id, {
+        quantity,
+        chain: chain || "mainnet",
+        lastUpdated: Date.now()
+      });
+    } else {
+      // Create new holding
+      return await ctx.db.insert("holdings", {
+        walletId,
+        symbol,
+        quantity,
+        chain: chain || "mainnet",
+        lastUpdated: Date.now()
+      });
+    }
+  }
+});
+
+// Delete a holding
+export const deleteHolding = mutation({
+  args: {
+    walletId: v.id("wallets"),
+    symbol: v.string()
+  },
+  handler: async (ctx, { walletId, symbol }) => {
+    // Find the holding
+    const holding = await ctx.db
+      .query("holdings")
+      .withIndex("by_symbol_and_wallet", q => 
+        q.eq("symbol", symbol).eq("walletId", walletId)
+      )
+      .first();
+
+    if (!holding) {
+      throw new Error("Holding not found");
+    }
+
+    await ctx.db.delete(holding._id);
+    return true;
   }
 });

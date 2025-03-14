@@ -1,7 +1,7 @@
 import { action, query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
-import { DailyMetric } from "@/components/NetWorthChart";
+import { DailyMetric } from "@/components/net-worth-chart";
 
 interface Wallet {
   chainType: string;
@@ -49,7 +49,6 @@ export async function calculateNetWorthHelper(ctx: any) {
   // Process Ethereum wallets
   const ethWallets = wallets.filter((w: Wallet) => w.chainType === "ethereum");
   console.info("Processing ETH wallets:", ethWallets.length);
-
   for (const wallet of ethWallets) {
     try {
       const balance = await ctx.runAction(api.finance.getWalletBalance, { 
@@ -60,6 +59,15 @@ export async function calculateNetWorthHelper(ctx: any) {
       console.debug(`Wallet ${wallet.address} value:`, walletValue);
       
       if (balance.totalUsdValue) {
+        // Update wallet value and metadata
+        await ctx.runMutation(api.wallets.updateWallet, {
+          id: wallet._id,
+          value: walletValue,
+          metadata: {
+            lastUpdated: Date.now()
+          }
+        });
+
         totalValue += walletValue;
         console.info(`Added wallet value: ${walletValue}, new total: ${totalValue}`);
       }
@@ -70,8 +78,8 @@ export async function calculateNetWorthHelper(ctx: any) {
 
   // Process Bitcoin wallets
   const btcWallets = wallets.filter((w: Wallet) => w.chainType === "bitcoin");
-  console.info("Processing BTC wallets:", btcWallets.length);
 
+  console.info("Processing BTC wallets:", btcWallets.length);
   for (const wallet of btcWallets) {
     try {
       // Get BTC balance using BlockCypher API
@@ -80,7 +88,23 @@ export async function calculateNetWorthHelper(ctx: any) {
       });
       
       const btcBalance = Number(balance.confirmedBalance); // Convert satoshis to BTC
+      // Update BTC holding for this wallet
+      await ctx.runMutation(api.wallets.upsertHolding, {
+        walletId: wallet._id,
+        symbol: "BTC",
+        quantity: btcBalance,
+        chain: "mainnet"
+      });
       const walletValue = btcBalance * btcPrice;
+
+      // Update wallet value and metadata
+      await ctx.runMutation(api.wallets.updateWallet, {
+        id: wallet._id,
+        value: walletValue,
+        metadata: {
+          lastUpdated: Date.now()
+        }
+      });
 
       totalValue += walletValue;
       console.info(`Added BTC wallet value:`, {

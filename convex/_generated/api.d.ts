@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as assets from "../assets.js";
 import type * as crons from "../crons.js";
 import type * as finance from "../finance.js";
 import type * as metrics from "../metrics.js";
@@ -27,6 +28,7 @@ import type * as wallets from "../wallets.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  assets: typeof assets;
   crons: typeof crons;
   finance: typeof finance;
   metrics: typeof metrics;

@@ -7,7 +7,23 @@ export default defineSchema({
     name: v.string(),
     address: v.string(), // The wallet address
     chainType: v.string(), // "evm", "solana", or "bitcoin"
+    value: v.optional(v.number()), // Current value in USD
+    metadata: v.optional(v.object({
+      lastUpdated: v.number(), // When the value was last updated
+    })),
   }).index("by_address", ["address"]),
+
+  // Store individual token holdings for each wallet
+  holdings: defineTable({
+    walletId: v.id("wallets"), // Reference to the wallet this holding belongs to
+    symbol: v.string(), // Token symbol (ETH, BTC, USDC, etc)
+    quantity: v.number(), // Amount of tokens held
+    chain: v.string(), // Chain name - only relevant for L2 chains, defaults to mainnet 
+    lastUpdated: v.number(), // When the holding was last updated
+  })
+    .index("by_wallet", ["walletId"])
+    .index("by_symbol", ["symbol"])
+    .index("by_symbol_and_wallet", ["symbol", "walletId"]),
 
   // Store daily financial metrics
   dailyMetrics: defineTable({
