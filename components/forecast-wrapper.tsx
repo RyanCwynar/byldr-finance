@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import NetWorthChart from './net-worth-chart';
 import { Doc } from "@/convex/_generated/dataModel";
 
@@ -37,9 +39,15 @@ function Slider({ value, onChange, min, max, step, label }: SliderProps) {
     );
 }
 
-export default function ForecastWrapper({ metrics }: { metrics: DailyMetric[] }) {
+export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: DailyMetric[] }) {
     const [monthlyCost, setMonthlyCost] = useState(10000);
     const [monthlyIncome, setMonthlyIncome] = useState(18000);
+    
+    // Fetch metrics in real-time
+    const liveMetrics = useQuery(api.metrics.getDailyMetrics) ?? initialMetrics;
+    
+    // Use live metrics if available, otherwise fall back to initial metrics
+    const metrics = liveMetrics || initialMetrics;
 
     const forecastedMetrics = useMemo(() => {
         if (!metrics?.length) return metrics;

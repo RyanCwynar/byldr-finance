@@ -213,8 +213,22 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
               return [`$${value.toLocaleString()}`, label];
             }}
             labelFormatter={(timestamp) => new Date(timestamp).toLocaleString()}
+            contentStyle={{ 
+              backgroundColor: '#1f2937', // Dark gray background
+              borderColor: '#374151', // Darker border
+              color: '#f3f4f6', // Light text
+              borderRadius: '0.375rem', // Rounded corners
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+            itemStyle={{ color: '#f3f4f6' }} // Light text for items
+            labelStyle={{ color: '#d1d5db' }} // Slightly darker text for label
           />
-          <Legend />
+          <Legend 
+            wrapperStyle={{ 
+              paddingTop: '10px',
+              color: '#f3f4f6' // Light text
+            }}
+          />
           
           {/* Upper projection line - only show for projected points and when showUncertainty is true */}
           {showUncertainty && (
