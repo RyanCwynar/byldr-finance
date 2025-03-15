@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { DailyMetric } from './net-worth-chart';
 import NetWorthChart from './net-worth-chart';
+import { Doc } from "@/convex/_generated/dataModel";
+
+type DailyMetric = Doc<'dailyMetrics'> & {
+    isProjected?: boolean;
+};
 
 interface SliderProps {
     value: number;
@@ -33,11 +37,7 @@ function Slider({ value, onChange, min, max, step, label }: SliderProps) {
     );
 }
 
-interface ForecastWrapperProps {
-    metrics: DailyMetric[];
-}
-
-export default function ForecastWrapper({ metrics }: ForecastWrapperProps) {
+export default function ForecastWrapper({ metrics }: { metrics: DailyMetric[] }) {
     const [monthlyCost, setMonthlyCost] = useState(10000);
     const [monthlyIncome, setMonthlyIncome] = useState(18000);
 

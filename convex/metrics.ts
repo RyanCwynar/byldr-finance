@@ -1,6 +1,4 @@
-import { action, query, mutation, QueryCtx } from "./_generated/server";
-import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { query, mutation, QueryCtx } from "./_generated/server";
 import { DailyMetric } from "@/components/net-worth-chart";
 import { listHoldingsHelper } from "./holdings";
 import { getQuotesHelper } from "./quotes";

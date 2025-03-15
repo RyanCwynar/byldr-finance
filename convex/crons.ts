@@ -18,5 +18,11 @@ crons.cron(
   api.quotes.updateQuotes
 );
 
+crons.cron(
+  "update wallet values",
+  "*/10 * * * *", // Every 10 minutes
+  api.wallets.updateWalletValues
+);
+
 
 export default crons;

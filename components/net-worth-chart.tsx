@@ -13,24 +13,13 @@ import {
   Area
 } from 'recharts';
 
-export interface DailyMetric {
-  date: number;
-  netWorth: number;
-  assets: number;
-  debts: number;
-  prices: Record<string, number>;
-  metadata?: {
-    dataSource: string;
-    lastUpdated: number;
-  };
+import { Doc } from "@/convex/_generated/dataModel";
+
+type DailyMetric = Doc<'dailyMetrics'> & {
   isProjected?: boolean;
-}
+};
 
-interface NetWorthChartProps {
-  metrics: DailyMetric[];
-}
-
-export default function NetWorthChart({ metrics }: NetWorthChartProps) {
+export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
 
   const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
