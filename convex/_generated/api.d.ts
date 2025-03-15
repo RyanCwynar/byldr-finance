@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as assets from "../assets.js";
 import type * as crons from "../crons.js";
+import type * as debts from "../debts.js";
 import type * as holdings from "../holdings.js";
 import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
@@ -32,6 +33,7 @@ import type * as wallets from "../wallets.js";
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   crons: typeof crons;
+  debts: typeof debts;
   holdings: typeof holdings;
   holdingsNode: typeof holdingsNode;
   metrics: typeof metrics;

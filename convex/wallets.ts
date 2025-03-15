@@ -117,6 +117,7 @@ export const getWalletByAddress = query({
             .first();
     }
 });
+
 // Helper function to list wallets that can be used by other queries
 export async function listWalletsHelper(ctx: { db: DatabaseReader }) {
     const query = ctx.db.query("wallets");
@@ -195,4 +196,16 @@ export const listWallets = query({
     handler: async (ctx) => {
         return await listWalletsHelper(ctx);
     }
+});
+
+// Get wallet by ID
+export const getWallet = query({
+  args: { id: v.id("wallets") },
+  handler: async (ctx, { id }) => {
+    const wallet = await ctx.db.get(id);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+    return wallet;
+  }
 });

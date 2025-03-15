@@ -317,3 +317,14 @@ export async function updateHoldingsHelper(ctx: any) {
   
     return true;
   }
+
+// Get holdings for a specific wallet
+export const getHoldingsByWallet = query({
+  args: { walletId: v.id("wallets") },
+  handler: async (ctx, { walletId }) => {
+    return await ctx.db
+      .query("holdings")
+      .withIndex("by_wallet", q => q.eq("walletId", walletId))
+      .collect();
+  }
+});
