@@ -1,37 +1,66 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Doc } from "@/convex/_generated/dataModel";
 
 interface AssetFormProps {
   onClose: () => void;
+  asset?: Doc<"assets">;
+  onSubmit?: (updatedData: Partial<Doc<"assets">>) => Promise<void>;
 }
 
-export function AssetForm({ onClose }: AssetFormProps) {
-  const [name, setName] = useState("");
-  const [value, setValue] = useState("");
-  const [type, setType] = useState<"real_estate" | "crypto" | "stocks" | "cash" | "other">("other");
+export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
+  const [name, setName] = useState(asset?.name || "");
+  const [value, setValue] = useState(asset?.value.toString() || "");
+  const [type, setType] = useState<"real_estate" | "stocks" | "crypto" | "cash" | "other">(
+    asset?.type || "other"
+  );
+  const [description, setDescription] = useState(asset?.metadata?.description || "");
+  const [location, setLocation] = useState(asset?.metadata?.location || "");
+  const [ticker, setTicker] = useState(asset?.metadata?.ticker || "");
+  const [purchasePrice, setPurchasePrice] = useState(
+    asset?.metadata?.purchasePrice !== undefined ? asset.metadata.purchasePrice.toString() : ""
+  );
+  
   const addAsset = useMutation(api.assets.addAsset);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addAsset({
-      name,
-      value: Number(value),
-      type,
-      metadata: {
-        lastUpdated: Date.now(),
-        description: "",
-        purchaseDate: Date.now(),
-        purchasePrice: Number(value)
-      }
-    });
+    
+    const metadata = {
+      description,
+      purchaseDate: asset?.metadata?.purchaseDate || Date.now(),
+      purchasePrice: purchasePrice ? Number(purchasePrice) : Number(value),
+      lastUpdated: Date.now(),
+      location: location || undefined,
+      ticker: ticker || undefined
+    };
+    
+    if (asset && onSubmit) {
+      // Update existing asset
+      await onSubmit({
+        name,
+        value: Number(value),
+        type,
+        metadata
+      });
+    } else {
+      // Add new asset
+      await addAsset({
+        name,
+        value: Number(value),
+        type,
+        metadata
+      });
+    }
+    
     onClose();
   };
 
   return (
     <div>
       <h3 className="text-lg font-medium leading-6 text-gray-100 mb-4">
-        Add New Asset
+        {asset ? "Edit Asset" : "Add New Asset"}
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -81,6 +110,60 @@ export function AssetForm({ onClose }: AssetFormProps) {
             step="0.01"
           />
         </div>
+        
+        <div>
+          <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-300">
+            Purchase Price (USD)
+          </label>
+          <input
+            type="number"
+            id="purchasePrice"
+            value={purchasePrice}
+            onChange={(e) => setPurchasePrice(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            min="0"
+            step="0.01"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-gray-300">
+            Location
+          </label>
+          <input
+            type="text"
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="ticker" className="block text-sm font-medium text-gray-300">
+            Ticker Symbol
+          </label>
+          <input
+            type="text"
+            id="ticker"
+            value={ticker}
+            onChange={(e) => setTicker(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+            Description
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            rows={3}
+          />
+        </div>
 
         <div className="mt-5 flex justify-end gap-3">
           <button
@@ -94,7 +177,7 @@ export function AssetForm({ onClose }: AssetFormProps) {
             type="submit"
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Add Asset
+            {asset ? "Update Asset" : "Add Asset"}
           </button>
         </div>
       </form>

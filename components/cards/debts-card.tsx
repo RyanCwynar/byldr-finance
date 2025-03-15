@@ -7,45 +7,67 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { Modal } from "@/components/modal";
 import { DebtForm } from "@/components/forms/debt-form";
+import Link from "next/link";
 
 type Debt = Doc<"debts">;
 
 interface DebtsCardProps {
-  preloadedDebts?: Debt[];
+  debts: Debt[];
 }
 
-export const AddButton = ({ onClick }: { onClick: () => void }) => {
-  return (
-    <button
-      onClick={onClick}
-      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-    >
-      <PlusIcon className="w-5 h-5" />
-    </button>
-  );
-};
-
-export default function DebtsCard({ preloadedDebts }: DebtsCardProps) {
-  const debts = useQuery(api.debts.listDebts) ?? preloadedDebts;
+export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
+  const debts = useQuery(api.debts.listDebts) ?? initialDebts;
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Helper function to get icon based on debt type
+  const getDebtTypeIcon = (type: string) => {
+    switch (type) {
+      case 'mortgage':
+        return '🏠';
+      case 'loan':
+        return '💰';
+      case 'credit_card':
+        return '💳';
+      case 'crypto':
+        return '₿';
+      default:
+        return '📝';
+    }
+  };
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
       <h2 className="text-xl font-semibold mb-4">Debts</h2>
-      <AddButton onClick={() => setShowAddForm(true)} />
+      <button
+        onClick={() => setShowAddForm(true)}
+        className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        <PlusIcon className="w-5 h-5" />
+      </button>
       
       <div className="space-y-3">
-        {debts?.map((debt: Debt) => (
-          <div key={debt._id} className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-            <div className="flex flex-col">
-              <span className="font-medium">{debt.name}</span>
-              {debt.metadata?.lender && (
-                <span className="text-xs text-gray-400">{debt.metadata.lender}</span>
-              )}
-            </div>
-            <span className="text-red-500">-${debt.value.toLocaleString()}</span>
-          </div>
-        ))}
+        {debts?.length === 0 ? (
+          <p className="text-gray-400 text-center py-4">No debts found. Add one to get started.</p>
+        ) : (
+          debts?.map((debt: Debt) => (
+            <Link 
+              href={`/debt/${debt._id}`} 
+              key={debt._id}
+              className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center">
+                <span className="mr-3 text-xl" aria-hidden="true">{getDebtTypeIcon(debt.type)}</span>
+                <div className="flex flex-col">
+                  <span className="font-medium">{debt.name}</span>
+                  <span className="text-xs text-gray-400 capitalize">{debt.type.replace('_', ' ')}</span>
+                </div>
+              </div>
+              <span className="text-red-500">
+                ${debt.value.toLocaleString()}
+              </span>
+            </Link>
+          ))
+        )}
       </div>
       
       {showAddForm && (

@@ -29,6 +29,13 @@ export const getAssetsTotal = query({
   }
 });
 
+export const getAsset = query({
+  args: { id: v.id("assets") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
 // Asset mutations
 export const addAsset = mutation({
   args: {

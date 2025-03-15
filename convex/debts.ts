@@ -8,6 +8,13 @@ export const listDebts = query({
   }
 });
 
+export const getDebt = query({
+  args: { id: v.id("debts") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
 export const getDebtsByType = query({
   args: {
     type: v.union(v.literal("mortgage"), v.literal("loan"), v.literal("credit_card"), v.literal("crypto"), v.literal("other"))
@@ -76,4 +83,20 @@ export const updateDebt = mutation({
     }
     return await ctx.db.patch(id, updates);
   }
+});
+
+export const deleteDebt = mutation({
+  args: { id: v.id("debts") },
+  handler: async (ctx, args) => {
+    // Check if the debt exists
+    const debt = await ctx.db.get(args.id);
+    if (!debt) {
+      throw new Error("Debt not found");
+    }
+    
+    // Delete the debt
+    await ctx.db.delete(args.id);
+    
+    return { success: true };
+  },
 }); 

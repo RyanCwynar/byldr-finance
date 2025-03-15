@@ -19,7 +19,12 @@ type DailyMetric = Doc<'dailyMetrics'> & {
   isProjected?: boolean;
 };
 
-export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
+interface NetWorthChartProps {
+  metrics: DailyMetric[];
+  showUncertainty?: boolean;
+}
+
+export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
 
   const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
@@ -57,7 +62,7 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
       let upperProjection = m.netWorth;
       let lowerProjection = m.netWorth;
 
-      if (isProjection) {
+      if (isProjection && showUncertainty) {
         projectionCount++;
         const daysFromLastReal = (m.date - lastRealPoint.date) / (24 * 60 * 60 * 1000);
         const monthsFromLastReal = daysFromLastReal / 30;
@@ -120,7 +125,7 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
     });
 
     // Verify we have some projections
-    console.assert(projectionCount > 0, 'Should have at least one projection point');
+    console.assert(projectionCount > 0 || !showUncertainty, 'Should have at least one projection point when showing uncertainty');
     console.assert(maxValue > minValue, 'Should have different max and min values');
 
     // Calculate Y-axis domain with padding
@@ -148,7 +153,7 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
       yAxisDomain: domain,
       firstProjectedIndex
     };
-  }, [metrics, uncertaintyPercent]);
+  }, [metrics, uncertaintyPercent, showUncertainty]);
 
   // Add logging when uncertainty changes
   useEffect(() => {
@@ -161,19 +166,21 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
 
   return (
     <div className="w-full h-full flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <span>Uncertainty Range: ±{uncertaintyPercent}%</span>
-        <input
-          type="range"
-          min="0"
-          max="50"
-          value={uncertaintyPercent}
-          onChange={(e) => setUncertaintyPercent(Number(e.target.value))}
-          className="w-48"
-        />
-      </div>
+      {showUncertainty && (
+        <div className="flex items-center gap-2">
+          <span>Uncertainty Range: ±{uncertaintyPercent}%</span>
+          <input
+            type="range"
+            min="0"
+            max="50"
+            value={uncertaintyPercent}
+            onChange={(e) => setUncertaintyPercent(Number(e.target.value))}
+            className="w-48"
+          />
+        </div>
+      )}
       
-      <ResponsiveContainer width="100%" height="90%">
+      <ResponsiveContainer width="100%" height={showUncertainty ? "90%" : "100%"}>
         <LineChart
           data={chartData}
           margin={{
@@ -201,7 +208,7 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
               const label = {
                 netWorth: 'Net Worth',
                 upperProjection: 'Optimistic Projection',
-                lowerProjection: 'Conservative Projection'
+                lowerProjection: 'Pessimistic Projection'
               }[name] || name;
               return [`$${value.toLocaleString()}`, label];
             }}
@@ -209,49 +216,52 @@ export default function NetWorthChart({ metrics }: { metrics: DailyMetric[] }) {
           />
           <Legend />
           
-          {/* Upper projection line - only show for projected points */}
-          <Line
-            type="monotone"
-            dataKey="upperProjection"
-            name="Optimistic Projection"
-            stroke="#22c55e"
-            strokeWidth={1}
-            strokeDasharray="5 5"
-            dot={false}
-            connectNulls={true}
-            data={chartData.map((point, index) => ({
-              ...point,
-              upperProjection: index >= firstProjectedIndex ? point.upperProjection : null
-            }))}
-          />
+          {/* Upper projection line - only show for projected points and when showUncertainty is true */}
+          {showUncertainty && (
+            <Line
+              type="monotone"
+              dataKey="upperProjection"
+              name="Optimistic Projection"
+              stroke="#22c55e"
+              strokeWidth={1}
+              strokeDasharray="5 5"
+              dot={false}
+              connectNulls={true}
+              data={chartData.map((point, index) => ({
+                ...point,
+                upperProjection: index >= firstProjectedIndex ? point.upperProjection : null
+              }))}
+            />
+          )}
           
           {/* Main line */}
           <Line
             type="monotone"
             dataKey="netWorth"
             name="Net Worth"
-            stroke="#4ade80"
+            stroke="#3b82f6"
             strokeWidth={2}
             dot={{ r: 4 }}
             activeDot={{ r: 8 }}
           />
 
-          {/* Lower projection line - only show for projected points */}
-          <Line
-            type="monotone"
-            dataKey="lowerProjection"
-            name="Conservative Projection"
-            stroke="#22c55e"
-            strokeWidth={1}
-            strokeDasharray="5 5"
-            dot={false}
-            connectNulls={true}
-            data={chartData.map((point, index) => ({
-              ...point,
-              lowerProjection: index >= firstProjectedIndex ? point.lowerProjection : null
-            }))}
-          />
-          
+          {/* Lower projection line - only show for projected points and when showUncertainty is true */}
+          {showUncertainty && (
+            <Line
+              type="monotone"
+              dataKey="lowerProjection"
+              name="Pessimistic Projection"
+              stroke="#ef4444"
+              strokeWidth={1}
+              strokeDasharray="5 5"
+              dot={false}
+              connectNulls={true}
+              data={chartData.map((point, index) => ({
+                ...point,
+                lowerProjection: index >= firstProjectedIndex ? point.lowerProjection : null
+              }))}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
