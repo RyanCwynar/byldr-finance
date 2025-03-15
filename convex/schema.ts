@@ -19,6 +19,7 @@ export default defineSchema({
     symbol: v.string(),
     price: v.number(),
     lastUpdated: v.number(),
+    type: v.optional(v.union(v.literal("crypto"), v.literal("stock"))), // Type of the symbol
   }).index("by_symbol", ["symbol"]),
 
   // Store individual token holdings for each wallet
@@ -31,6 +32,7 @@ export default defineSchema({
     ignore: v.optional(v.boolean()), // Whether to ignore this holding
     isDebt: v.optional(v.boolean()), // Whether this holding is a debt
     quoteSymbol: v.optional(v.string()), // The quote symbol for the holding might be different from specified symbol
+    quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock"))), // Type of the quote symbol
   })
     .index("by_wallet", ["walletId"])
     .index("by_symbol", ["symbol"])

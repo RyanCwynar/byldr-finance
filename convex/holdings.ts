@@ -200,9 +200,10 @@ export const upsertHolding = mutation({
       quantity: v.number(),
       ignore: v.optional(v.boolean()),
       quoteSymbol: v.optional(v.string()),
-      isDebt: v.optional(v.boolean())
+      isDebt: v.optional(v.boolean()),
+      quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
     },
-    handler: async (ctx, { walletId, symbol, quantity, chain, ignore, quoteSymbol, isDebt }) => {
+    handler: async (ctx, { walletId, symbol, quantity, chain, ignore, quoteSymbol, isDebt, quoteType }) => {
       // Check if wallet exists
       const wallet = await ctx.db.get(walletId);
       if (!wallet) {
@@ -225,7 +226,8 @@ export const upsertHolding = mutation({
           lastUpdated: Date.now(),
           ignore: ignore || false,
           quoteSymbol: quoteSymbol || undefined,
-          isDebt: isDebt || false
+          isDebt: isDebt || false,
+          quoteType: quoteType || undefined
         });
       } else {
         // Create new holding
@@ -237,7 +239,8 @@ export const upsertHolding = mutation({
           lastUpdated: Date.now(),
           ignore: ignore || false,
           quoteSymbol: quoteSymbol || undefined,
-          isDebt: isDebt || false
+          isDebt: isDebt || false,
+          quoteType: quoteType || undefined
         });
       }
     }

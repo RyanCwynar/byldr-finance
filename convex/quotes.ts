@@ -6,9 +6,10 @@ import { v } from "convex/values";
 export const upsertQuote = mutation({
   args: {
     symbol: v.string(),
-    price: v.number()
+    price: v.number(),
+    type: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
   },
-  handler: async (ctx, { symbol, price }) => {
+  handler: async (ctx, { symbol, price, type }) => {
     // Try to find existing quote
     const existingQuote = await ctx.db
       .query("quotes")
@@ -19,14 +20,16 @@ export const upsertQuote = mutation({
       // Update existing quote
       return await ctx.db.patch(existingQuote._id, {
         price,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
+        type: type || existingQuote.type // Keep existing type if not provided
       });
     } else {
       // Create new quote
       return await ctx.db.insert("quotes", {
         symbol,
         price,
-        lastUpdated: Date.now()
+        lastUpdated: Date.now(),
+        type
       });
     }
   }
@@ -97,67 +100,180 @@ const COINGECKO_ID_MAP: Record<string, string> = {
     'PALM': 'palm-ai',
   };
   
-  // Get prices from CoinGecko for a list of symbols
-  async function getPricesForSymbols(symbols: string[]) {
-    const ids = symbols
-      .map(s => COINGECKO_ID_MAP[s.toUpperCase()] || s.toLowerCase())
-      .filter(Boolean)
-      .join(',');
-    
-    console.log("Fetching prices for symbols:", symbols);
-    console.log("Using CoinGecko IDs:", ids);
+// Get prices from CoinGecko for a list of symbols
+async function getPricesForSymbols(symbols: string[]) {
+  const ids = symbols
+    .map(s => COINGECKO_ID_MAP[s.toUpperCase()] || s.toLowerCase())
+    .filter(Boolean)
+    .join(',');
   
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
-    );
-    const data = await response.json();
-    console.log("CoinGecko price response:", data);
-  
-    // Map CoinGecko IDs back to original symbols
-    const symbolPrices: Record<string, number> = {};
-    for (const symbol of symbols) {
-      const id = COINGECKO_ID_MAP[symbol.toUpperCase()] || symbol.toLowerCase();
-      if (data[id]) {
-        symbolPrices[symbol] = data[id].usd;
-      }
+  console.log("Fetching prices for symbols:", symbols);
+  console.log("Using CoinGecko IDs:", ids);
+
+  const response = await fetch(
+    `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
+  );
+  const data = await response.json();
+  console.log("CoinGecko price response:", data);
+
+  // Map CoinGecko IDs back to original symbols
+  const symbolPrices: Record<string, number> = {};
+  for (const symbol of symbols) {
+    const id = COINGECKO_ID_MAP[symbol.toUpperCase()] || symbol.toLowerCase();
+    if (data[id]) {
+      symbolPrices[symbol] = data[id].usd;
     }
-    console.log("Symbol prices:", symbolPrices);
-  
-    return symbolPrices;
   }
+  console.log("Symbol prices:", symbolPrices);
+
+  return symbolPrices;
+}
+
+// Get stock prices from Alpha Vantage API
+async function getStockPrices(symbols: string[]) {
+  // Replace with your Alpha Vantage API key
+  const API_KEY = "GGYT0O0DY3ZPHPOW";
+  
+  console.log("Fetching stock prices for symbols:", symbols);
+  
+  const symbolPrices: Record<string, number> = {};
+  
+  // Alpha Vantage free tier has rate limits, so we need to fetch one at a time
+  for (const symbol of symbols) {
+    try {
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      console.log(`Alpha Vantage response for ${symbol}:`, data);
+      
+      // Extract the price from the response
+      if (data["Global Quote"] && data["Global Quote"]["05. price"]) {
+        const price = parseFloat(data["Global Quote"]["05. price"]);
+        symbolPrices[symbol] = price;
+      }
+      
+      // Alpha Vantage free tier has a limit of 5 requests per minute
+      // Add a small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 12000));
+    } catch (error) {
+      console.error(`Error fetching stock price for ${symbol}:`, error);
+    }
+  }
+  
+  console.log("Stock prices:", symbolPrices);
+  return symbolPrices;
+}
 
 // Update quotes for all symbols we care about
 export const updateQuotes = action({
   handler: async (ctx) => {
     // Get all symbols from holdings
     const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
-    const holdingsSymbols = new Set<string>();
+    const holdingSymbols = new Map<string, { symbol: string, type?: string }>();
+    
     holdings.forEach((holding) => {
       const symbol = holding.quoteSymbol || holding.symbol;
-      holdingsSymbols.add(symbol);
+      const type = holding.quoteType || (COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock");
+      holdingSymbols.set(symbol, { symbol, type });
     });
 
     // Get existing symbols from quotes table
     const existingQuotes = await ctx.runQuery(api.quotes.listQuotes, {});
     existingQuotes.forEach((quote) => {
-      holdingsSymbols.add(quote.symbol);
+      if (!holdingSymbols.has(quote.symbol)) {
+        holdingSymbols.set(quote.symbol, { 
+          symbol: quote.symbol, 
+          type: quote.type || (COINGECKO_ID_MAP[quote.symbol.toUpperCase()] ? "crypto" : "stock") 
+        });
+      }
     });
 
-    // Get current prices for all symbols
-    const symbols = Array.from(holdingsSymbols);
-    const prices = await getPricesForSymbols(symbols);
+    // Separate symbols into crypto and stock symbols based on their type
+    const symbolsArray = Array.from(holdingSymbols.values());
+    const cryptoSymbols = symbolsArray
+      .filter(item => item.type === "crypto")
+      .map(item => item.symbol);
+    
+    const stockSymbols = symbolsArray
+      .filter(item => item.type === "stock")
+      .map(item => item.symbol);
+    
+    console.log("Crypto symbols:", cryptoSymbols);
+    console.log("Stock symbols:", stockSymbols);
 
+    // Get current prices for crypto symbols
+    const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
+    
+    // Get current prices for stock symbols
+    const stockPrices = await getStockPrices(stockSymbols);
+    
     // Update quotes table with new prices
-    for (const [symbol, price] of Object.entries(prices)) {
-      await ctx.runMutation(api.quotes.upsertQuote, {
-        symbol,
-        price,
-      });
+    for (const symbol of cryptoSymbols) {
+      if (cryptoPrices[symbol]) {
+        await ctx.runMutation(api.quotes.upsertQuote, {
+          symbol,
+          price: cryptoPrices[symbol],
+          type: "crypto"
+        });
+      }
+    }
+    
+    for (const symbol of stockSymbols) {
+      if (stockPrices[symbol]) {
+        await ctx.runMutation(api.quotes.upsertQuote, {
+          symbol,
+          price: stockPrices[symbol],
+          type: "stock"
+        });
+      }
     }
 
+    // Combine all prices for the return value
+    const prices = { ...cryptoPrices, ...stockPrices };
+    
     return {
-      updatedSymbols: symbols,
+      updatedCryptoSymbols: cryptoSymbols,
+      updatedStockSymbols: stockSymbols,
       prices
     };
+  }
+});
+
+// Get a stock quote directly from Alpha Vantage (for testing)
+export const getStockQuote = action({
+  args: {
+    symbol: v.string()
+  },
+  handler: async (ctx, { symbol }) => {
+    const prices = await getStockPrices([symbol]);
+    if (prices[symbol]) {
+      // Store the quote in the database
+      await ctx.runMutation(api.quotes.upsertQuote, {
+        symbol,
+        price: prices[symbol],
+        type: "stock"
+      });
+    }
+    return prices[symbol] || null;
+  }
+});
+
+// Get a crypto quote directly from CoinGecko (for testing)
+export const getCryptoQuote = action({
+  args: {
+    symbol: v.string()
+  },
+  handler: async (ctx, { symbol }) => {
+    const prices = await getPricesForSymbols([symbol]);
+    if (prices[symbol]) {
+      // Store the quote in the database
+      await ctx.runMutation(api.quotes.upsertQuote, {
+        symbol,
+        price: prices[symbol],
+        type: "crypto"
+      });
+    }
+    return prices[symbol] || null;
   }
 });

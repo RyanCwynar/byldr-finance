@@ -15,6 +15,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
   const [chain, setChain] = useState("ethereum");
   const [isDebt, setIsDebt] = useState(false);
   const [quoteSymbol, setQuoteSymbol] = useState("");
+  const [quoteType, setQuoteType] = useState<"crypto" | "stock">("crypto");
   const [ignore, setIgnore] = useState(false);
   
   // Initialize form with holding data if editing
@@ -25,6 +26,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
       setChain(holding.chain);
       setIsDebt(holding.isDebt || false);
       setQuoteSymbol(holding.quoteSymbol || "");
+      setQuoteType(holding.quoteType || "crypto");
       setIgnore(holding.ignore || false);
     }
   }, [holding]);
@@ -41,7 +43,8 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
       chain,
       isDebt,
       ignore,
-      quoteSymbol: quoteSymbol ? quoteSymbol.toUpperCase() : undefined
+      quoteSymbol: quoteSymbol ? quoteSymbol.toUpperCase() : undefined,
+      quoteType
     });
     
     onClose();
@@ -148,6 +151,24 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
           />
           <p className="mt-1 text-xs text-gray-400">
             If the token has a different symbol for price lookup, enter it here.
+          </p>
+        </div>
+        
+        <div>
+          <label htmlFor="quoteType" className="block text-sm font-medium text-gray-300">
+            Quote Type
+          </label>
+          <select
+            id="quoteType"
+            value={quoteType}
+            onChange={(e) => setQuoteType(e.target.value as "crypto" | "stock")}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="crypto">Cryptocurrency</option>
+            <option value="stock">Stock</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            Select whether this is a cryptocurrency or stock market symbol.
           </p>
         </div>
         
