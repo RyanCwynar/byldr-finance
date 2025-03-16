@@ -2,6 +2,17 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Store user information
+  users: defineTable({
+    externalId: v.string(), // Clerk user ID (subject from JWT)
+    createdAt: v.number(), // When the user was first seen
+    lastSeen: v.number(), // When the user was last active
+    metadata: v.optional(v.object({
+      email: v.optional(v.string()),
+      name: v.optional(v.string()),
+    })),
+  }).index("by_external_id", ["externalId"]),
+
   // Store wallet addresses across different chains
   wallets: defineTable({
     name: v.string(),
@@ -22,7 +33,7 @@ export default defineSchema({
     symbol: v.string(),
     price: v.number(),
     lastUpdated: v.number(),
-    type: v.optional(v.union(v.literal("crypto"), v.literal("stock"))), // Type of the symbol
+    type: v.union(v.literal("crypto"), v.literal("stock")), // Type of the symbol (required)
   }).index("by_symbol", ["symbol"]),
 
   // Store individual token holdings for each wallet
@@ -36,7 +47,7 @@ export default defineSchema({
     ignore: v.optional(v.boolean()), // Whether to ignore this holding
     isDebt: v.optional(v.boolean()), // Whether this holding is a debt
     quoteSymbol: v.optional(v.string()), // The quote symbol for the holding might be different from specified symbol
-    quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock"))), // Type of the quote symbol
+    quoteType: v.union(v.literal("crypto"), v.literal("stock")), // Type of the quote symbol
   })
     .index("by_wallet", ["walletId"])
     .index("by_symbol", ["symbol"])

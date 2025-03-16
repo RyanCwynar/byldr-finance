@@ -8,48 +8,42 @@ type Wallet = Doc<"wallets">;
 type Holding = Doc<"holdings">;
 // Helper function to list holdings
 export async function listHoldingsHelper(ctx: QueryCtx, filter?: {
-  walletIds?: Id<"wallets">[],
+  walletId?: Id<"wallets">,
   includeDebts?: boolean,
   debtsOnly?: boolean
 }) {
-  // Get the user ID from authentication if available
-  const identity = ctx.auth ? await ctx.auth.getUserIdentity() : null;
-  const userId = identity?.subject;
+  console.log("listHoldingsHelper called with filter:", filter);
   
   let q = ctx.db.query("holdings").filter(q => q.eq(q.field("ignore"), false));
-  
-  // Filter by userId if authenticated
-  if (userId) {
-    q = q.filter(q => q.eq(q.field("userId"), userId));
-  } else {
-    // For backward compatibility, only show holdings without userId
-    q = q.filter(q => q.eq(q.field("userId"), undefined));
+  // Filter by wallet ID if provided
+  if (filter?.walletId) {
+    console.log("Filtering by walletId:", filter.walletId);
+    // Use filter instead of withIndex to avoid type issues
+    q = q.filter(q => q.eq(q.field("walletId"), filter.walletId));
   }
-  
   // Handle debt filtering
   if (filter?.debtsOnly) {
+    console.log("Filtering for debts only");
     // Only show debts
     q = q.filter(q => q.eq(q.field("isDebt"), true));
   } else if (!filter?.includeDebts) {
+    console.log("Filtering out debts");
     // Default: only show assets (not debts)
     q = q.filter(q => q.eq(q.field("isDebt"), false));
-  }
-  
-  if (filter?.walletIds && filter.walletIds.length > 0) {
-    const walletIds = filter.walletIds;
-    q = q.filter(q => 
-      q.or(...walletIds.map(id => q.eq("walletId", id as any)))
-    );
+  } else {
+    console.log("Including both assets and debts");
   }
 
-  return await q.collect();
+  const holdings = await q.collect();
+  console.log("Found holdings:", holdings.length);
+  return holdings;
 }
 
 // Query endpoint to list holdings
 export const listHoldings = query({
   args: {
     filter: v.optional(v.object({
-      walletIds: v.optional(v.array(v.id("wallets"))),
+      walletId: v.optional(v.id("wallets")),
       includeDebts: v.optional(v.boolean()),
       debtsOnly: v.optional(v.boolean())
     }))
@@ -61,37 +55,78 @@ export const listHoldings = query({
 
 // Helper function to get holdings value
 export async function getHoldingsValueHelper(ctx: QueryCtx, walletIds?: Id<"wallets">[]) {
-  const holdings = await listHoldingsHelper(ctx, {
-    walletIds,
-    includeDebts: true // Include both assets and debts
-  });
+  console.log("getHoldingsValueHelper called with walletIds:", walletIds);
+  
+  // If no wallet IDs are provided, return empty results
+  if (!walletIds || walletIds.length === 0) {
+    console.log("No wallet IDs provided, returning empty results");
+    return {
+      total: {
+        assets: 0,
+        debts: 0,
+        value: 0
+      },
+      walletValues: {},
+      prices: {}
+    };
+  }
+  
+  // Process one wallet at a time
+  const allHoldings = [];
+  for (const walletId of walletIds) {
+    const holdings = await listHoldingsHelper(ctx, {
+      walletId,
+      includeDebts: true // Include both assets and debts
+    });
+    allHoldings.push(...holdings);
+  }
+  
+  console.log("Holdings found:", allHoldings.length);
   
   // Get unique symbols
   const symbols = new Set<string>();
-  holdings.forEach((holding: Holding) => {
+  allHoldings.forEach((holding: Holding) => {
     symbols.add(holding.quoteSymbol || holding.symbol);
   });
+  
+  console.log("Unique symbols:", Array.from(symbols));
 
   // Get prices
   const prices: { [symbol: string]: number } = await getQuotesHelper(ctx);
-
-  // Track assets and debts by wallet
-  const walletAssets = new Map<Id<"wallets">, number>();
-  const walletDebts = new Map<Id<"wallets">, number>();
+  console.log("Prices retrieved:", Object.keys(prices).length);
   
-  holdings.forEach((holding: Holding) => {
+  // Track assets and debts by wallet
+  const walletAssets = new Map<string, number>();
+  const walletDebts = new Map<string, number>();
+  
+  allHoldings.forEach((holding: Holding) => {
     const symbol = holding.quoteSymbol || holding.symbol;
     const price = prices[symbol] || 0;
     const value = holding.quantity * price;
+    
+    console.log("Processing holding:", {
+      symbol,
+      quantity: holding.quantity,
+      price,
+      value,
+      isDebt: holding.isDebt,
+      walletId: holding.walletId
+    });
+
+    // Convert wallet ID to string for consistent key usage
+    const walletIdStr = holding.walletId.toString();
 
     if (holding.isDebt) {
-      const currentDebt = walletDebts.get(holding.walletId) || 0;
-      walletDebts.set(holding.walletId, currentDebt + value);
+      const currentDebt = walletDebts.get(walletIdStr) || 0;
+      walletDebts.set(walletIdStr, currentDebt + value);
     } else {
-      const currentAsset = walletAssets.get(holding.walletId) || 0;
-      walletAssets.set(holding.walletId, currentAsset + value);
+      const currentAsset = walletAssets.get(walletIdStr) || 0;
+      walletAssets.set(walletIdStr, currentAsset + value);
     }
   });
+  
+  console.log("Wallet assets:", Array.from(walletAssets.entries()));
+  console.log("Wallet debts:", Array.from(walletDebts.entries()));
 
   // Calculate totals
   let totalAssets = 0;
@@ -99,9 +134,9 @@ export async function getHoldingsValueHelper(ctx: QueryCtx, walletIds?: Id<"wall
   const walletValues: {[key: string]: {assets: number, debts: number, value: number}} = {};
 
   // Convert maps to return object and calculate totals
-  walletAssets.forEach((assetValue, walletId) => {
-    const debtValue = walletDebts.get(walletId) || 0;
-    walletValues[walletId] = {
+  walletAssets.forEach((assetValue, walletIdStr) => {
+    const debtValue = walletDebts.get(walletIdStr) || 0;
+    walletValues[walletIdStr] = {
       assets: assetValue,
       debts: debtValue,
       value: assetValue - debtValue
@@ -111,15 +146,30 @@ export async function getHoldingsValueHelper(ctx: QueryCtx, walletIds?: Id<"wall
   });
 
   // Handle wallets that only have debts
-  walletDebts.forEach((debtValue, walletId) => {
-    if (!walletAssets.has(walletId)) {
-      walletValues[walletId] = {
+  walletDebts.forEach((debtValue, walletIdStr) => {
+    if (!walletAssets.has(walletIdStr)) {
+      walletValues[walletIdStr] = {
         assets: 0,
         debts: debtValue,
         value: -debtValue
       };
     }
   });
+  
+  // Ensure all requested wallet IDs have entries in the result
+  walletIds.forEach(walletId => {
+    const walletIdStr = walletId.toString();
+    if (!walletValues[walletIdStr]) {
+      console.log("Adding empty entry for wallet:", walletIdStr);
+      walletValues[walletIdStr] = {
+        assets: 0,
+        debts: 0,
+        value: 0
+      };
+    }
+  });
+  
+  console.log("Final wallet values:", walletValues);
 
   return {
     total: {
@@ -216,10 +266,35 @@ export const upsertHolding = mutation({
       quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
     },
     handler: async (ctx, { walletId, symbol, quantity, chain, ignore, quoteSymbol, isDebt, quoteType }) => {
+      // Get the user ID from authentication
+      const identity = await ctx.auth.getUserIdentity();
+      const authUserId = identity?.subject;
+      
       // Check if wallet exists
       const wallet = await ctx.db.get(walletId);
       if (!wallet) {
         throw new Error("Wallet not found");
+      }
+      
+      // Determine the userId to use:
+      // 1. If authenticated, use the authenticated user's ID
+      // 2. If not authenticated but wallet has a userId, use the wallet's userId (for actions)
+      // 3. If neither, throw an error
+      let userId = authUserId;
+      
+      if (!userId) {
+        // If no authenticated user, check if wallet has a userId
+        if (wallet.userId) {
+          userId = wallet.userId;
+          console.log("Using wallet's userId for upsertHolding:", userId);
+        } else {
+          throw new Error("Authentication required to upsert holdings and wallet has no userId");
+        }
+      } else {
+        // If authenticated, check if user has access to this wallet
+        if (wallet.userId && wallet.userId !== userId) {
+          throw new Error("Not authorized to modify holdings for this wallet");
+        }
       }
   
       // Try to find existing holding
@@ -236,10 +311,12 @@ export const upsertHolding = mutation({
           quantity,
           chain: chain || "ethereum",
           lastUpdated: Date.now(),
-          ignore: ignore || false,
+          ignore: ignore !== undefined ? ignore : existingHolding.ignore,
           quoteSymbol: quoteSymbol || undefined,
           isDebt: isDebt || false,
-          quoteType: quoteType || undefined
+          quoteType: quoteType !== undefined ? quoteType : existingHolding.quoteType,
+          // Update userId if it's missing on the existing holding
+          userId: existingHolding.userId || userId
         });
       } else {
         // Create new holding
@@ -252,7 +329,8 @@ export const upsertHolding = mutation({
           ignore: ignore || false,
           quoteSymbol: quoteSymbol || undefined,
           isDebt: isDebt || false,
-          quoteType: quoteType || undefined
+          quoteType: quoteType || "crypto",
+          userId // Always include userId for new holdings
         });
       }
     }
@@ -371,7 +449,8 @@ export const addHolding = mutation({
       ...args,
       userId,
       lastUpdated: Date.now(),
-      ignore: false
+      ignore: false,
+      quoteType: args.quoteType || "crypto"
     });
   }
 });
@@ -400,6 +479,11 @@ export const updateHolding = mutation({
     // Check if the user has access to this holding
     if (holding.userId && holding.userId !== userId) {
       throw new Error("Not authorized to update this holding");
+    }
+    
+    // If quoteType is not explicitly provided, remove it from updates to preserve existing value
+    if (updates.quoteType === undefined) {
+      delete updates.quoteType;
     }
     
     // Update the holding
@@ -434,5 +518,43 @@ export const deleteHolding = mutation({
     // Delete the holding
     await ctx.db.delete(id);
     return { success: true };
+  }
+});
+
+// Add a new mutation to toggle the ignore status of a holding
+export const toggleHoldingIgnore = mutation({
+  args: {
+    id: v.id("holdings")
+  },
+  handler: async (ctx, { id }) => {
+    // Get the holding
+    const holding = await ctx.db.get(id);
+    if (!holding) {
+      throw new Error("Holding not found");
+    }
+    
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the wallet to check ownership
+    const wallet = await ctx.db.get(holding.walletId);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+    
+    // Check if the user has access to this wallet
+    if (wallet.userId && wallet.userId !== userId) {
+      throw new Error("Not authorized to update this holding");
+    }
+    
+    // Toggle the ignore status
+    const newIgnoreStatus = !holding.ignore;
+    
+    // Update the holding
+    return await ctx.db.patch(id, {
+      ignore: newIgnoreStatus,
+      lastUpdated: Date.now()
+    });
   }
 });

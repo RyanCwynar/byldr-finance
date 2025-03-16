@@ -1,6 +1,103 @@
 import { v } from "convex/values";
 import { DatabaseReader, mutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { getHoldingsValueHelper } from "./holdings";
+
+// Get a wallet by address
+export const getWalletByAddress = query({
+    args: {
+        address: v.string()
+    },
+    handler: async (ctx, { address }) => {
+        // Get the user ID from authentication
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
+        
+        // Find the wallet by address
+        const wallet = await ctx.db
+            .query("wallets")
+            .withIndex("by_address", q => q.eq("address", address))
+            .filter(q => 
+                userId ? q.eq(q.field("userId"), userId) : q.eq(q.field("userId"), undefined)
+            )
+            .first();
+            
+        return wallet;
+    }
+});
+
+// Update a wallet's value based on its holdings
+export const updateWalletValue = mutation({
+    args: {
+        id: v.id("wallets")
+    },
+    handler: async (ctx, { id }) => {
+        console.log("Starting updateWalletValue for wallet:", id);
+        
+        // Get the wallet
+        const wallet = await ctx.db.get(id);
+        if (!wallet) {
+            console.error("Wallet not found:", id);
+            throw new Error("Wallet not found");
+        }
+        
+        console.log("Found wallet:", wallet);
+        
+        // Get the user ID from authentication
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
+        
+        console.log("User ID from auth:", userId);
+        console.log("Wallet user ID:", wallet.userId);
+        
+        // Check if the user has access to this wallet
+        if (wallet.userId && wallet.userId !== userId) {
+            console.error("Not authorized to update this wallet. User:", userId, "Wallet owner:", wallet.userId);
+            throw new Error("Not authorized to update this wallet");
+        }
+        
+        // Get the wallet's holdings value using the helper function
+        console.log("Getting holdings value for wallet:", id);
+        const holdingsValue = await getHoldingsValueHelper(ctx, [id]);
+        console.log("Holdings value result:", holdingsValue);
+        
+        // Get the wallet's value from the holdings
+        // Convert the ID to a string to use as a key in the walletValues object
+        const walletIdStr = id.toString();
+        console.log("Wallet ID as string:", walletIdStr);
+        const walletValue = holdingsValue.walletValues[walletIdStr];
+        console.log("Wallet value from holdings:", walletValue);
+        
+        if (!walletValue) {
+            console.log("No holdings or all holdings are ignored, setting values to 0");
+            // No holdings or all holdings are ignored
+            return await ctx.db.patch(id, {
+                value: 0,
+                assets: 0,
+                debts: 0,
+                metadata: {
+                    lastUpdated: Date.now()
+                }
+            });
+        }
+        
+        console.log("Updating wallet with new values:", {
+            value: walletValue.value,
+            assets: walletValue.assets,
+            debts: walletValue.debts
+        });
+        
+        // Update the wallet with the new values
+        return await ctx.db.patch(id, {
+            value: walletValue.value,
+            assets: walletValue.assets,
+            debts: walletValue.debts,
+            metadata: {
+                lastUpdated: Date.now()
+            }
+        });
+    }
+});
 
 // Add a new wallet
 export const addWallet = mutation({

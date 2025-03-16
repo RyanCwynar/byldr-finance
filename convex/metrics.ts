@@ -95,90 +95,126 @@ export const getDebtsTotal = query({
 // Mutation to take a snapshot of net worth with additional metrics
 export const snapshotDailyMetrics = mutation({
   handler: async (ctx): Promise<{
-    netWorth: number,
-    assets: number,
-    debts: number
+    userCount: number,
+    snapshots: {
+      userId: string | undefined,
+      netWorth: number,
+      assets: number,
+      debts: number
+    }[]
   }> => {
-    // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
+    // Get all users from the users table
+    const users = await ctx.db.query("users").collect();
+    const snapshots = [];
     
-    // Get holdings value using helper
-    const holdings = await listHoldingsHelper(ctx, { includeDebts: true });
-    const quotes = await getQuotesHelper(ctx);
-
-    // Calculate holdings totals
-    let holdingsAssets = 0;
-    let holdingsDebts = 0;
-    
-    holdings.forEach(holding => {
-      const symbol = holding.quoteSymbol || holding.symbol;
-      const price = quotes[symbol] || 0;
-      const value = holding.quantity * price;
-      
-      if (holding.isDebt) {
-        holdingsDebts += value;
-      } else {
-        holdingsAssets += value;
-      }
-    });
-
-    // Get assets and debts from tables
-    let assets, debts;
-    
-    if (userId) {
-      // If authenticated, get user's assets and debts
-      assets = await ctx.db
-        .query("assets")
-        .withIndex("by_user", q => q.eq("userId", userId))
-        .collect();
-        
-      debts = await ctx.db
-        .query("debts")
-        .withIndex("by_user", q => q.eq("userId", userId))
-        .collect();
-    } else {
-      // For backward compatibility, get assets and debts without userId
-      assets = await ctx.db
-        .query("assets")
-        .filter(q => q.eq(q.field("userId"), undefined))
-        .collect();
-        
-      debts = await ctx.db
-        .query("debts")
-        .filter(q => q.eq(q.field("userId"), undefined))
-        .collect();
+    // Create a snapshot for each user
+    for (const user of users) {
+      const userId = user.externalId;
+      const snapshot = await createSnapshotForUser(ctx, userId);
+      snapshots.push({
+        userId,
+        ...snapshot
+      });
     }
     
-    const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
-    const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
-
-    // Calculate final totals
-    const totalAssets = holdingsAssets + assetsTotal;
-    const totalDebts = holdingsDebts + debtsTotal;
-    const netWorth = totalAssets - totalDebts;
-
-    // Store the daily metrics
-    await ctx.db.insert("dailyMetrics", {
-      date: Date.now(),
-      netWorth,
-      assets: totalAssets,
-      debts: totalDebts,
-      userId,
-      prices: quotes,
-      metadata: {
-        dataSource: "CoinGecko",
-        lastUpdated: Date.now(),
-      }
+    // Also create a snapshot for legacy data (no userId)
+    const legacySnapshot = await createSnapshotForUser(ctx, undefined);
+    snapshots.push({
+      userId: undefined,
+      ...legacySnapshot
     });
-
+    
     return {
-      netWorth,
-      assets: totalAssets,
-      debts: totalDebts
+      userCount: users.length,
+      snapshots
     };
   }
 });
+
+// Helper function to create a snapshot for a specific user
+async function createSnapshotForUser(ctx: any, userId: string | undefined): Promise<{
+  netWorth: number,
+  assets: number,
+  debts: number
+}> {
+  // Get holdings value for this user
+  const holdings = await listHoldingsHelper(ctx, { 
+    includeDebts: true,
+    userId // Pass the userId to override auth
+  });
+  const quotes = await getQuotesHelper(ctx);
+
+  // Calculate holdings totals
+  let holdingsAssets = 0;
+  let holdingsDebts = 0;
+  
+  holdings.forEach(holding => {
+    const symbol = holding.quoteSymbol || holding.symbol;
+    const price = quotes[symbol] || 0;
+    const value = holding.quantity * price;
+    
+    if (holding.isDebt) {
+      holdingsDebts += value;
+    } else {
+      holdingsAssets += value;
+    }
+  });
+
+  // Get assets and debts from tables for this user
+  let assets, debts;
+  
+  if (userId) {
+    // Get user's assets and debts
+    assets = await ctx.db
+      .query("assets")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .collect();
+      
+    debts = await ctx.db
+      .query("debts")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .collect();
+  } else {
+    // Get assets and debts without userId (legacy data)
+    assets = await ctx.db
+      .query("assets")
+      .filter((q: any) => q.eq(q.field("userId"), undefined))
+      .collect();
+      
+    debts = await ctx.db
+      .query("debts")
+      .filter((q: any) => q.eq(q.field("userId"), undefined))
+      .collect();
+  }
+  
+  const assetsTotal = assets.reduce((sum: number, asset: any) => sum + asset.value, 0);
+  const debtsTotal = debts.reduce((sum: number, debt: any) => sum + debt.value, 0);
+
+  // Calculate final totals
+  const totalAssets = holdingsAssets + assetsTotal;
+  const totalDebts = holdingsDebts + debtsTotal;
+  const netWorth = totalAssets - totalDebts;
+
+  // Store the daily metrics
+  await ctx.db.insert("dailyMetrics", {
+    date: Date.now(),
+    netWorth,
+    assets: totalAssets,
+    debts: totalDebts,
+    userId,
+    prices: quotes,
+    metadata: {
+      dataSource: "CoinGecko",
+      lastUpdated: Date.now(),
+    }
+  });
+
+  return {
+    netWorth,
+    assets: totalAssets,
+    debts: totalDebts
+  };
+}
 
 // Add a query for cached net worth
 export const getCachedNetWorth = query({

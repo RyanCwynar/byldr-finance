@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/header";
+import UserTracker from "@/components/user-tracker";
 
 import type { Metadata } from "next";
 
@@ -21,6 +22,7 @@ export default function RootLayout({
       <html lang="en">
         <body className="min-h-screen antialiased bg-black text-white">
           <ConvexClientProvider>
+            <UserTracker />
             <Header />
             <main className="flex-1">
               {children}

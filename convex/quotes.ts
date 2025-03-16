@@ -21,7 +21,7 @@ export const upsertQuote = mutation({
       return await ctx.db.patch(existingQuote._id, {
         price,
         lastUpdated: Date.now(),
-        type: type || existingQuote.type // Keep existing type if not provided
+        type: type || existingQuote.type || "crypto" // Keep existing type if not provided, default to crypto
       });
     } else {
       // Create new quote
@@ -29,7 +29,7 @@ export const upsertQuote = mutation({
         symbol,
         price,
         lastUpdated: Date.now(),
-        type
+        type: type || "crypto" // Default to crypto if not provided
       });
     }
   }
@@ -174,7 +174,8 @@ export const updateQuotes = action({
     
     holdings.forEach((holding) => {
       const symbol = holding.quoteSymbol || holding.symbol;
-      const type = holding.quoteType || (COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock");
+      // Only set type if it's explicitly defined on the holding
+      const type = holding.quoteType;
       holdingSymbols.set(symbol, { symbol, type });
     });
 
@@ -184,7 +185,13 @@ export const updateQuotes = action({
       if (!holdingSymbols.has(quote.symbol)) {
         holdingSymbols.set(quote.symbol, { 
           symbol: quote.symbol, 
-          type: quote.type || (COINGECKO_ID_MAP[quote.symbol.toUpperCase()] ? "crypto" : "stock") 
+          type: quote.type // Only use the type if it's explicitly set in the quote
+        });
+      } else if (!holdingSymbols.get(quote.symbol)?.type && quote.type) {
+        // If we have a symbol from holdings without a type, but the quote has a type, use that
+        holdingSymbols.set(quote.symbol, { 
+          symbol: quote.symbol, 
+          type: quote.type 
         });
       }
     });
@@ -201,6 +208,8 @@ export const updateQuotes = action({
     
     console.log("Crypto symbols:", cryptoSymbols);
     console.log("Stock symbols:", stockSymbols);
+    console.log("Symbols without clear type (skipping):", 
+      symbolsArray.filter(item => !item.type).map(item => item.symbol));
 
     // Get current prices for crypto symbols
     const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
@@ -252,7 +261,7 @@ export const getStockQuote = action({
       await ctx.runMutation(api.quotes.upsertQuote, {
         symbol,
         price: prices[symbol],
-        type: "stock"
+        type: "stock" // Explicitly set type to stock
       });
     }
     return prices[symbol] || null;
@@ -271,7 +280,7 @@ export const getCryptoQuote = action({
       await ctx.runMutation(api.quotes.upsertQuote, {
         symbol,
         price: prices[symbol],
-        type: "crypto"
+        type: "crypto" // Explicitly set type to crypto
       });
     }
     return prices[symbol] || null;

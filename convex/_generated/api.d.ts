@@ -20,6 +20,7 @@ import type * as holdings from "../holdings.js";
 import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
 import type * as quotes from "../quotes.js";
+import type * as users from "../users.js";
 import type * as wallets from "../wallets.js";
 
 /**
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   holdingsNode: typeof holdingsNode;
   metrics: typeof metrics;
   quotes: typeof quotes;
+  users: typeof users;
   wallets: typeof wallets;
 }>;
 export declare const api: FilterApi<
