@@ -1,8 +1,6 @@
 import { v } from "convex/values";
 import { DatabaseReader, mutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { listHoldingsHelper } from "./holdings";
-import { getQuotesHelper } from "./quotes";
 
 // Add a new wallet
 export const addWallet = mutation({
@@ -12,16 +10,23 @@ export const addWallet = mutation({
         chainType: v.string(),
     },
     handler: async (ctx, { name, address, chainType }) => {
+        // Get the user ID from authentication
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
+        
         // Validate address format based on chain type
         if (chainType === "ethereum" && !/^0x[a-fA-F0-9]{40}$/.test(address)) {
             throw new Error("Invalid EVM address format");
         }
         // Add more chain-specific validation as needed
 
-        // Check if wallet already exists
+        // Check if wallet already exists for this user
         const existing = await ctx.db
             .query("wallets")
             .withIndex("by_address", q => q.eq("address", address))
+            .filter(q => 
+                userId ? q.eq(q.field("userId"), userId) : q.eq(q.field("userId"), undefined)
+            )
             .first();
 
         if (existing) {
@@ -34,6 +39,7 @@ export const addWallet = mutation({
             address,
             chainType,
             value: 0,
+            userId,
             metadata: {
                 lastUpdated: Date.now()
             }
@@ -52,22 +58,28 @@ export async function updateWalletHelper(ctx: MutationCtx, args: {
         lastUpdated: number
     }
 }) {
-    const wallet = await ctx.db.get(args.id);
+    const { id, ...updates } = args;
+    
+    // Get the wallet
+    const wallet = await ctx.db.get(id);
     if (!wallet) {
         throw new Error("Wallet not found");
     }
-
-    const updates: any = {};
-    if (args.name !== undefined) updates.name = args.name;
-    if (args.value !== undefined) updates.value = args.value;
-    if (args.assets !== undefined) updates.assets = args.assets;
-    if (args.debts !== undefined) updates.debts = args.debts;
-    if (args.metadata !== undefined) updates.metadata = args.metadata;
-
-    return await ctx.db.patch(args.id, updates);
+    
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Check if the user has access to this wallet
+    if (wallet.userId && wallet.userId !== userId) {
+        throw new Error("Not authorized to update this wallet");
+    }
+    
+    // Update the wallet
+    return await ctx.db.patch(id, updates);
 }
 
-// Update an existing wallet
+// Update a wallet
 export const updateWallet = mutation({
     args: {
         id: v.id("wallets"),
@@ -79,9 +91,7 @@ export const updateWallet = mutation({
             lastUpdated: v.number()
         }))
     },
-    handler: async (ctx, args) => {
-        return await updateWalletHelper(ctx, args);
-    }
+    handler: updateWalletHelper
 });
 
 // Delete a wallet
@@ -90,122 +100,88 @@ export const deleteWallet = mutation({
         id: v.id("wallets")
     },
     handler: async (ctx, { id }) => {
+        // Get the user ID from authentication
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
+        
+        // Get the wallet
         const wallet = await ctx.db.get(id);
         if (!wallet) {
             throw new Error("Wallet not found");
         }
-
+        
+        // Check if the user has access to this wallet
+        if (wallet.userId && wallet.userId !== userId) {
+            throw new Error("Not authorized to delete this wallet");
+        }
+        
+        // Delete the wallet
         await ctx.db.delete(id);
-        return true;
+        
+        // Delete all holdings for this wallet
+        const holdings = await ctx.db
+            .query("holdings")
+            .withIndex("by_wallet", q => q.eq("walletId", id))
+            .collect();
+            
+        for (const holding of holdings) {
+            await ctx.db.delete(holding._id);
+        }
+        
+        return { success: true };
     }
 });
 
-// Get all wallets
-export const getAllWallets = query({
-    handler: async (ctx) => {
-        return await ctx.db.query("wallets").collect();
-    }
-});
-
-// Get wallet by address
-export const getWalletByAddress = query({
-    args: { address: v.string() },
-    handler: async (ctx, { address }) => {
+// Helper function to list wallets
+export async function listWalletsHelper(ctx: { db: DatabaseReader, auth?: { getUserIdentity: () => Promise<any> } }) {
+    // Get the user ID from authentication if available
+    const identity = ctx.auth ? await ctx.auth.getUserIdentity() : null;
+    const userId = identity?.subject;
+    
+    if (userId) {
+        // If authenticated, return only user's wallets
         return await ctx.db
             .query("wallets")
-            .withIndex("by_address", q => q.eq("address", address))
-            .first();
+            .withIndex("by_user", q => q.eq("userId", userId))
+            .collect();
+    } else {
+        // For backward compatibility, return wallets without userId
+        return await ctx.db
+            .query("wallets")
+            .filter(q => q.eq(q.field("userId"), undefined))
+            .collect();
     }
-});
-
-// Helper function to list wallets that can be used by other queries
-export async function listWalletsHelper(ctx: { db: DatabaseReader }) {
-    const query = ctx.db.query("wallets");
-    const wallets = await query.collect();
-
-    // Sort wallets by value, handling undefined values
-    const sortedWallets = wallets.sort((a, b) => {
-        const valueA = a.value ?? 0;
-        const valueB = b.value ?? 0;
-        return valueB - valueA; // Sort in descending order
-    });
-
-    return sortedWallets;
 }
 
-// Mutation to update wallet values
-export const updateWalletValues = mutation({
-    handler: async (ctx) => {
-
-
-        // Get all holdings and quotes using helpers
-        const holdings = await listHoldingsHelper(ctx, { includeDebts: true });
-        const quotes = await getQuotesHelper(ctx);
-
-        // Group holdings by wallet
-        const walletTotals: Record<string, { assets: number; debts: number; value: number }> = {};
-
-        holdings.forEach((holding: any) => {
-            if (!holding.ignore) {
-                const symbol = holding.quoteSymbol || holding.symbol;
-                const price = quotes[symbol] || 0;
-                const value = holding.quantity * price;
-
-                // Initialize wallet totals if not exists
-                if (!walletTotals[holding.walletId.toString()]) {
-                    walletTotals[holding.walletId.toString()] = {
-                        assets: 0,
-                        debts: 0,
-                        value: 0
-                    };
-                }
-
-                if (holding.isDebt) {
-                    walletTotals[holding.walletId.toString()].debts += value;
-                    walletTotals[holding.walletId.toString()].value -= value;
-                } else {
-                    walletTotals[holding.walletId.toString()].assets += value;
-                    walletTotals[holding.walletId.toString()].value += value;
-                }
-            }
-        });
-
-        // Get all wallets
-        const allWallets = await ctx.db.query("wallets").collect();
-
-        // Update each wallet's values
-        for (const wallet of allWallets) {
-            const totals = walletTotals[wallet._id.toString()] || { assets: 0, debts: 0, value: 0 };
-            await updateWalletHelper(ctx, {
-                id: wallet._id,
-                assets: totals.assets,
-                debts: totals.debts,
-                value: totals.value,
-                metadata: {
-                    lastUpdated: Date.now()
-                }
-            });
-        }
-
-        return true;
-    }
-});
-
-// Query endpoint to list wallets
+// List all wallets
 export const listWallets = query({
     handler: async (ctx) => {
         return await listWalletsHelper(ctx);
     }
 });
 
-// Get wallet by ID
+// Get a specific wallet
 export const getWallet = query({
-  args: { id: v.id("wallets") },
-  handler: async (ctx, { id }) => {
-    const wallet = await ctx.db.get(id);
-    if (!wallet) {
-      throw new Error("Wallet not found");
+    args: {
+        id: v.id("wallets")
+    },
+    handler: async (ctx, { id }) => {
+        const wallet = await ctx.db.get(id);
+        
+        // Check if the wallet exists
+        if (!wallet) {
+            return null;
+        }
+        
+        // If the wallet has a userId, verify the current user has access
+        const identity = await ctx.auth.getUserIdentity();
+        const userId = identity?.subject;
+        
+        if (wallet.userId && wallet.userId !== userId) {
+            // User doesn't have access to this wallet
+            return null;
+        }
+        
+        return wallet;
     }
-    return wallet;
-  }
 });

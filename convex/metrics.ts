@@ -1,29 +1,79 @@
 import { query, mutation, QueryCtx } from "./_generated/server";
-import { DailyMetric } from "@/components/net-worth-chart";
+import { Doc } from "./_generated/dataModel";
 import { listHoldingsHelper } from "./holdings";
 import { getQuotesHelper } from "./quotes";
+
+type DailyMetric = Doc<"dailyMetrics">;
 
 // Query to get historical metrics
 export const getDailyMetrics = query({
   handler: async (ctx): Promise<DailyMetric[]> => {
-    return await ctx.db
-      .query("dailyMetrics")
-      .withIndex("by_date")
-      .order("asc")
-      .collect();
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    if (userId) {
+      // If authenticated, return only user's metrics
+      return await ctx.db
+        .query("dailyMetrics")
+        .withIndex("by_user_and_date", q => q.eq("userId", userId))
+        .order("asc")
+        .collect();
+    } else {
+      // For backward compatibility, return metrics without userId
+      return await ctx.db
+        .query("dailyMetrics")
+        .withIndex("by_date")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .order("asc")
+        .collect();
+    }
   }
 });
 
 // Helper function to get total value of all assets
 export async function getAssetsTotalHelper(ctx: QueryCtx) {
-  const assets = await ctx.db.query("assets").collect();
+  const identity = await ctx.auth.getUserIdentity();
+  const userId = identity?.subject;
+  
+  let assets;
+  if (userId) {
+    // If authenticated, calculate total for user's assets
+    assets = await ctx.db
+      .query("assets")
+      .withIndex("by_user", q => q.eq("userId", userId))
+      .collect();
+  } else {
+    // For backward compatibility, calculate total for assets without userId
+    assets = await ctx.db
+      .query("assets")
+      .filter(q => q.eq(q.field("userId"), undefined))
+      .collect();
+  }
+  
   const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
   return { assetsTotal };
 }
 
 // Helper function to get total value of all debts
 export async function getDebtsTotalHelper(ctx: QueryCtx) {
-  const debts = await ctx.db.query("debts").collect();
+  const identity = await ctx.auth.getUserIdentity();
+  const userId = identity?.subject;
+  
+  let debts;
+  if (userId) {
+    // If authenticated, calculate total for user's debts
+    debts = await ctx.db
+      .query("debts")
+      .withIndex("by_user", q => q.eq("userId", userId))
+      .collect();
+  } else {
+    // For backward compatibility, calculate total for debts without userId
+    debts = await ctx.db
+      .query("debts")
+      .filter(q => q.eq(q.field("userId"), undefined))
+      .collect();
+  }
+  
   const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
   return { debtsTotal };
 }
@@ -49,6 +99,10 @@ export const snapshotDailyMetrics = mutation({
     assets: number,
     debts: number
   }> => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
     // Get holdings value using helper
     const holdings = await listHoldingsHelper(ctx, { includeDebts: true });
     const quotes = await getQuotesHelper(ctx);
@@ -70,8 +124,31 @@ export const snapshotDailyMetrics = mutation({
     });
 
     // Get assets and debts from tables
-    const assets = await ctx.db.query("assets").collect();
-    const debts = await ctx.db.query("debts").collect();
+    let assets, debts;
+    
+    if (userId) {
+      // If authenticated, get user's assets and debts
+      assets = await ctx.db
+        .query("assets")
+        .withIndex("by_user", q => q.eq("userId", userId))
+        .collect();
+        
+      debts = await ctx.db
+        .query("debts")
+        .withIndex("by_user", q => q.eq("userId", userId))
+        .collect();
+    } else {
+      // For backward compatibility, get assets and debts without userId
+      assets = await ctx.db
+        .query("assets")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .collect();
+        
+      debts = await ctx.db
+        .query("debts")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .collect();
+    }
     
     const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
     const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
@@ -87,6 +164,7 @@ export const snapshotDailyMetrics = mutation({
       netWorth,
       assets: totalAssets,
       debts: totalDebts,
+      userId,
       prices: quotes,
       metadata: {
         dataSource: "CoinGecko",
@@ -105,12 +183,28 @@ export const snapshotDailyMetrics = mutation({
 // Add a query for cached net worth
 export const getCachedNetWorth = query({
   handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
     // Get the most recent daily metric
-    const latestMetric = await ctx.db
-      .query("dailyMetrics")
-      .withIndex("by_date")
-      .order("desc")
-      .first();
+    let latestMetric;
+    
+    if (userId) {
+      // If authenticated, get user's latest metric
+      latestMetric = await ctx.db
+        .query("dailyMetrics")
+        .withIndex("by_user_and_date", q => q.eq("userId", userId))
+        .order("desc")
+        .first();
+    } else {
+      // For backward compatibility, get latest metric without userId
+      latestMetric = await ctx.db
+        .query("dailyMetrics")
+        .withIndex("by_date")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .order("desc")
+        .first();
+    }
     
     return latestMetric?.netWorth ?? 0;
   }

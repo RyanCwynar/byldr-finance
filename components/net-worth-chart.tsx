@@ -24,6 +24,18 @@ interface NetWorthChartProps {
   showUncertainty?: boolean;
 }
 
+// Empty state component to display when no data is available
+function EmptyChartState() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full w-full border border-dashed rounded-lg bg-gray-50 dark:bg-gray-800/50">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      <p className="text-sm text-gray-500">No chart data available</p>
+    </div>
+  );
+}
+
 export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
 
@@ -161,7 +173,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
   }, [uncertaintyPercent]);
 
   if (!chartData.length) {
-    return <div>Loading...</div>;
+    return <EmptyChartState />;
   }
 
   return (

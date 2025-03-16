@@ -39,6 +39,21 @@ function Slider({ value, onChange, min, max, step, label }: SliderProps) {
     );
 }
 
+// Empty state component to display when no data is available
+function EmptyState() {
+    return (
+        <div className="flex flex-col items-center justify-center p-8 border rounded-lg bg-gray-50 dark:bg-gray-800 h-[400px]">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-lg font-medium mb-2">No financial data available</h3>
+            <p className="text-sm text-gray-500 text-center mb-4">
+                Add some assets, debts, or wallets to start tracking your net worth and see projections.
+            </p>
+        </div>
+    );
+}
+
 export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: DailyMetric[] }) {
     const [monthlyCost, setMonthlyCost] = useState(10000);
     const [monthlyIncome, setMonthlyIncome] = useState(18000);
@@ -47,10 +62,13 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
     const liveMetrics = useQuery(api.metrics.getDailyMetrics) ?? initialMetrics;
     
     // Use live metrics if available, otherwise fall back to initial metrics
-    const metrics = liveMetrics || initialMetrics;
+    const metrics = liveMetrics || initialMetrics || [];
+    
+    // Check if we have any metrics data
+    const hasData = metrics && metrics.length > 0;
 
     const forecastedMetrics = useMemo(() => {
-        if (!metrics?.length) return metrics;
+        if (!hasData) return [];
 
         const lastMetric = metrics[metrics.length - 1];
         const lastDate = new Date(lastMetric.date);
@@ -81,7 +99,7 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
         const realPoints = metrics.map(m => ({ ...m, isProjected: false }));
 
         return [...realPoints, ...forecastPoints];
-    }, [metrics, monthlyCost, monthlyIncome]);
+    }, [metrics, monthlyCost, monthlyIncome, hasData]);
 
     const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>('all');
 
@@ -90,11 +108,47 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
     }, [forecastedMetrics]);
 
     const projectedMetrics = useMemo(() => {
+        if (!hasData) return [];
+        
         // Include last real point with projections for continuity
         const lastRealPoint = forecastedMetrics.filter(m => !m.isProjected).sort((a, b) => b.date - a.date)[0];
         const projectedPoints = forecastedMetrics.filter(m => m.isProjected);
         return lastRealPoint ? [lastRealPoint, ...projectedPoints] : projectedPoints;
-    }, [forecastedMetrics]);
+    }, [forecastedMetrics, hasData]);
+
+    // If there's no data, show the empty state
+    if (!hasData) {
+        return (
+            <div className="flex flex-col gap-4 w-full">
+                <EmptyState />
+                
+                <div className="flex flex-col gap-4 p-4 border rounded-lg">
+                    <h3 className="text-lg font-medium mb-2">Forecast Settings</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                        These settings will be used to generate projections once you have financial data.
+                    </p>
+                    
+                    <Slider
+                        value={monthlyCost}
+                        onChange={setMonthlyCost}
+                        min={0}
+                        max={50000}
+                        step={100}
+                        label="Monthly Costs"
+                    />
+
+                    <Slider
+                        value={monthlyIncome}
+                        onChange={setMonthlyIncome}
+                        min={0}
+                        max={50000}
+                        step={100}
+                        label="Monthly Income"
+                    />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-4 w-full">

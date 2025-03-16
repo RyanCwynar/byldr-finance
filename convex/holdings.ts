@@ -12,7 +12,19 @@ export async function listHoldingsHelper(ctx: QueryCtx, filter?: {
   includeDebts?: boolean,
   debtsOnly?: boolean
 }) {
+  // Get the user ID from authentication if available
+  const identity = ctx.auth ? await ctx.auth.getUserIdentity() : null;
+  const userId = identity?.subject;
+  
   let q = ctx.db.query("holdings").filter(q => q.eq(q.field("ignore"), false));
+  
+  // Filter by userId if authenticated
+  if (userId) {
+    q = q.filter(q => q.eq(q.field("userId"), userId));
+  } else {
+    // For backward compatibility, only show holdings without userId
+    q = q.filter(q => q.eq(q.field("userId"), undefined));
+  }
   
   // Handle debt filtering
   if (filter?.debtsOnly) {
@@ -246,30 +258,6 @@ export const upsertHolding = mutation({
     }
   });
   
-  // Delete a holding
-  export const deleteHolding = mutation({
-    args: {
-      walletId: v.id("wallets"),
-      symbol: v.string(),
-      chain: v.string()
-    },
-    handler: async (ctx, { walletId, symbol, chain }) => {
-      // Find the holding
-      const holding = await ctx.db
-        .query("holdings")
-        .withIndex("by_symbol_and_wallet_and_chain", q => 
-          q.eq("symbol", symbol).eq("walletId", walletId).eq("chain", chain)
-        )
-        .first();
-  
-      if (!holding) {
-        throw new Error("Holding not found");
-      }
-  
-      await ctx.db.delete(holding._id);
-      return true;
-    }
-  });
  
   // Helper function to calculate net worth - now expects an action context
 export async function updateHoldingsHelper(ctx: any) {
@@ -329,5 +317,122 @@ export const getHoldingsByWallet = query({
       .query("holdings")
       .withIndex("by_wallet", q => q.eq("walletId", walletId))
       .collect();
+  }
+});
+
+// Add a holding
+export const addHolding = mutation({
+  args: {
+    walletId: v.id("wallets"),
+    symbol: v.string(),
+    quantity: v.number(),
+    chain: v.string(),
+    isDebt: v.optional(v.boolean()),
+    quoteSymbol: v.optional(v.string()),
+    quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
+  },
+  handler: async (ctx, args) => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the wallet to check if the user has access
+    const wallet = await ctx.db.get(args.walletId);
+    if (!wallet) {
+      throw new Error("Wallet not found");
+    }
+    
+    // Check if the user has access to this wallet
+    if (wallet.userId && wallet.userId !== userId) {
+      throw new Error("Not authorized to add holdings to this wallet");
+    }
+    
+    // Check if a holding with the same symbol and chain already exists
+    const existingHolding = await ctx.db
+      .query("holdings")
+      .withIndex("by_symbol_and_wallet_and_chain", q => 
+        q.eq("symbol", args.symbol)
+         .eq("walletId", args.walletId)
+         .eq("chain", args.chain)
+      )
+      .first();
+    
+    if (existingHolding) {
+      // Update the quantity of the existing holding
+      const newQuantity = existingHolding.quantity + args.quantity;
+      return await ctx.db.patch(existingHolding._id, { 
+        quantity: newQuantity,
+        lastUpdated: Date.now()
+      });
+    }
+    
+    // Insert a new holding
+    return await ctx.db.insert("holdings", {
+      ...args,
+      userId,
+      lastUpdated: Date.now(),
+      ignore: false
+    });
+  }
+});
+
+// Update a holding
+export const updateHolding = mutation({
+  args: {
+    id: v.id("holdings"),
+    quantity: v.optional(v.number()),
+    ignore: v.optional(v.boolean()),
+    isDebt: v.optional(v.boolean()),
+    quoteSymbol: v.optional(v.string()),
+    quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
+  },
+  handler: async (ctx, { id, ...updates }) => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the holding
+    const holding = await ctx.db.get(id);
+    if (!holding) {
+      throw new Error("Holding not found");
+    }
+    
+    // Check if the user has access to this holding
+    if (holding.userId && holding.userId !== userId) {
+      throw new Error("Not authorized to update this holding");
+    }
+    
+    // Update the holding
+    return await ctx.db.patch(id, {
+      ...updates,
+      lastUpdated: Date.now()
+    });
+  }
+});
+
+// Delete a holding
+export const deleteHolding = mutation({
+  args: {
+    id: v.id("holdings")
+  },
+  handler: async (ctx, { id }) => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the holding
+    const holding = await ctx.db.get(id);
+    if (!holding) {
+      throw new Error("Holding not found");
+    }
+    
+    // Check if the user has access to this holding
+    if (holding.userId && holding.userId !== userId) {
+      throw new Error("Not authorized to delete this holding");
+    }
+    
+    // Delete the holding
+    await ctx.db.delete(id);
+    return { success: true };
   }
 });

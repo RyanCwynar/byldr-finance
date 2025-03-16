@@ -5,7 +5,22 @@ import { Id } from "./_generated/dataModel";
 // Asset queries
 export const listAssets = query({
   handler: async (ctx) => {
-    return await ctx.db.query("assets").collect();
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    if (userId) {
+      // If authenticated, return only user's assets
+      return await ctx.db
+        .query("assets")
+        .withIndex("by_user", q => q.eq("userId", userId))
+        .collect();
+    } else {
+      // For backward compatibility, return assets without userId
+      return await ctx.db
+        .query("assets")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .collect();
+    }
   }
 });
 
@@ -14,16 +29,46 @@ export const getAssetsByType = query({
     type: v.union(v.literal("real_estate"), v.literal("stocks"), v.literal("crypto"), v.literal("cash"), v.literal("other"))
   },
   handler: async (ctx, { type }) => {
-    return await ctx.db
-      .query("assets")
-      .withIndex("by_type", q => q.eq("type", type))
-      .collect();
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    if (userId) {
+      // If authenticated, return only user's assets of the specified type
+      return await ctx.db
+        .query("assets")
+        .withIndex("by_user_and_type", q => q.eq("userId", userId).eq("type", type))
+        .collect();
+    } else {
+      // For backward compatibility, return assets without userId
+      return await ctx.db
+        .query("assets")
+        .withIndex("by_type", q => q.eq("type", type))
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .collect();
+    }
   }
 });
 
 export const getAssetsTotal = query({
   handler: async (ctx) => {
-    const assets = await ctx.db.query("assets").collect();
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    let assets;
+    if (userId) {
+      // If authenticated, calculate total for user's assets
+      assets = await ctx.db
+        .query("assets")
+        .withIndex("by_user", q => q.eq("userId", userId))
+        .collect();
+    } else {
+      // For backward compatibility, calculate total for assets without userId
+      assets = await ctx.db
+        .query("assets")
+        .filter(q => q.eq(q.field("userId"), undefined))
+        .collect();
+    }
+    
     const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
     return { assetsTotal };
   }
@@ -32,7 +77,23 @@ export const getAssetsTotal = query({
 export const getAsset = query({
   args: { id: v.id("assets") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const asset = await ctx.db.get(args.id);
+    
+    // Check if the asset exists
+    if (!asset) {
+      return null;
+    }
+    
+    // If the asset has a userId, verify the current user has access
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    if (asset.userId && asset.userId !== userId) {
+      // User doesn't have access to this asset
+      return null;
+    }
+    
+    return asset;
   },
 });
 
@@ -53,7 +114,15 @@ export const addAsset = mutation({
     tags: v.optional(v.array(v.string()))
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("assets", args);
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Add the asset with the user ID
+    return await ctx.db.insert("assets", {
+      ...args,
+      userId
+    });
   }
 });
 
@@ -74,10 +143,22 @@ export const updateAsset = mutation({
     tags: v.optional(v.array(v.string()))
   },
   handler: async (ctx, { id, ...updates }) => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the asset
     const asset = await ctx.db.get(id);
     if (!asset) {
       throw new Error("Asset not found");
     }
+    
+    // Check if the user has access to this asset
+    if (asset.userId && asset.userId !== userId) {
+      throw new Error("Not authorized to update this asset");
+    }
+    
+    // Update the asset
     return await ctx.db.patch(id, updates);
   }
 });
@@ -87,10 +168,22 @@ export const deleteAsset = mutation({
     id: v.id("assets")
   },
   handler: async (ctx, { id }) => {
+    // Get the user ID from authentication
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+    
+    // Get the asset
     const asset = await ctx.db.get(id);
     if (!asset) {
       throw new Error("Asset not found");
     }
+    
+    // Check if the user has access to this asset
+    if (asset.userId && asset.userId !== userId) {
+      throw new Error("Not authorized to delete this asset");
+    }
+    
+    // Delete the asset
     await ctx.db.delete(id);
     return true;
   }
