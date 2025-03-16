@@ -1,7 +1,6 @@
-import { preloadQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
-import { getAuthToken } from "./auth";
+import { preloadQueryWithAuth } from "@/lib/convex";
 
 type DailyMetric = Doc<'dailyMetrics'>;
 type Asset = Doc<'assets'>;
@@ -14,14 +13,12 @@ import AssetsCard from "@/components/cards/assets-card";
 import DebtsCard from "@/components/cards/debts-card";
 
 export default async function Home() {
-  // Get the auth token from Clerk
-  const token = await getAuthToken() as string;
-
+  // Preload all data with authentication
   const [metricsPreload, assetsPreload, debtsPreload, walletsPreload] = await Promise.all([
-    (await preloadQuery(api.metrics.getDailyMetrics, {}, { token }))._valueJSON as unknown as DailyMetric[],
-    (await preloadQuery(api.assets.listAssets, {}, { token }))._valueJSON as unknown as Asset[],
-    (await preloadQuery(api.debts.listDebts, {}, { token }))._valueJSON as unknown as Debt[],
-    (await preloadQuery(api.wallets.listWallets, {}, { token }))._valueJSON as unknown as Wallet[]
+    preloadQueryWithAuth<DailyMetric[]>(api.metrics.getDailyMetrics, {}),
+    preloadQueryWithAuth<Asset[]>(api.assets.listAssets, {}),
+    preloadQueryWithAuth<Debt[]>(api.debts.listDebts, {}),
+    preloadQueryWithAuth<Wallet[]>(api.wallets.listWallets, {})
   ]);
 
   return (
