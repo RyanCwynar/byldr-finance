@@ -3,18 +3,18 @@ import { api } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Snapshot daily metrics every 20 minutes
+// Snapshot daily metrics every hour
 crons.cron(
-  "snapshot metrics",
-  "*/20 * * * *", // Every 20 minutes
+  "snapshot metrics", 
+  "0 * * * *", // Every hour at minute 0
   api.metrics.snapshotDailyMetrics
 );
 
 
-// Update quotes every 10 minutes
+// Update quotes every hour
 crons.cron(
   "update quotes",
-  "*/10 * * * *", // Every 10 minutes
+  "0 * * * *", // Every hour at minute 0
   api.quotes.updateQuotes
 );
 

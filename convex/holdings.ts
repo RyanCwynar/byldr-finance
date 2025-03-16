@@ -321,8 +321,10 @@ export const upsertHolding = mutation({
           chain: chain || "ethereum",
           lastUpdated: Date.now(),
           ignore: ignore !== undefined ? ignore : existingHolding.ignore,
-          quoteSymbol: quoteSymbol || undefined,
-          isDebt: isDebt || false,
+          // Preserve existing quoteSymbol if it's already defined and no new value is provided
+          quoteSymbol: quoteSymbol !== undefined ? quoteSymbol : existingHolding.quoteSymbol,
+          // Preserve existing isDebt status if it's already defined and no new value is provided
+          isDebt: isDebt !== undefined ? isDebt : existingHolding.isDebt,
           quoteType: quoteType !== undefined ? quoteType : existingHolding.quoteType,
           // Update userId if it's missing on the existing holding
           userId: existingHolding.userId || userId

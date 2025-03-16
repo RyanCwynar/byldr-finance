@@ -38,12 +38,12 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
     
     await upsertHolding({
       walletId,
-      symbol: symbol.toUpperCase(),
+      symbol: symbol,
       quantity: Number(quantity),
       chain,
       isDebt,
       ignore,
-      quoteSymbol: quoteSymbol ? quoteSymbol.toUpperCase() : undefined,
+      quoteSymbol: quoteSymbol || undefined,
       quoteType
     });
     

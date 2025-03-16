@@ -30,68 +30,6 @@ export const getDailyMetrics = query({
     }
 });
 
-// Helper function to get total value of all assets
-export async function getAssetsTotalHelper(ctx: QueryCtx) {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
-
-    let assets;
-    if (userId) {
-        // If authenticated, calculate total for user's assets
-        assets = await ctx.db
-            .query("assets")
-            .withIndex("by_user", q => q.eq("userId", userId))
-            .collect();
-    } else {
-        // For backward compatibility, calculate total for assets without userId
-        assets = await ctx.db
-            .query("assets")
-            .filter(q => q.eq(q.field("userId"), undefined))
-            .collect();
-    }
-
-    const assetsTotal = assets.reduce((sum, asset) => sum + asset.value, 0);
-    return { assetsTotal };
-}
-
-// Helper function to get total value of all debts
-export async function getDebtsTotalHelper(ctx: QueryCtx) {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = identity?.subject;
-
-    let debts;
-    if (userId) {
-        // If authenticated, calculate total for user's debts
-        debts = await ctx.db
-            .query("debts")
-            .withIndex("by_user", q => q.eq("userId", userId))
-            .collect();
-    } else {
-        // For backward compatibility, calculate total for debts without userId
-        debts = await ctx.db
-            .query("debts")
-            .filter(q => q.eq(q.field("userId"), undefined))
-            .collect();
-    }
-
-    const debtsTotal = debts.reduce((sum, debt) => sum + debt.value, 0);
-    return { debtsTotal };
-}
-
-// Query to get total value of all assets
-export const getAssetsTotal = query({
-    handler: async (ctx) => {
-        return await getAssetsTotalHelper(ctx);
-    }
-});
-
-// Query to get total value of all debts 
-export const getDebtsTotal = query({
-    handler: async (ctx) => {
-        return await getDebtsTotalHelper(ctx);
-    }
-});
-
 // Mutation to take a snapshot of net worth with additional metrics
 export const snapshotDailyMetrics = mutation({
     handler: async (ctx): Promise<{
