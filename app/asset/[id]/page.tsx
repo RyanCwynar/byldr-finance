@@ -5,9 +5,16 @@ import { preloadQueryWithAuth } from "@/lib/convex";
 
 type Asset = Doc<"assets">;
 
-export default async function AssetPage({ params }: { params: { id: string } }) {
+export default async function AssetPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // Get the id from params Promise
+  const { id } = await params;
+  
   // Convert the string ID to a Convex ID
-  const assetId = params.id as Id<"assets">;
+  const assetId = id as Id<"assets">;
   
   // Preload asset data with authentication
   const asset = await preloadQueryWithAuth<Asset>(api.assets.getAsset, { id: assetId });

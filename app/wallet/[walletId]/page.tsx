@@ -6,14 +6,21 @@ import { preloadQueryWithAuth } from "@/lib/convex";
 type Wallet = Doc<"wallets">;
 type Holding = Doc<"holdings">;
 
-export default async function WalletPage({ params }: { params: { walletId: string } }) {
+export default async function WalletPage({
+  params,
+}: {
+  params: Promise<{ walletId: string }>;
+}) {
+  // Get the walletId from params Promise
+  const { walletId } = await params;
+  
   // Convert the string ID to a Convex ID
-  const walletId = params.walletId as Id<"wallets">;
+  const walletIdObj = walletId as Id<"wallets">;
   
   // Preload wallet data and holdings with authentication
   const [wallet, holdings] = await Promise.all([
-    preloadQueryWithAuth<Wallet>(api.wallets.getWallet, { id: walletId }),
-    preloadQueryWithAuth<Holding[]>(api.holdings.getHoldingsByWallet, { walletId })
+    preloadQueryWithAuth<Wallet>(api.wallets.getWallet, { id: walletIdObj }),
+    preloadQueryWithAuth<Holding[]>(api.holdings.getHoldingsByWallet, { walletId: walletIdObj })
   ]);
 
   return (
