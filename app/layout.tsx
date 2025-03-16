@@ -2,12 +2,13 @@ import "@/app/globals.css";
 
 import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
+import Header from "@/components/header";
 
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Ryan Cwynar",
-  description: "Basic information site.",
+  title: "Mastermind Finance",
+  description: "Track your net worth and financial assets.",
 };
 
 export default function RootLayout({
@@ -18,9 +19,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="min-h-screen antialiased">
+        <body className="min-h-screen antialiased bg-black text-white">
           <ConvexClientProvider>
-            {children}
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
           </ConvexClientProvider>
         </body>
       </html>

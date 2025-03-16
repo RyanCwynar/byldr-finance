@@ -21,9 +21,9 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center w-full max-w-6xl">
-        <h1 className="text-3xl font-bold">Net Worth Over Time</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col gap-8 w-full max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
 
         <div className="w-full">
           <ForecastWrapper metrics={metricsPreload} />
@@ -33,9 +33,7 @@ export default async function Home() {
           <DebtsCard debts={debtsPreload} />
           <CryptoWalletsCard wallets={walletsPreload} />
         </div>
-      </main>
-      <footer>
-      </footer>
+      </div>
     </div>
   );
 }
