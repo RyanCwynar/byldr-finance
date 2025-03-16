@@ -9,18 +9,27 @@ type Holding = Doc<"holdings">;
 // Helper function to list holdings
 export async function listHoldingsHelper(ctx: QueryCtx, filter?: {
   walletId?: Id<"wallets">,
+  userId?: string,
   includeDebts?: boolean,
   debtsOnly?: boolean
 }) {
   console.log("listHoldingsHelper called with filter:", filter);
   
   let q = ctx.db.query("holdings").filter(q => q.eq(q.field("ignore"), false));
-  // Filter by wallet ID if provided
+
+  // Filter by either walletId or userId, but not both
+  if (filter?.walletId && filter?.userId) {
+    throw new Error("Cannot filter by both walletId and userId");
+  }
+
   if (filter?.walletId) {
     console.log("Filtering by walletId:", filter.walletId);
-    // Use filter instead of withIndex to avoid type issues
     q = q.filter(q => q.eq(q.field("walletId"), filter.walletId));
+  } else if (filter?.userId) {
+    console.log("Filtering by userId:", filter.userId);
+    q = q.filter(q => q.eq(q.field("userId"), filter.userId));
   }
+
   // Handle debt filtering
   if (filter?.debtsOnly) {
     console.log("Filtering for debts only");
