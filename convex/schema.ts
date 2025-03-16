@@ -61,7 +61,7 @@ export default defineSchema({
     assets: v.number(), // Total assets value in USD
     debts: v.number(), // Total debts value in USD
     userId: v.optional(v.string()), // Clerk user ID
-    prices: v.record(v.string(), v.number()), // Symbol -> USD price mapping
+    prices: v.optional(v.record(v.string(), v.number())), // Symbol -> USD price mapping
     // Optional metadata
     metadata: v.optional(v.object({
       dataSource: v.string(),

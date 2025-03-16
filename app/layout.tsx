@@ -8,7 +8,7 @@ import UserTracker from "@/components/user-tracker";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mastermind Finance",
+  title: "Byldr Finance",
   description: "Track your net worth and financial assets.",
 };
 

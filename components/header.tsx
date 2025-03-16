@@ -8,7 +8,7 @@ export default function Header() {
       <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">Mastermind</span>
+            <span className="text-xl font-bold">Byldr Finance</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             {/* <Link href="/" className="text-sm font-medium text-gray-200 hover:text-white">
