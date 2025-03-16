@@ -213,28 +213,39 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
                 </div>
             )}
             
-            <div className="flex justify-between p-4 border rounded-lg">
-                <div>
-                    <div className="text-sm text-gray-500">Current Net Worth</div>
-                    <div className="text-2xl font-bold">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4 p-4 border rounded-lg">
+                <div className="text-center sm:text-left">
+                    <div className="text-sm text-gray-500">
+                        <span className="sm:hidden">Current</span>
+                        <span className="hidden sm:inline">Current Net Worth</span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold">
                         ${metrics[metrics.length-1].netWorth.toLocaleString()}
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
                     <div className="text-sm text-gray-500">Projected Change</div>
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
                         {(() => {
                             const currentValue = metrics[metrics.length-1].netWorth;
                             const projectedValue = forecastedMetrics[forecastedMetrics.length-1].netWorth;
                             const difference = projectedValue - currentValue;
                             const percentChange = ((difference / currentValue) * 100).toFixed(1);
-                            return `+${percentChange}% (+$${difference.toLocaleString()})`;
+                            return (
+                                <>
+                                    <span>+{percentChange}%</span>
+                                    <span className="hidden sm:inline"> (+${difference.toLocaleString()})</span>
+                                </>
+                            );
                         })()}
                     </div>
                 </div>
-                <div>
-                    <div className="text-sm text-gray-500">Projected Net Worth (1 Year)</div>
-                    <div className="text-2xl font-bold">
+                <div className="text-center sm:text-right">
+                    <div className="text-sm text-gray-500">
+                        <span className="sm:hidden">Projected (1yr)</span>
+                        <span className="hidden sm:inline">Projected Net Worth (1 Year)</span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold">
                         ${forecastedMetrics[forecastedMetrics.length-1].netWorth.toLocaleString()}
                     </div>
                 </div>
