@@ -25,24 +25,30 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Ticker animation */
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+/* Ticker styles */
+.ticker-container {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0.25rem 0;
 }
 
-.animate-marquee {
-  display: inline-flex;
+.ticker-text {
+  display: inline-block;
   white-space: nowrap;
-  animation: marquee 60s linear infinite;
+  font-family: monospace;
 }
 
-/* Create a duplicate of the content for seamless looping */
-.animate-marquee > div {
-  display: inline-flex;
-  white-space: nowrap;
+.ticker-item {
+  display: inline-block;
+  padding: 0 0.5rem;
+  margin-right: 1rem;
+  border-radius: 0.25rem;
+  transition: transform 0.3s ease;
+}
+
+/* Add a subtle separator between items */
+.ticker-item:not(:last-child)::after {
+  content: "•";
+  margin-left: 1rem;
+  opacity: 0.3;
 }

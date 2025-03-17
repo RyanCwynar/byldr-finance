@@ -2,12 +2,15 @@
 
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { useEffect, useState } from 'react';
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
 
 export default function QuotesTicker() {
   const quotes = useQuery(api.quotes.listQuotes) || [];
   const [prevQuotes, setPrevQuotes] = useState<Record<string, number>>({});
+  const [tickerWords, setTickerWords] = useState<string[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const tickerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Track previous quotes to show price changes
   useEffect(() => {
@@ -18,33 +21,88 @@ export default function QuotesTicker() {
       });
       setPrevQuotes(quoteMap);
     }
-  }, []);
+  }, [quotes]);
 
   // Filter out ignored quotes and sort by symbol
-  const filteredQuotes = quotes.filter(quote => !quote.ignored);
-  const sortedQuotes = [...filteredQuotes].sort((a, b) => a.symbol.localeCompare(b.symbol));
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter(quote => !quote.ignored)
+      .sort((a, b) => a.symbol.localeCompare(b.symbol));
+  }, [quotes]);
 
-  // Create a single quote item component for reuse
-  const QuoteItem = ({ quote }: { quote: typeof sortedQuotes[0] }) => {
-    const prevPrice = prevQuotes[quote.symbol] || quote.price;
-    const priceChange = quote.price - prevPrice;
-    const percentChange = prevPrice ? (priceChange / prevPrice) * 100 : 0;
-    const isUp = priceChange >= 0;
+  // Generate the ticker content from quotes
+  useEffect(() => {
+    if (filteredQuotes.length === 0) return;
     
-    return (
-      <div className="inline-flex items-center mx-4">
-        <span className="font-medium">{quote.symbol}</span>
-        <span className="ml-2 font-mono">${quote.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-        <span className={`ml-2 flex items-center ${isUp ? 'text-green-500' : 'text-red-500'}`}>
-          {isUp ? <ArrowUpIcon className="w-3 h-3 mr-1" /> : <ArrowDownIcon className="w-3 h-3 mr-1" />}
-          {Math.abs(percentChange).toFixed(2)}%
-        </span>
-      </div>
-    );
+    const quoteElements: string[] = [];
+    
+    filteredQuotes.forEach((quote) => {
+      const prevPrice = prevQuotes[quote.symbol] || quote.price;
+      const priceChange = quote.price - prevPrice;
+      const percentChange = prevPrice ? (priceChange / prevPrice) * 100 : 0;
+      const isUp = priceChange >= 0;
+      const formattedPrice = quote.price.toLocaleString(undefined, { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      });
+      const formattedPercent = Math.abs(percentChange).toFixed(2);
+      
+      // Add color spans for up/down indicators
+      const colorClass = isUp ? 'text-green-500' : 'text-red-500';
+      const arrow = isUp ? '▲' : '▼';
+      
+      // Create a single quote element
+      const quoteElement = `<span class="ticker-item">${quote.symbol}: $${formattedPrice} <span class="${colorClass}">${arrow} ${formattedPercent}%</span></span>`;
+      quoteElements.push(quoteElement);
+    });
+    
+    // Duplicate the elements to ensure continuous scrolling
+    const allElements = [...quoteElements, ...quoteElements, ...quoteElements];
+    setTickerWords(allElements);
+  }, [filteredQuotes, prevQuotes]);
+
+  // Set up the ticker animation
+  useEffect(() => {
+    // Don't do anything if there are no words or if paused
+    if (tickerWords.length === 0 || isPaused) {
+      if (tickerIntervalRef.current) {
+        clearInterval(tickerIntervalRef.current);
+        tickerIntervalRef.current = null;
+      }
+      return;
+    }
+    
+    // Clear any existing interval
+    if (tickerIntervalRef.current) {
+      clearInterval(tickerIntervalRef.current);
+    }
+    
+    // Start a new interval that moves words from front to back
+    tickerIntervalRef.current = setInterval(() => {
+      setTickerWords(prev => {
+        if (prev.length <= 1) return prev; // Prevent issues with empty arrays
+        // Move the first word to the end
+        const firstWord = prev[0];
+        const restWords = prev.slice(1);
+        return [...restWords, firstWord];
+      });
+    }, 2000); // 2 seconds per word movement for better readability
+    
+    // Cleanup on unmount or dependency change
+    return () => {
+      if (tickerIntervalRef.current) {
+        clearInterval(tickerIntervalRef.current);
+        tickerIntervalRef.current = null;
+      }
+    };
+  }, [tickerWords.length, isPaused]); // Only depend on the length, not the content
+
+  // Toggle pause state
+  const togglePause = () => {
+    setIsPaused(!isPaused);
   };
 
   // If no quotes to display, show a message
-  if (sortedQuotes.length === 0) {
+  if (filteredQuotes.length === 0) {
     return (
       <div className="w-full bg-black/80 border-b border-gray-800 py-1 text-center text-gray-400">
         No quotes available
@@ -53,20 +111,27 @@ export default function QuotesTicker() {
   }
 
   return (
-    <div className="w-full bg-black/80 border-b border-gray-800 overflow-hidden py-1">
-      <div className="flex animate-marquee whitespace-nowrap">
-        <div className="flex flex-nowrap">
-          {sortedQuotes.map((quote) => (
-            <QuoteItem key={quote.symbol} quote={quote} />
-          ))}
-        </div>
-        {/* Duplicate the content for seamless looping */}
-        <div className="flex flex-nowrap">
-          {sortedQuotes.map((quote) => (
-            <QuoteItem key={`dup-${quote.symbol}`} quote={quote} />
+    <div className="w-full bg-black/80 border-b border-gray-800 overflow-hidden py-1 relative">
+      <div className="ticker-container px-4">
+        <div className="ticker-text">
+          {tickerWords.map((word, index) => (
+            <span key={`ticker-word-${index}`} dangerouslySetInnerHTML={{ __html: word + ' ' }} />
           ))}
         </div>
       </div>
+      
+      {/* Pause/Play button */}
+      <button 
+        onClick={togglePause}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700/70 rounded-full p-1 z-10"
+        aria-label={isPaused ? "Play ticker" : "Pause ticker"}
+      >
+        {isPaused ? (
+          <PlayIcon className="w-4 h-4 text-white" />
+        ) : (
+          <PauseIcon className="w-4 h-4 text-white" />
+        )}
+      </button>
     </div>
   );
 } 
