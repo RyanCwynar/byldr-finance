@@ -30,9 +30,9 @@ export default async function Home() {
           <ForecastWrapper metrics={metricsPreload} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+          <WalletsCard wallets={walletsPreload} />
           <AssetsCard assets={assetsPreload} />
           <DebtsCard debts={debtsPreload} />
-          <WalletsCard wallets={walletsPreload} />
         </div>
       </div>
     </div>
