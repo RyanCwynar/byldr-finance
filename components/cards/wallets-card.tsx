@@ -44,7 +44,7 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-4">Crypto Wallets</h2>
+      <h2 className="text-xl font-semibold mb-4">Wallets</h2>
       <AddButton onClick={() => setShowAddForm(true)} />
       
       <div className="space-y-3">

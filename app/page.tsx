@@ -8,7 +8,7 @@ type Debt = Doc<'debts'>;
 type Wallet = Doc<'wallets'>;
 
 import ForecastWrapper from "@/components/forecast-wrapper";
-import CryptoWalletsCard from "@/components/cards/crypto-wallets-card";
+import WalletsCard from "@/components/cards/wallets-card";
 import AssetsCard from "@/components/cards/assets-card";
 import DebtsCard from "@/components/cards/debts-card";
 
@@ -32,7 +32,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <AssetsCard assets={assetsPreload} />
           <DebtsCard debts={debtsPreload} />
-          <CryptoWalletsCard wallets={walletsPreload} />
+          <WalletsCard wallets={walletsPreload} />
         </div>
       </div>
     </div>
