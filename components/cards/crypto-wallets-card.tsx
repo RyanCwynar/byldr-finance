@@ -4,10 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Modal } from "@/components/modal";
 import { WalletForm } from "@/components/forms/wallet-form";
 import Link from "next/link";
+import { formatNumber } from "@/lib/formatters";
 
 type Wallet = Doc<"wallets">;
 
@@ -30,13 +31,24 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
   const wallets = useQuery(api.wallets.listWallets) ?? initialWallets;
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Sort wallets by value in descending order
+  const sortedWallets = useMemo(() => {
+    if (!wallets) return [];
+    return [...wallets].sort((a, b) => {
+      // Use 0 as default value if wallet.value is undefined
+      const valueA = a.value || 0;
+      const valueB = b.value || 0;
+      return valueB - valueA; // Descending order
+    });
+  }, [wallets]);
+
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
       <h2 className="text-xl font-semibold mb-4">Crypto Wallets</h2>
       <AddButton onClick={() => setShowAddForm(true)} />
       
       <div className="space-y-3">
-        {wallets?.map((wallet: Wallet) => (
+        {sortedWallets.map((wallet: Wallet) => (
           <Link 
             href={`/wallet/${wallet._id}`} 
             key={wallet._id}
@@ -46,8 +58,8 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
               <span className="font-medium">{wallet.name}</span>
               <span className="text-xs text-gray-400">{wallet.chainType}</span>
             </div>
-            <span className={`${wallet.value && wallet.value > 0 ? 'text-green-500' : 'text-gray-400'}`}>
-              ${Math.round(wallet.value || 0).toLocaleString()}
+            <span className={`${wallet.value && wallet.value > 0 ? 'text-green-500' : 'text-gray-400'} font-mono`}>
+              ${formatNumber(wallet.value || 0)}
             </span>
           </Link>
         ))}

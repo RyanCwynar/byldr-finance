@@ -4,10 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Modal } from "@/components/modal";
 import { DebtForm } from "@/components/forms/debt-form";
 import Link from "next/link";
+import { formatNumber } from "@/lib/formatters";
 
 type Debt = Doc<"debts">;
 
@@ -18,6 +19,12 @@ interface DebtsCardProps {
 export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
   const debts = useQuery(api.debts.listDebts) ?? initialDebts;
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Sort debts by value in descending order
+  const sortedDebts = useMemo(() => {
+    if (!debts) return [];
+    return [...debts].sort((a, b) => b.value - a.value);
+  }, [debts]);
 
   // Helper function to get icon based on debt type
   const getDebtTypeIcon = (type: string) => {
@@ -46,10 +53,10 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
       </button>
       
       <div className="space-y-3">
-        {debts?.length === 0 ? (
+        {sortedDebts.length === 0 ? (
           <p className="text-gray-400 text-center py-4">No debts found. Add one to get started.</p>
         ) : (
-          debts?.map((debt: Debt) => (
+          sortedDebts.map((debt: Debt) => (
             <Link 
               href={`/debt/${debt._id}`} 
               key={debt._id}
@@ -62,8 +69,8 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
                   <span className="text-xs text-gray-400 capitalize">{debt.type.replace('_', ' ')}</span>
                 </div>
               </div>
-              <span className="text-red-500">
-                ${debt.value.toLocaleString()}
+              <span className="text-red-500 font-mono">
+                ${formatNumber(debt.value)}
               </span>
             </Link>
           ))

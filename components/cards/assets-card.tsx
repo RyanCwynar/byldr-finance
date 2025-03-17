@@ -4,10 +4,11 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Modal } from "@/components/modal";
 import { AssetForm } from "@/components/forms/asset-form";
 import Link from "next/link";
+import { formatNumber } from "@/lib/formatters";
 
 type Asset = Doc<"assets">;
 
@@ -18,6 +19,12 @@ interface AssetsCardProps {
 export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
   const assets = useQuery(api.assets.listAssets) ?? initialAssets;
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Sort assets by value in descending order
+  const sortedAssets = useMemo(() => {
+    if (!assets) return [];
+    return [...assets].sort((a, b) => b.value - a.value);
+  }, [assets]);
 
   // Helper function to get icon based on asset type
   const getAssetTypeIcon = (type: string) => {
@@ -48,10 +55,10 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
       </button>
       
       <div className="space-y-3">
-        {assets?.length === 0 ? (
+        {sortedAssets.length === 0 ? (
           <p className="text-gray-400 text-center py-4">No assets found. Add one to get started.</p>
         ) : (
-          assets?.map((asset: Asset) => (
+          sortedAssets.map((asset: Asset) => (
             <Link 
               href={`/asset/${asset._id}`} 
               key={asset._id}
@@ -64,8 +71,8 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
                   <span className="text-xs text-gray-400 capitalize">{asset.type.replace('_', ' ')}</span>
                 </div>
               </div>
-              <span className="text-green-500">
-                ${asset.value.toLocaleString()}
+              <span className="text-green-500 font-mono">
+                ${formatNumber(asset.value)}
               </span>
             </Link>
           ))
