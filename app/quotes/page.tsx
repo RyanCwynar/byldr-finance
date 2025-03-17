@@ -1,10 +1,11 @@
 import { api } from "@/convex/_generated/api";
 import { preloadQueryWithAuth } from "@/lib/convex";
 import QuotesManager from "@/components/quotes/quotes-manager";
+import { Doc } from "@/convex/_generated/dataModel";
 
 export default async function QuotesPage() {
   // Preload quotes data
-  const quotes = await preloadQueryWithAuth(api.quotes.listQuotes, {});
+  const quotes = await (await preloadQueryWithAuth(api.quotes.listQuotes, {})) as Array<Doc<"quotes">>;
 
   return (
     <div className="min-h-screen p-8 pb-20 sm:p-20">
