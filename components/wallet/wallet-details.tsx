@@ -49,7 +49,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
   const updateWallet = useMutation(api.wallets.updateWallet);
   const updateWalletValue = useMutation(api.wallets.updateWalletValue);
   const deleteWallet = useMutation(api.wallets.deleteWallet);
-  const updateEvmHoldings = useAction(api.holdingsNode.updateEvmWalletHoldings);
+  const updateWalletHoldings = useAction(api.holdingsNode.updateWalletHoldings);
   const toggleHoldingIgnore = useMutation(api.holdings.toggleHoldingIgnore);
   
   const handleUpdateWallet = async () => {
@@ -71,8 +71,8 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
   };
 
   const handleUpdateHoldings = async () => {
-    if (liveWallet.chainType !== 'ethereum') {
-      setUpdateError("Only Ethereum wallets are supported for automatic updates");
+    if (liveWallet.chainType !== 'ethereum' && liveWallet.chainType !== 'bitcoin') {
+      setUpdateError("Only Ethereum and Bitcoin wallets are supported for automatic updates");
       return;
     }
 
@@ -80,15 +80,8 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
     setUpdateError(null);
     
     try {
-      await updateEvmHoldings({ walletAddress: liveWallet.address });
-      
-      // Update the wallet's lastUpdated timestamp
-      await updateWallet({
-        id: liveWallet._id,
-        metadata: {
-          lastUpdated: Date.now()
-        }
-      });
+      // Use the universal action that handles different wallet types
+      await updateWalletHoldings({ walletId: liveWallet._id });
     } catch (error) {
       console.error("Error updating holdings:", error);
       setUpdateError(error instanceof Error ? error.message : "Failed to update holdings");
@@ -147,15 +140,15 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           </button>
           <button 
             onClick={handleUpdateHoldings}
-            disabled={isUpdatingHoldings || liveWallet.chainType !== 'ethereum'}
+            disabled={isUpdatingHoldings || (liveWallet.chainType !== 'ethereum' && liveWallet.chainType !== 'bitcoin')}
             className={`p-2 rounded-md ${
-              liveWallet.chainType !== 'ethereum' 
+              liveWallet.chainType !== 'ethereum' && liveWallet.chainType !== 'bitcoin'
                 ? 'bg-gray-700 cursor-not-allowed' 
                 : isUpdatingHoldings 
                   ? 'bg-blue-700 cursor-wait' 
                   : 'bg-blue-600 hover:bg-blue-700'
             } text-gray-200 flex items-center gap-2`}
-            title={liveWallet.chainType !== 'ethereum' ? 'Only Ethereum wallets are supported' : 'Update holdings'}
+            title={liveWallet.chainType !== 'ethereum' && liveWallet.chainType !== 'bitcoin' ? 'Only Ethereum and Bitcoin wallets are supported' : 'Update holdings'}
           >
             <ArrowPathIcon className={`w-5 h-5 ${isUpdatingHoldings ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Update Holdings</span>
