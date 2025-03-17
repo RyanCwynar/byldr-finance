@@ -7,6 +7,9 @@ import QuoteSlider from './quote-slider';
 import SimulationSummary from './simulation-summary';
 import SimulationWallets from './simulation-wallets';
 
+// Local storage key for saving adjusted quotes
+const STORAGE_KEY = 'simulation_adjusted_quotes';
+
 type Quote = Doc<"quotes">;
 type Holding = Doc<"holdings">;
 type Wallet = Doc<"wallets">;
@@ -31,6 +34,20 @@ export default function SimulationView({
   // State for adjusted quote values
   const [adjustedQuotes, setAdjustedQuotes] = useState<Record<string, number>>({});
   const [debug, setDebug] = useState<any>({});
+  
+  // Load saved adjustments from local storage on component mount
+  useEffect(() => {
+    try {
+      const savedAdjustments = localStorage.getItem(STORAGE_KEY);
+      if (savedAdjustments) {
+        const parsed = JSON.parse(savedAdjustments);
+        setAdjustedQuotes(parsed);
+        console.log('Loaded saved adjustments from local storage:', parsed);
+      }
+    } catch (error) {
+      console.error('Error loading saved adjustments from local storage:', error);
+    }
+  }, []);
   
   // Get unique symbols from holdings
   const uniqueSymbols = useMemo(() => {
@@ -285,15 +302,33 @@ export default function SimulationView({
   
   // Handle slider change
   const handleSliderChange = (symbol: string, value: number) => {
-    setAdjustedQuotes(prev => ({
-      ...prev,
-      [symbol]: value
-    }));
+    setAdjustedQuotes(prev => {
+      const updated = {
+        ...prev,
+        [symbol]: value
+      };
+      
+      // Save to local storage
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving adjustments to local storage:', error);
+      }
+      
+      return updated;
+    });
   };
   
   // Reset all adjustments
   const handleReset = () => {
     setAdjustedQuotes({});
+    
+    // Clear from local storage
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Error clearing adjustments from local storage:', error);
+    }
   };
   
   // Filter symbols to only include those with quotes
