@@ -34,6 +34,7 @@ export default defineSchema({
     price: v.number(),
     lastUpdated: v.number(),
     type: v.union(v.literal("crypto"), v.literal("stock")), // Type of the symbol (required)
+    ignored: v.optional(v.boolean()), // Whether to ignore this quote in updates and ticker
   }).index("by_symbol", ["symbol"]),
 
   // Store individual token holdings for each wallet

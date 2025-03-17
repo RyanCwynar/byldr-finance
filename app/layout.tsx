@@ -4,6 +4,7 @@ import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/header";
 import UserTracker from "@/components/user-tracker";
+import QuotesTicker from "@/components/quotes-ticker";
 
 import type { Metadata } from "next";
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           <ConvexClientProvider>
             <UserTracker />
             <Header />
+            <QuotesTicker />
             <main className="flex-1">
               {children}
             </main>

@@ -7,9 +7,10 @@ export const upsertQuote = mutation({
   args: {
     symbol: v.string(),
     price: v.number(),
-    type: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
+    type: v.optional(v.union(v.literal("crypto"), v.literal("stock"))),
+    ignored: v.optional(v.boolean())
   },
-  handler: async (ctx, { symbol, price, type }) => {
+  handler: async (ctx, { symbol, price, type, ignored }) => {
     // Try to find existing quote
     const existingQuote = await ctx.db
       .query("quotes")
@@ -21,7 +22,8 @@ export const upsertQuote = mutation({
       return await ctx.db.patch(existingQuote._id, {
         price,
         lastUpdated: Date.now(),
-        type: type || existingQuote.type || "crypto" // Keep existing type if not provided, default to crypto
+        type: type || existingQuote.type || "crypto", // Keep existing type if not provided, default to crypto
+        ...(ignored !== undefined ? { ignored } : {}) // Only update ignored if provided
       });
     } else {
       // Create new quote
@@ -29,7 +31,8 @@ export const upsertQuote = mutation({
         symbol,
         price,
         lastUpdated: Date.now(),
-        type: type || "crypto" // Default to crypto if not provided
+        type: type || "crypto", // Default to crypto if not provided
+        ...(ignored !== undefined ? { ignored } : {}) // Only include ignored if provided
       });
     }
   }
@@ -182,6 +185,12 @@ export const updateQuotes = action({
     // Get existing symbols from quotes table
     const existingQuotes = await ctx.runQuery(api.quotes.listQuotes, {});
     existingQuotes.forEach((quote) => {
+      // Skip ignored quotes
+      if (quote.ignored) {
+        console.log(`Skipping ignored quote: ${quote.symbol}`);
+        return;
+      }
+      
       if (!holdingSymbols.has(quote.symbol)) {
         holdingSymbols.set(quote.symbol, { 
           symbol: quote.symbol, 
@@ -284,5 +293,22 @@ export const getCryptoQuote = action({
       });
     }
     return prices[symbol] || null;
+  }
+});
+
+// Toggle a quote's ignored status
+export const toggleQuoteIgnored = mutation({
+  args: {
+    id: v.id("quotes")
+  },
+  handler: async (ctx, { id }) => {
+    const quote = await ctx.db.get(id);
+    if (!quote) {
+      throw new Error("Quote not found");
+    }
+    
+    return await ctx.db.patch(id, {
+      ignored: !quote.ignored
+    });
   }
 });

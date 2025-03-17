@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
+import { BeakerIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 
 export default function Header() {
   return (
@@ -10,10 +11,15 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold">Byldr Finance</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            {/* <Link href="/" className="text-sm font-medium text-gray-200 hover:text-white">
-              Dashboard
-            </Link> */}
+          <nav className="flex items-center gap-6">
+            <Link href="/simulation" className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1">
+              <BeakerIcon className="w-4 h-4" />
+              <span>Simulation</span>
+            </Link>
+            <Link href="/quotes" className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1">
+              <CurrencyDollarIcon className="w-4 h-4" />
+              <span>Quotes</span>
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">

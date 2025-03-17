@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ticker animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee 60s linear infinite;
+}
+
+/* Create a duplicate of the content for seamless looping */
+.animate-marquee > div {
+  display: inline-flex;
+  white-space: nowrap;
+}
