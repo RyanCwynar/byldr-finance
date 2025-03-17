@@ -18,6 +18,38 @@ interface WalletDetailsProps {
   holdings: Holding[];
 }
 
+/**
+ * Format a number to be more readable
+ * - For small numbers (< 0.01), use scientific notation
+ * - For large numbers, use abbreviations (K, M, B)
+ * - Otherwise, use toLocaleString with appropriate precision
+ */
+function formatNumber(num: number): string {
+  // Handle very small numbers with scientific notation
+  if (Math.abs(num) > 0 && Math.abs(num) < 0.01) {
+    return num.toExponential(2);
+  }
+  
+  // Handle large numbers with abbreviations
+  if (Math.abs(num) >= 1000000000) {
+    return (num / 1000000000).toFixed(2) + 'B';
+  }
+  if (Math.abs(num) >= 1000000) {
+    return (num / 1000000).toFixed(2) + 'M';
+  }
+  if (Math.abs(num) >= 1000) {
+    return (num / 1000).toFixed(2) + 'K';
+  }
+  
+  // For numbers with many decimal places, limit to 6 decimal places
+  if (Math.abs(num) < 1 && num.toString().length > 8) {
+    return num.toFixed(6);
+  }
+  
+  // Otherwise use regular formatting
+  return num.toLocaleString();
+}
+
 export default function WalletDetails({ wallet: initialWallet, holdings: initialHoldings }: WalletDetailsProps) {
   const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -117,14 +149,14 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
   
   return (
     <div className="w-full">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-blue-500 hover:text-blue-600">
-            ← Back to Dashboard
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <Link href="/" className="text-blue-500 hover:text-blue-600 text-sm sm:text-base">
+            ← Back
           </Link>
-          <h1 className="text-2xl font-bold">{liveWallet.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold truncate max-w-[250px] sm:max-w-none">{liveWallet.name}</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={handleUpdateValue}
             disabled={isUpdatingValue}
@@ -156,12 +188,14 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           <button 
             onClick={() => setIsEditModalOpen(true)}
             className="p-2 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"
+            title="Edit wallet"
           >
             <PencilIcon className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setIsDeleteModalOpen(true)}
             className="p-2 rounded-md bg-red-800 hover:bg-red-700 text-gray-200"
+            title="Delete wallet"
           >
             <TrashIcon className="w-5 h-5" />
           </button>
@@ -176,36 +210,50 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Wallet Details</h2>
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Wallet Details</h2>
           <div className="space-y-3">
-            <div>
-              <span className="text-gray-400">Name:</span>
-              <span className="ml-2">{liveWallet.name}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Name:</span>
+              <span className="ml-2 break-all">{liveWallet.name}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Chain Type:</span>
-              <span className="ml-2">{liveWallet.chainType}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Chain Type:</span>
+              <span className="ml-2 capitalize">{liveWallet.chainType}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Address:</span>
-              <span className="ml-2 break-all">{liveWallet.address}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Address:</span>
+              <span className="ml-2 break-all text-xs sm:text-sm font-mono bg-black/30 p-1 rounded">
+                {liveWallet.address.length > 20 
+                  ? `${liveWallet.address.substring(0, 10)}...${liveWallet.address.substring(liveWallet.address.length - 10)}`
+                  : liveWallet.address
+                }
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(liveWallet.address);
+                  }}
+                  className="ml-2 text-blue-400 hover:text-blue-300"
+                  title="Copy address"
+                >
+                  📋
+                </button>
+              </span>
             </div>
-            <div>
-              <span className="text-gray-400">Total Value:</span>
-              <span className="ml-2">${(liveWallet.value || 0).toLocaleString()}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Total Value:</span>
+              <span className="ml-2 font-medium">${formatNumber(liveWallet.value || 0)}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Assets:</span>
-              <span className="ml-2 text-green-500">${(liveWallet.assets || 0).toLocaleString()}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Assets:</span>
+              <span className="ml-2 text-green-500 font-medium">${formatNumber(liveWallet.assets || 0)}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Debts:</span>
-              <span className="ml-2 text-red-500">${(liveWallet.debts || 0).toLocaleString()}</span>
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Debts:</span>
+              <span className="ml-2 text-red-500 font-medium">${formatNumber(liveWallet.debts || 0)}</span>
             </div>
-            <div>
-              <span className="text-gray-400">Last Updated:</span>
-              <span className="ml-2">
+            <div className="flex flex-wrap items-baseline">
+              <span className="text-gray-400 w-24 text-sm sm:text-base">Last Updated:</span>
+              <span className="ml-2 text-xs sm:text-sm">
                 {liveWallet.metadata?.lastUpdated 
                   ? new Date(liveWallet.metadata.lastUpdated).toLocaleString() 
                   : 'Never'}
@@ -214,12 +262,13 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           </div>
         </div>
         
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-4 sm:p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Holdings</h2>
+            <h2 className="text-lg sm:text-xl font-semibold">Holdings</h2>
             <button 
               onClick={() => setIsAddHoldingModalOpen(true)}
               className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+              title="Add new holding"
             >
               <PlusIcon className="w-5 h-5" />
             </button>
@@ -239,13 +288,13 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                       key={holding._id} 
                       className="flex justify-between items-center p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
                     >
-                      <div className="flex-1" onClick={() => handleEditHolding(holding)}>
-                        <div className="font-medium">{holding.symbol}</div>
+                      <div className="flex-1 min-w-0" onClick={() => handleEditHolding(holding)}>
+                        <div className="font-medium truncate">{holding.symbol}</div>
                         <div className="text-xs text-gray-400">{holding.chain}</div>
                       </div>
-                      <div className="text-right flex-1" onClick={() => handleEditHolding(holding)}>
-                        <div className={holding.isDebt ? "text-red-500" : "text-green-500"}>
-                          {holding.isDebt ? "-" : ""}{holding.quantity.toLocaleString()}
+                      <div className="text-right pl-2" onClick={() => handleEditHolding(holding)}>
+                        <div className={`${holding.isDebt ? "text-red-500" : "text-green-500"} font-mono text-sm sm:text-base`}>
+                          {holding.isDebt ? "-" : ""}{formatNumber(holding.quantity)}
                         </div>
                         <div className="text-xs text-gray-400">
                           {holding.isDebt ? "Debt" : "Asset"}
@@ -253,7 +302,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                       </div>
                       <button 
                         onClick={(e) => handleToggleIgnore(holding._id, e)}
-                        className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300"
+                        className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 flex-shrink-0"
                         title="Ignore this holding"
                       >
                         <EyeSlashIcon className="w-4 h-4" />
@@ -286,13 +335,13 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                           key={holding._id} 
                           className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
                         >
-                          <div className="flex-1" onClick={() => handleEditHolding(holding)}>
-                            <div className="font-medium text-gray-400">{holding.symbol}</div>
+                          <div className="flex-1 min-w-0" onClick={() => handleEditHolding(holding)}>
+                            <div className="font-medium text-gray-400 truncate">{holding.symbol}</div>
                             <div className="text-xs text-gray-500">{holding.chain}</div>
                           </div>
-                          <div className="text-right flex-1" onClick={() => handleEditHolding(holding)}>
-                            <div className={`${holding.isDebt ? "text-red-500/70" : "text-green-500/70"}`}>
-                              {holding.isDebt ? "-" : ""}{holding.quantity.toLocaleString()}
+                          <div className="text-right pl-2" onClick={() => handleEditHolding(holding)}>
+                            <div className={`${holding.isDebt ? "text-red-500/70" : "text-green-500/70"} font-mono text-sm sm:text-base`}>
+                              {holding.isDebt ? "-" : ""}{formatNumber(holding.quantity)}
                             </div>
                             <div className="text-xs text-gray-500 flex items-center justify-end gap-2">
                               {holding.isDebt ? "Debt" : "Asset"}
@@ -301,7 +350,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                           </div>
                           <button 
                             onClick={(e) => handleToggleIgnore(holding._id, e)}
-                            className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300"
+                            className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 flex-shrink-0"
                             title="Unignore this holding"
                           >
                             <EyeIcon className="w-4 h-4" />
