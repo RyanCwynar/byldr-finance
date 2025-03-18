@@ -15,7 +15,12 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
   
   // Fetch metrics and current net worth in real-time
   const liveMetrics = useQuery(api.metrics.getDailyMetrics) ?? initialMetrics;
-  const currentNetWorth = useQuery(api.metrics.getCurrentNetWorth);
+  
+  // getCurrentNetWorth will return null when user is not authenticated
+  const currentNetWorth = useQuery(api.metrics.getCurrentNetWorth, {
+    // This empty options object will make the query NOT run if options change
+    // It's more for explicitness to show we're not passing arguments
+  });
   
   // Use live metrics if available, otherwise fall back to initial metrics
   const metrics = liveMetrics || initialMetrics || [];
@@ -28,7 +33,13 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
 
     // Use current net worth if available, otherwise use last metric
     const lastMetric = metrics[metrics.length - 1];
-    const startingNetWorth = currentNetWorth?.netWorth ?? lastMetric.netWorth;
+    if (!lastMetric) return []; // Safety check
+    
+    // Safely access current net worth, falling back to the last metric
+    const startingNetWorth = (currentNetWorth?.netWorth !== undefined && currentNetWorth?.netWorth !== null) 
+      ? currentNetWorth.netWorth 
+      : lastMetric.netWorth;
+    
     const lastDate = new Date(lastMetric.date);
 
     // Start forecast from first of next month
@@ -40,13 +51,22 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
       const forecastDate = new Date(forecastStart);
       forecastDate.setMonth(forecastStart.getMonth() + i);
 
+      // Safely access assets/debts with fallbacks
+      const assets = (currentNetWorth?.assets !== undefined && currentNetWorth?.assets !== null)
+        ? currentNetWorth.assets
+        : (lastMetric.assets || 0);
+      
+      const debts = (currentNetWorth?.debts !== undefined && currentNetWorth?.debts !== null)
+        ? currentNetWorth.debts
+        : (lastMetric.debts || 0);
+
       return {
         _id: lastMetric._id, // Use the same ID as the last metric
         _creationTime: Date.now(),
         date: forecastDate.getTime(),
         netWorth: startingNetWorth + (monthlyNet * (i + 1)),
-        assets: currentNetWorth?.assets || lastMetric.assets || 0,
-        debts: currentNetWorth?.debts || lastMetric.debts || 0,
+        assets: assets,
+        debts: debts,
         prices: lastMetric.prices,
         metadata: lastMetric.metadata,
         isProjected: true // Mark as projected
@@ -66,10 +86,13 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
   }, [forecastedMetrics]);
 
   const projectedMetrics = useMemo(() => {
-    if (!hasData) return [];
+    if (!hasData || !forecastedMetrics.length) return [];
     
     // Include last real point with projections for continuity
-    const lastRealPoint = forecastedMetrics.filter(m => !m.isProjected).sort((a, b) => b.date - a.date)[0];
+    const nonProjectedPoints = forecastedMetrics.filter(m => !m.isProjected);
+    if (!nonProjectedPoints.length) return [];
+    
+    const lastRealPoint = nonProjectedPoints.sort((a, b) => b.date - a.date)[0];
     const projectedPoints = forecastedMetrics.filter(m => m.isProjected);
     return lastRealPoint ? [lastRealPoint, ...projectedPoints] : projectedPoints;
   }, [forecastedMetrics, hasData]);
@@ -86,9 +109,16 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
     );
   }
 
-  // Get the current and projected net worth values
-  const currentValue = currentNetWorth?.netWorth ?? metrics[metrics.length-1].netWorth;
-  const projectedValue = forecastedMetrics[forecastedMetrics.length-1].netWorth;
+  // Safely get the current and projected net worth values
+  const lastMetric = metrics.length > 0 ? metrics[metrics.length-1] : null;
+  const currentValue = (currentNetWorth?.netWorth !== undefined) 
+    ? currentNetWorth.netWorth 
+    : (lastMetric?.netWorth || 0);
+  
+  const lastForecastedMetric = forecastedMetrics.length > 0 
+    ? forecastedMetrics[forecastedMetrics.length-1] 
+    : null;
+  const projectedValue = lastForecastedMetric?.netWorth || currentValue;
 
   return (
     <div className="flex flex-col gap-4 w-full">

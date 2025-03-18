@@ -8,7 +8,8 @@ export function ForecastSummary({
 }: ForecastSummaryProps) {
   // Calculate difference and percentage change
   const difference = projectedNetWorth - currentNetWorth;
-  const percentChange = ((difference / currentNetWorth) * 100).toFixed(1);
+  // Avoid division by zero
+  const percentChange = currentNetWorth ? ((difference / currentNetWorth) * 100).toFixed(1) : '0.0';
 
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between gap-4 p-4 border rounded-lg">
@@ -18,7 +19,7 @@ export function ForecastSummary({
           <span className="hidden sm:inline">Current Net Worth</span>
         </div>
         <div className="text-xl sm:text-2xl font-bold">
-          ${currentNetWorth.toLocaleString()}
+          ${(currentNetWorth || 0).toLocaleString()}
         </div>
       </div>
       <div className="flex flex-col items-center">
@@ -34,7 +35,7 @@ export function ForecastSummary({
           <span className="hidden sm:inline">Projected Net Worth (1 Year)</span>
         </div>
         <div className="text-xl sm:text-2xl font-bold">
-          ${projectedNetWorth.toLocaleString()}
+          ${(projectedNetWorth || 0).toLocaleString()}
         </div>
       </div>
     </div>

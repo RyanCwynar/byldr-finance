@@ -208,7 +208,9 @@ export const getCurrentNetWorth = query({
         const authUserId = identity?.subject;
 
         if (!authUserId) {
-            throw new Error("User ID is required for getCurrentNetWorth");
+            // Return null instead of throwing an error when not authenticated
+            console.log("User not authenticated for getCurrentNetWorth, returning null");
+            return null;
         }
 
         return await getCurrentNetWorthHelper(ctx, authUserId);
