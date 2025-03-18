@@ -284,11 +284,13 @@ export const updateQuotes = action({
       }
       
       try {
+        // Determine quote type based on symbol lists
+        const type = stockSymbols.includes(symbol) ? "stock" : "crypto";
         // Use the upsertQuote mutation to update or create the quote
         await ctx.runMutation(api.quotes.upsertQuote, {
           symbol,
           price,
-          type: COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock"
+          type
         });
         updatedCount++;
       } catch (error) {
