@@ -28,6 +28,26 @@ const ALPHA_VANTAGE_API_KEY = "GGYT0O0DY3ZPHPOW";
 // Helper Functions
 // ==========================================
 
+// Helper function to check if the US stock market is open
+function isMarketOpen(): boolean {
+  const now = new Date();
+  const nyTime = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  
+  // Check if it's a weekday
+  const day = nyTime.getDay();
+  if (day === 0 || day === 6) return false; // Weekend
+  
+  // Check if it's between 9:30 AM and 4:00 PM ET
+  const hour = nyTime.getHours();
+  const minute = nyTime.getMinutes();
+  const timeInMinutes = hour * 60 + minute;
+  
+  const marketOpenTime = 9 * 60 + 30;  // 9:30 AM
+  const marketCloseTime = 16 * 60;     // 4:00 PM
+  
+  return timeInMinutes >= marketOpenTime && timeInMinutes < marketCloseTime;
+}
+
 // Helper function to get all quotes
 export async function getQuotesHelper(ctx: QueryCtx): Promise<{ [symbol: string]: number }> {
   const quotes = await ctx.db
@@ -75,6 +95,13 @@ async function getPricesForSymbols(symbols: string[]) {
 // Get stock prices from Alpha Vantage API
 async function getStockPrices(symbols: string[]) {
   console.log("Fetching stock prices for symbols:", symbols);
+  
+  // Check if market is open
+  const marketOpen = isMarketOpen();
+  if (!marketOpen) {
+    console.log("Stock market is closed, skipping stock price updates");
+    return {};
+  }
   
   const symbolPrices: Record<string, number> = {};
   
@@ -200,98 +227,96 @@ export const toggleQuoteIgnored = mutation({
   }
 });
 
-// ==========================================
-// Actions
-// ==========================================
-
-// Update quotes for all symbols we care about
-export const updateQuotes = action({
-  handler: async (ctx) => {
-    // Get all symbols from holdings
-    const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
-    const holdingSymbols = new Map<string, { symbol: string, type?: string }>();
+// Update quotes for all holdings
+export const updateQuotes = mutation({
+  args: {},
+  handler: async (ctx): Promise<{ updated: number }> => {
+    console.log("Starting quote update...");
     
-    holdings.forEach((holding) => {
-      const symbol = holding.quoteSymbol || holding.symbol;
-      // Only set type if it's explicitly defined on the holding
-      const type = holding.quoteType;
-      holdingSymbols.set(symbol, { symbol, type });
-    });
-
-    // Get existing symbols from quotes table
-    const existingQuotes = await ctx.runQuery(api.quotes.listQuotes, {});
-    existingQuotes.forEach((quote) => {
-      // Skip ignored quotes
-      if (quote.ignored) {
-        console.log(`Skipping ignored quote: ${quote.symbol}`);
-        return;
-      }
-      
-      if (!holdingSymbols.has(quote.symbol)) {
-        holdingSymbols.set(quote.symbol, { 
-          symbol: quote.symbol, 
-          type: quote.type // Only use the type if it's explicitly set in the quote
-        });
-      } else if (!holdingSymbols.get(quote.symbol)?.type && quote.type) {
-        // If we have a symbol from holdings without a type, but the quote has a type, use that
-        holdingSymbols.set(quote.symbol, { 
-          symbol: quote.symbol, 
-          type: quote.type 
-        });
-      }
-    });
-
-    // Separate symbols into crypto and stock symbols based on their type
-    const symbolsArray = Array.from(holdingSymbols.values());
-    const cryptoSymbols = symbolsArray
-      .filter(item => item.type === "crypto")
-      .map(item => item.symbol);
+    // Get all holdings to determine which quotes we need
+    const holdings = await ctx.db
+      .query("holdings")
+      .collect();
     
-    const stockSymbols = symbolsArray
-      .filter(item => item.type === "stock")
-      .map(item => item.symbol);
+    // Get current quotes
+    const currentQuotes = await getQuotesHelper(ctx);
+    
+    // Get unique symbols from holdings
+    const symbols = [...new Set(holdings.map(h => h.symbol))];
+    console.log("Symbols to update:", symbols);
+    
+    // Filter out ignored quotes
+    const ignoredQuotes = await ctx.db
+      .query("quotes")
+      .filter(q => q.eq(q.field("ignored"), true))
+      .collect();
+    const ignoredSymbols = new Set(ignoredQuotes.map(q => q.symbol));
+    const symbolsToUpdate = symbols.filter(s => !ignoredSymbols.has(s));
+    
+    // Separate crypto and stock symbols
+    const cryptoSymbols = symbolsToUpdate.filter(s => COINGECKO_ID_MAP[s.toUpperCase()]);
+    const stockSymbols = symbolsToUpdate.filter(s => !COINGECKO_ID_MAP[s.toUpperCase()]);
     
     console.log("Crypto symbols:", cryptoSymbols);
     console.log("Stock symbols:", stockSymbols);
-    console.log("Symbols without clear type (skipping):", 
-      symbolsArray.filter(item => !item.type).map(item => item.symbol));
-
-    // Get current prices for crypto symbols
-    const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     
-    // Get current prices for stock symbols
+    // Get current prices
+    const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     const stockPrices = await getStockPrices(stockSymbols);
     
-    // Update quotes table with new prices
-    for (const symbol of cryptoSymbols) {
-      if (cryptoPrices[symbol]) {
-        await ctx.runMutation(api.quotes.upsertQuote, {
-          symbol,
-          price: cryptoPrices[symbol],
-          type: "crypto"
-        });
-      }
-    }
-    
-    for (const symbol of stockSymbols) {
-      if (stockPrices[symbol]) {
-        await ctx.runMutation(api.quotes.upsertQuote, {
-          symbol,
-          price: stockPrices[symbol],
-          type: "stock"
-        });
-      }
-    }
-
-    // Combine all prices for the return value
+    // Combine prices
     const prices = { ...cryptoPrices, ...stockPrices };
+    console.log("All prices:", prices);
     
-    return {
-      updatedCryptoSymbols: cryptoSymbols,
-      updatedStockSymbols: stockSymbols,
-      prices
-    };
-  }
+    // Update quotes in database
+    let updatedCount = 0;
+    for (const [symbol, price] of Object.entries(prices)) {
+      // Skip if price is undefined or NaN
+      if (price === undefined || isNaN(price)) {
+        console.log(`Skipping ${symbol} due to invalid price:`, price);
+        continue;
+      }
+      
+      // Skip if price hasn't changed
+      if (currentQuotes[symbol] === price) {
+        console.log(`Skipping ${symbol} as price hasn't changed:`, price);
+        continue;
+      }
+      
+      // Get existing quote
+      const existingQuote = await ctx.db
+        .query("quotes")
+        .filter(q => q.eq(q.field("symbol"), symbol))
+        .first();
+      
+      if (existingQuote) {
+        // Update existing quote
+        await ctx.db.patch(existingQuote._id, { 
+          price,
+          lastUpdated: Date.now()
+        });
+      } else {
+        // Insert new quote
+        await ctx.db.insert("quotes", { 
+          symbol, 
+          price,
+          type: COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock",
+          lastUpdated: Date.now()
+        });
+      }
+      updatedCount++;
+    }
+    
+    // For stock symbols that weren't updated due to market hours, log them
+    const updatedSymbols = new Set(Object.keys(prices));
+    const skippedStocks = stockSymbols.filter(s => !updatedSymbols.has(s));
+    if (skippedStocks.length > 0) {
+      console.log("Skipped updating these stock symbols due to market hours:", skippedStocks);
+    }
+    
+    console.log(`Updated ${updatedCount} quotes`);
+    return { updated: updatedCount };
+  },
 });
 
 // Get a stock quote directly from Alpha Vantage (for testing)

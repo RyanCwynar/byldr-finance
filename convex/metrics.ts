@@ -1,6 +1,5 @@
 import { query, mutation, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { listHoldingsHelper } from "./holdings";
 import { getQuotesHelper } from "./quotes";
 import { updateAllWalletValuesHelper } from "./wallets";
 
