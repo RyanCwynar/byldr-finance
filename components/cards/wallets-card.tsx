@@ -1,9 +1,9 @@
 'use client';
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
 import { useState, useMemo } from "react";
 import { Modal } from "@/components/modal";
 import { WalletForm } from "@/components/forms/wallet-form";
@@ -20,9 +20,22 @@ export const AddButton = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
       onClick={onClick}
-      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="absolute top-2 right-12 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
     >
       <PlusIcon className="w-5 h-5" />
+    </button>
+  );
+};
+
+export const UpdateButton = ({ onClick, isUpdating }: { onClick: () => void, isUpdating: boolean }) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={isUpdating}
+      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+      title="Update wallet values"
+    >
+      <ArrowPathIcon className={`w-5 h-5 ${isUpdating ? 'animate-spin' : ''}`} />
     </button>
   );
 };
@@ -30,6 +43,8 @@ export const AddButton = ({ onClick }: { onClick: () => void }) => {
 export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWalletsCardProps) {
   const wallets = useQuery(api.wallets.listWallets) ?? initialWallets;
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const updateAllWallets = useMutation(api.wallets.updateAllWalletValues);
 
   // Sort wallets by value in descending order
   const sortedWallets = useMemo(() => {
@@ -42,10 +57,22 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
     });
   }, [wallets]);
 
+  const handleUpdateWallets = async () => {
+    try {
+      setIsUpdating(true);
+      await updateAllWallets();
+    } catch (error) {
+      console.error('Error updating wallets:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
       <h2 className="text-xl font-semibold mb-4">Wallets</h2>
       <AddButton onClick={() => setShowAddForm(true)} />
+      <UpdateButton onClick={handleUpdateWallets} isUpdating={isUpdating} />
       
       <div className="space-y-3">
         {sortedWallets.map((wallet: Wallet) => (

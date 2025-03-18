@@ -13,8 +13,9 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
   const [monthlyCost, setMonthlyCost] = useState(10000);
   const [monthlyIncome, setMonthlyIncome] = useState(18000);
   
-  // Fetch metrics in real-time
+  // Fetch metrics and current net worth in real-time
   const liveMetrics = useQuery(api.metrics.getDailyMetrics) ?? initialMetrics;
+  const currentNetWorth = useQuery(api.metrics.getCurrentNetWorth);
   
   // Use live metrics if available, otherwise fall back to initial metrics
   const metrics = liveMetrics || initialMetrics || [];
@@ -25,7 +26,9 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
   const forecastedMetrics = useMemo(() => {
     if (!hasData) return [];
 
+    // Use current net worth if available, otherwise use last metric
     const lastMetric = metrics[metrics.length - 1];
+    const startingNetWorth = currentNetWorth?.netWorth ?? lastMetric.netWorth;
     const lastDate = new Date(lastMetric.date);
 
     // Start forecast from first of next month
@@ -41,9 +44,9 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
         _id: lastMetric._id, // Use the same ID as the last metric
         _creationTime: Date.now(),
         date: forecastDate.getTime(),
-        netWorth: lastMetric.netWorth + (monthlyNet * (i + 1)),
-        assets: lastMetric.assets || 0,
-        debts: lastMetric.debts || 0,
+        netWorth: startingNetWorth + (monthlyNet * (i + 1)),
+        assets: currentNetWorth?.assets || lastMetric.assets || 0,
+        debts: currentNetWorth?.debts || lastMetric.debts || 0,
         prices: lastMetric.prices,
         metadata: lastMetric.metadata,
         isProjected: true // Mark as projected
@@ -54,7 +57,7 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
     const realPoints = metrics.map(m => ({ ...m, isProjected: false }));
 
     return [...realPoints, ...forecastPoints];
-  }, [metrics, monthlyCost, monthlyIncome, hasData]);
+  }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth]);
 
   const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>('all');
 
@@ -83,11 +86,15 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
     );
   }
 
+  // Get the current and projected net worth values
+  const currentValue = currentNetWorth?.netWorth ?? metrics[metrics.length-1].netWorth;
+  const projectedValue = forecastedMetrics[forecastedMetrics.length-1].netWorth;
+
   return (
     <div className="flex flex-col gap-4 w-full">
       <ForecastSummary
-        currentNetWorth={metrics[metrics.length-1].netWorth}
-        projectedNetWorth={forecastedMetrics[forecastedMetrics.length-1].netWorth}
+        currentNetWorth={currentValue}
+        projectedNetWorth={projectedValue}
       />
       
       <ForecastChartView
@@ -97,7 +104,6 @@ export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: 
         setDataView={setDataView}
       />
       
-
       <ForecastControls
         monthlyCost={monthlyCost}
         setMonthlyCost={setMonthlyCost}
