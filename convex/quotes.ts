@@ -331,3 +331,91 @@ export const getCryptoQuote = action({
     return prices[symbol] || null;
   }
 });
+
+// Create a new quote snapshot
+export const createSnapshot = mutation({
+  handler: async (ctx) => {
+    console.log("Creating manual quote snapshot");
+    
+    // Get all non-ignored quotes
+    const quotes = await ctx.db
+      .query("quotes")
+      .filter(q => q.neq(q.field("ignored"), true))
+      .collect();
+    
+    if (quotes.length === 0) {
+      throw new Error("No active quotes found to snapshot");
+    }
+    
+    // Convert quotes to a prices record
+    const prices: Record<string, number> = {};
+    quotes.forEach(quote => {
+      prices[quote.symbol] = quote.price;
+    });
+    
+    // Create the snapshot
+    const snapshot = await ctx.db.insert("quoteSnapshots", {
+      timestamp: Date.now(),
+      prices,
+      metadata: {
+        description: "Manually created snapshot",
+        source: "manual"
+      }
+    });
+    
+    console.log(`Created quote snapshot with ID: ${snapshot}`);
+    return {
+      id: snapshot,
+      timestamp: Date.now(),
+      quoteCount: Object.keys(prices).length
+    };
+  }
+});
+
+// Get the most recent quote snapshot
+export const getLatestSnapshot = query({
+  handler: async (ctx) => {
+    const snapshot = await ctx.db
+      .query("quoteSnapshots")
+      .order("desc")
+      .first();
+    
+    return snapshot;
+  }
+});
+
+// Get a specific snapshot by ID
+export const getSnapshot = query({
+  args: {
+    id: v.id("quoteSnapshots")
+  },
+  handler: async (ctx, { id }) => {
+    return await ctx.db.get(id);
+  }
+});
+
+// Get snapshots within a date range
+export const getSnapshots = query({
+  args: {
+    startTimestamp: v.number(),
+    endTimestamp: v.number(),
+    limit: v.optional(v.number())
+  },
+  handler: async (ctx, { startTimestamp, endTimestamp, limit }) => {
+    let query = ctx.db
+      .query("quoteSnapshots")
+      .filter(q => 
+        q.and(
+          q.gte(q.field("timestamp"), startTimestamp),
+          q.lte(q.field("timestamp"), endTimestamp)
+        )
+      )
+      .order("desc");
+    
+    const snapshots = limit
+      ? await query.take(limit)
+      : await query.collect();
+    
+    return snapshots;
+  }
+});

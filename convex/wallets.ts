@@ -26,23 +26,21 @@ export const getWalletByAddress = query({
     }
 });
 
-// Update a wallet's value based on its holdings
-export const updateWalletValue = mutation({
-    args: {
-        id: v.id("wallets")
-    },
-    handler: async (ctx, { id }) => {
-        console.log("Starting updateWalletValue for wallet:", id);
-        
-        // Get the wallet
-        const wallet = await ctx.db.get(id);
-        if (!wallet) {
-            console.error("Wallet not found:", id);
-            throw new Error("Wallet not found");
-        }
-        
-        console.log("Found wallet:", wallet);
-        
+// Extract the wallet update logic into a helper function to be reused
+async function updateWalletValueHelper(ctx: MutationCtx, walletId: Id<"wallets">, options?: { skipAuth?: boolean }) {
+    console.log("Starting updateWalletValueHelper for wallet:", walletId);
+    
+    // Get the wallet
+    const wallet = await ctx.db.get(walletId);
+    if (!wallet) {
+        console.error("Wallet not found:", walletId);
+        throw new Error("Wallet not found");
+    }
+    
+    console.log("Found wallet:", wallet);
+    
+    // Check authentication if not skipped
+    if (!options?.skipAuth) {
         // Get the user ID from authentication
         const identity = await ctx.auth.getUserIdentity();
         const userId = identity?.subject;
@@ -55,47 +53,57 @@ export const updateWalletValue = mutation({
             console.error("Not authorized to update this wallet. User:", userId, "Wallet owner:", wallet.userId);
             throw new Error("Not authorized to update this wallet");
         }
-        
-        // Get the wallet's holdings value using the helper function
-        console.log("Getting holdings value for wallet:", id);
-        const holdingsValue = await getHoldingsValueHelper(ctx, [id]);
-        console.log("Holdings value result:", holdingsValue);
-        
-        // Get the wallet's value from the holdings
-        // Convert the ID to a string to use as a key in the walletValues object
-        const walletIdStr = id.toString();
-        console.log("Wallet ID as string:", walletIdStr);
-        const walletValue = holdingsValue.walletValues[walletIdStr];
-        console.log("Wallet value from holdings:", walletValue);
-        
-        if (!walletValue) {
-            console.log("No holdings or all holdings are ignored, setting values to 0");
-            // No holdings or all holdings are ignored
-            return await ctx.db.patch(id, {
-                value: 0,
-                assets: 0,
-                debts: 0,
-                metadata: {
-                    lastUpdated: Date.now()
-                }
-            });
-        }
-        
-        console.log("Updating wallet with new values:", {
-            value: walletValue.value,
-            assets: walletValue.assets,
-            debts: walletValue.debts
-        });
-        
-        // Update the wallet with the new values
-        return await ctx.db.patch(id, {
-            value: walletValue.value,
-            assets: walletValue.assets,
-            debts: walletValue.debts,
+    }
+    
+    // Get the wallet's holdings value using the helper function
+    console.log("Getting holdings value for wallet:", walletId);
+    const holdingsValue = await getHoldingsValueHelper(ctx, [walletId]);
+    console.log("Holdings value result:", holdingsValue);
+    
+    // Get the wallet's value from the holdings
+    // Convert the ID to a string to use as a key in the walletValues object
+    const walletIdStr = walletId.toString();
+    console.log("Wallet ID as string:", walletIdStr);
+    const walletValue = holdingsValue.walletValues[walletIdStr];
+    console.log("Wallet value from holdings:", walletValue);
+    
+    if (!walletValue) {
+        console.log("No holdings or all holdings are ignored, setting values to 0");
+        // No holdings or all holdings are ignored
+        return await ctx.db.patch(walletId, {
+            value: 0,
+            assets: 0,
+            debts: 0,
             metadata: {
                 lastUpdated: Date.now()
             }
         });
+    }
+    
+    console.log("Updating wallet with new values:", {
+        value: walletValue.value,
+        assets: walletValue.assets,
+        debts: walletValue.debts
+    });
+    
+    // Update the wallet with the new values
+    return await ctx.db.patch(walletId, {
+        value: walletValue.value,
+        assets: walletValue.assets,
+        debts: walletValue.debts,
+        metadata: {
+            lastUpdated: Date.now()
+        }
+    });
+}
+
+// Update a wallet's value based on its holdings
+export const updateWalletValue = mutation({
+    args: {
+        id: v.id("wallets")
+    },
+    handler: async (ctx, { id }) => {
+        return await updateWalletValueHelper(ctx, id);
     }
 });
 
@@ -280,5 +288,43 @@ export const getWallet = query({
         }
         
         return wallet;
+    }
+});
+
+// Helper function to update all wallet values
+export async function updateAllWalletValuesHelper(ctx: MutationCtx) {
+    console.log("Starting updateAllWalletValues for all wallets");
+    
+    // Get all wallets
+    const wallets = await ctx.db.query("wallets").collect();
+    console.log(`Found ${wallets.length} wallets to update`);
+    
+    if (wallets.length === 0) {
+        console.log("No wallets found, nothing to update");
+        return { updated: 0 };
+    }
+    
+    // Keep track of how many wallets were updated
+    let updatedCount = 0;
+    
+    // Update each wallet using the helper function
+    for (const wallet of wallets) {
+        try {
+            await updateWalletValueHelper(ctx, wallet._id, { skipAuth: true });
+            updatedCount++;
+        } catch (error) {
+            console.error(`Error updating wallet ${wallet._id}:`, error);
+            // Continue with the next wallet
+        }
+    }
+    
+    console.log(`Successfully updated ${updatedCount} wallets`);
+    return { updated: updatedCount };
+}
+
+// Internal mutation to update all wallet values based on current quotes
+export const updateAllWalletValues = mutation({
+    handler: async (ctx) => {
+        return await updateAllWalletValuesHelper(ctx);
     }
 });

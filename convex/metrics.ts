@@ -1,7 +1,8 @@
 import { query, mutation, QueryCtx } from "./_generated/server";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { listHoldingsHelper } from "./holdings";
 import { getQuotesHelper } from "./quotes";
+import { updateAllWalletValuesHelper } from "./wallets";
 
 type DailyMetric = Doc<"dailyMetrics">;
 
@@ -30,10 +31,46 @@ export const getDailyMetrics = query({
     }
 });
 
+// Helper function to create a snapshot of current quotes
+async function createQuoteSnapshot(ctx: any) {
+    console.log("Creating quote snapshot");
+    
+    // Get all active quotes
+    const quotes = await ctx.db.query("quotes")
+        .filter((q: any) => q.neq(q.field("ignored"), true))
+        .collect();
+    
+    if (quotes.length === 0) {
+        console.log("No active quotes found, not creating snapshot");
+        return null;
+    }
+    
+    // Convert quotes to a prices record
+    const prices: Record<string, number> = {};
+    quotes.forEach((quote: Doc<"quotes">) => {
+        prices[quote.symbol] = quote.price;
+    });
+    
+    // Create the snapshot
+    const snapshot = await ctx.db.insert("quoteSnapshots", {
+        timestamp: Date.now(),
+        prices,
+        metadata: {
+            description: "Daily metrics snapshot",
+            source: "snapshotDailyMetrics"
+        }
+    });
+    
+    console.log(`Created quote snapshot with ID: ${snapshot}`);
+    return snapshot;
+}
+
 // Mutation to take a snapshot of net worth with additional metrics
 export const snapshotDailyMetrics = mutation({
     handler: async (ctx): Promise<{
         userCount: number,
+        quoteSnapshotId: Id<"quoteSnapshots"> | null,
+        walletsUpdated: number,
         snapshots: {
             userId: string | undefined,
             netWorth: number,
@@ -41,11 +78,19 @@ export const snapshotDailyMetrics = mutation({
             debts: number
         }[]
     }> => {
+        console.log("Starting daily metrics snapshot");
+        
+        // First, create a snapshot of current quotes
+        const quoteSnapshot = await createQuoteSnapshot(ctx);
+        
+        // Then, update all wallet values to ensure they're current
+        const walletUpdateResult = await updateAllWalletValuesHelper(ctx);
+        
         // Get all users from the users table
         const users = await ctx.db.query("users").collect();
         const snapshots = [];
 
-        // Create a snapshot for each user
+        // Create a metrics snapshot for each user
         for (const user of users) {
             const userId = user.externalId;
             if (userId) {
@@ -59,6 +104,8 @@ export const snapshotDailyMetrics = mutation({
 
         return {
             userCount: users.length,
+            quoteSnapshotId: quoteSnapshot?._id || null,
+            walletsUpdated: walletUpdateResult.updated,
             snapshots
         };
     }
@@ -80,6 +127,7 @@ async function createSnapshotForUser(ctx: any, userId: string): Promise<{
         assets: netWorthData.assets,
         debts: netWorthData.debts,
         userId,
+        prices: netWorthData.prices, // Store the current prices with the snapshot
         metadata: {
             dataSource: "CoinGecko",
             lastUpdated: Date.now(),
@@ -100,31 +148,28 @@ export async function getCurrentNetWorthHelper(ctx: QueryCtx, userId: string) {
         throw new Error("User ID is required for getCurrentNetWorthHelper");
     }
 
-    // Get all holdings for this user
-    const holdings = await listHoldingsHelper(ctx, {
-        userId // Pass the userId to override auth
-    });
-
-    // Get current quotes
+    // Get current quotes for reference
     const quotes = await getQuotesHelper(ctx);
 
-    // Calculate holdings assets and debts
-    let holdingsAssets = 0;
-    let holdingsDebts = 0;
+    // Get all wallets for this user
+    const wallets = await ctx.db
+        .query("wallets")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId))
+        .collect();
 
-    holdings.forEach(holding => {
-        const symbol = holding.quoteSymbol || holding.symbol;
-        const price = quotes[symbol] || 0;
-        const value = holding.quantity * price;
+    console.log(`Found ${wallets.length} wallets for user ${userId}`);
 
-        if (holding.isDebt) {
-            holdingsDebts += value;
-        } else {
-            holdingsAssets += value;
-        }
+    // Sum up wallet values
+    let totalAssets = 0;
+    let totalDebts = 0;
+
+    // Add up the wallet values (they should be up-to-date at this point)
+    wallets.forEach(wallet => {
+        totalAssets += wallet.assets || 0;
+        totalDebts += wallet.debts || 0;
     });
 
-    // Get assets and debts from tables for this user
+    // Get manual assets and debts from tables for this user
     const assets = await ctx.db
         .query("assets")
         .withIndex("by_user", (q: any) => q.eq("userId", userId))
@@ -138,10 +183,13 @@ export async function getCurrentNetWorthHelper(ctx: QueryCtx, userId: string) {
     const assetsTotal = assets.reduce((sum: number, asset: any) => sum + asset.value, 0);
     const debtsTotal = debts.reduce((sum: number, debt: any) => sum + debt.value, 0);
 
-    // Calculate final totals
-    const totalAssets = holdingsAssets + assetsTotal;
-    const totalDebts = holdingsDebts + debtsTotal;
+    // Add manual assets and debts to totals
+    totalAssets += assetsTotal;
+    totalDebts += debtsTotal;
+    
     const netWorth = totalAssets - totalDebts;
+
+    console.log(`User ${userId} metrics calculated: Net worth: ${netWorth}, Assets: ${totalAssets}, Debts: ${totalDebts}`);
 
     return {
         userId,

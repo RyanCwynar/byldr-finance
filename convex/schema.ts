@@ -37,6 +37,16 @@ export default defineSchema({
     ignored: v.optional(v.boolean()), // Whether to ignore this quote in updates and ticker
   }).index("by_symbol", ["symbol"]),
 
+  // Store snapshots of quotes at different points in time
+  quoteSnapshots: defineTable({
+    timestamp: v.number(), // When the snapshot was taken
+    prices: v.record(v.string(), v.number()), // Symbol -> USD price mapping
+    metadata: v.optional(v.object({
+      description: v.optional(v.string()), // Optional description of this snapshot
+      source: v.optional(v.string()), // Source of the snapshot (e.g., "scheduled", "manual")
+    })),
+  }).index("by_timestamp", ["timestamp"]),
+
   // Store individual token holdings for each wallet
   holdings: defineTable({
     walletId: v.id("wallets"), // Reference to the wallet this holding belongs to
