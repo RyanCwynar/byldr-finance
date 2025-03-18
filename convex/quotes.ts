@@ -231,33 +231,35 @@ export const toggleQuoteIgnored = mutation({
 export const updateQuotes = action({
   handler: async (ctx) => {
     console.log("Starting quote update...");
-    
     // Get all holdings to determine which quotes we need
     const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
     
     // Get current quotes
     const currentQuotes = await ctx.runQuery(api.quotes.getQuotes);
     
-    // Get unique symbols from holdings
-    const symbols = [...new Set(holdings.map(h => h.symbol))];
-    console.log("Symbols to update:", symbols);
-    
     // Get all quotes to check which ones are ignored
     const allQuotes = await ctx.runQuery(api.quotes.listQuotes);
     const ignoredSymbols = new Set(
       allQuotes.filter(q => q.ignored).map(q => q.symbol)
     );
+
+    // Create map of symbols to their quote types from holdings
+    const holdingQuoteTypes = new Map(
+      holdings.map(h => [h.quoteSymbol || h.symbol, h.quoteType])
+    );
+
+    // Get unique symbols from holdings and filter out ignored ones
+    const symbolsToUpdate = [...new Set(holdings.map(h => h.quoteSymbol || h.symbol))]
+      .filter(s => !ignoredSymbols.has(s));
+
+    console.log("Symbols to update:", symbolsToUpdate);
     
-    // Filter out ignored quotes
-    const symbolsToUpdate = symbols.filter(s => !ignoredSymbols.has(s));
-    
-    // Separate crypto and stock symbols
-    const cryptoSymbols = symbolsToUpdate.filter(s => COINGECKO_ID_MAP[s.toUpperCase()]);
-    const stockSymbols = symbolsToUpdate.filter(s => !COINGECKO_ID_MAP[s.toUpperCase()]);
+    // Separate crypto and stock symbols based on holding quote types
+    const cryptoSymbols = symbolsToUpdate.filter(s => holdingQuoteTypes.get(s) === "crypto");
+    const stockSymbols = symbolsToUpdate.filter(s => holdingQuoteTypes.get(s) === "stock");
     
     console.log("Crypto symbols:", cryptoSymbols);
     console.log("Stock symbols:", stockSymbols);
-    
     // Get current prices from external APIs
     const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     const stockPrices = await getStockPrices(stockSymbols);
