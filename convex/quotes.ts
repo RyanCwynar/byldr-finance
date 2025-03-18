@@ -228,29 +228,27 @@ export const toggleQuoteIgnored = mutation({
 });
 
 // Update quotes for all holdings
-export const updateQuotes = mutation({
-  args: {},
-  handler: async (ctx): Promise<{ updated: number }> => {
+export const updateQuotes = action({
+  handler: async (ctx) => {
     console.log("Starting quote update...");
     
     // Get all holdings to determine which quotes we need
-    const holdings = await ctx.db
-      .query("holdings")
-      .collect();
+    const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
     
     // Get current quotes
-    const currentQuotes = await getQuotesHelper(ctx);
+    const currentQuotes = await ctx.runQuery(api.quotes.getQuotes);
     
     // Get unique symbols from holdings
     const symbols = [...new Set(holdings.map(h => h.symbol))];
     console.log("Symbols to update:", symbols);
     
+    // Get all quotes to check which ones are ignored
+    const allQuotes = await ctx.runQuery(api.quotes.listQuotes);
+    const ignoredSymbols = new Set(
+      allQuotes.filter(q => q.ignored).map(q => q.symbol)
+    );
+    
     // Filter out ignored quotes
-    const ignoredQuotes = await ctx.db
-      .query("quotes")
-      .filter(q => q.eq(q.field("ignored"), true))
-      .collect();
-    const ignoredSymbols = new Set(ignoredQuotes.map(q => q.symbol));
     const symbolsToUpdate = symbols.filter(s => !ignoredSymbols.has(s));
     
     // Separate crypto and stock symbols
@@ -260,7 +258,7 @@ export const updateQuotes = mutation({
     console.log("Crypto symbols:", cryptoSymbols);
     console.log("Stock symbols:", stockSymbols);
     
-    // Get current prices
+    // Get current prices from external APIs
     const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     const stockPrices = await getStockPrices(stockSymbols);
     
@@ -283,28 +281,17 @@ export const updateQuotes = mutation({
         continue;
       }
       
-      // Get existing quote
-      const existingQuote = await ctx.db
-        .query("quotes")
-        .filter(q => q.eq(q.field("symbol"), symbol))
-        .first();
-      
-      if (existingQuote) {
-        // Update existing quote
-        await ctx.db.patch(existingQuote._id, { 
+      try {
+        // Use the upsertQuote mutation to update or create the quote
+        await ctx.runMutation(api.quotes.upsertQuote, {
+          symbol,
           price,
-          lastUpdated: Date.now()
+          type: COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock"
         });
-      } else {
-        // Insert new quote
-        await ctx.db.insert("quotes", { 
-          symbol, 
-          price,
-          type: COINGECKO_ID_MAP[symbol.toUpperCase()] ? "crypto" : "stock",
-          lastUpdated: Date.now()
-        });
+        updatedCount++;
+      } catch (error) {
+        console.error(`Error updating quote for ${symbol}:`, error);
       }
-      updatedCount++;
     }
     
     // For stock symbols that weren't updated due to market hours, log them
