@@ -15,7 +15,7 @@ crons.cron(
 crons.cron(
   "update quotes",
   "0 * * * *", // Every hour at minute 0
-  api.actions.quoteActions.updateQuotes
+  api.quoteActions.updateQuotes
 );
 
 

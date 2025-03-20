@@ -10,9 +10,9 @@ export default function FinnhubTestPage() {
   const [loading, setLoading] = useState(false);
   const [skipMarketCheck, setSkipMarketCheck] = useState(false);
 
-  const testFinnhub = useAction(api.actions.testFinnhub.testFinnhubQuote);
-  const updateQuotes = useAction(api.actions.quoteActions.updateQuotes);
-  const getStockQuote = useAction(api.actions.quoteActions.getStockQuote);
+  const testFinnhub = useAction(api.testFinnhub.testFinnhubQuote);
+  const updateQuotes = useAction(api.quoteActions.updateQuotes);
+  const getStockQuote = useAction(api.quoteActions.getStockQuote);
 
   async function handleTestFinnhub() {
     setLoading(true);
