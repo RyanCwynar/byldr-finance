@@ -8,9 +8,11 @@ export default function FinnhubTestPage() {
   const [symbol, setSymbol] = useState("AAPL");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [skipMarketCheck, setSkipMarketCheck] = useState(false);
 
   const testFinnhub = useAction(api.actions.testFinnhub.testFinnhubQuote);
-  const updateQuotes = useAction(api.quotes.updateQuotes);
+  const updateQuotes = useAction(api.actions.quoteActions.updateQuotes);
+  const getStockQuote = useAction(api.actions.quoteActions.getStockQuote);
 
   async function handleTestFinnhub() {
     setLoading(true);
@@ -19,6 +21,19 @@ export default function FinnhubTestPage() {
       setResult(data);
     } catch (error) {
       console.error("Error testing Finnhub:", error);
+      setResult({ error: String(error) });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGetStockQuote() {
+    setLoading(true);
+    try {
+      const price = await getStockQuote({ symbol, skipMarketCheck });
+      setResult({ symbol, price, skipMarketCheck });
+    } catch (error) {
+      console.error("Error getting stock quote:", error);
       setResult({ error: String(error) });
     } finally {
       setLoading(false);
@@ -81,11 +96,32 @@ export default function FinnhubTestPage() {
             className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-md flex-grow"
           />
           <button
-            onClick={handleTestFinnhub}
+            onClick={handleGetStockQuote}
             disabled={loading}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Get Quote"}
+            {loading ? "Loading..." : "Get Stock Quote"}
+          </button>
+        </div>
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="skipMarketCheck"
+            checked={skipMarketCheck}
+            onChange={(e) => setSkipMarketCheck(e.target.checked)}
+            className="mr-2 h-4 w-4"
+          />
+          <label htmlFor="skipMarketCheck" className="text-sm text-gray-300">
+            Skip market hours check (get quote even when market is closed)
+          </label>
+        </div>
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={handleTestFinnhub}
+            disabled={loading}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Test Raw Finnhub API"}
           </button>
         </div>
       </div>

@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as actions_quoteActions from "../actions/quoteActions.js";
 import type * as actions_testFinnhub from "../actions/testFinnhub.js";
 import type * as assets from "../assets.js";
 import type * as crons from "../crons.js";
@@ -33,6 +34,7 @@ import type * as wallets from "../wallets.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "actions/quoteActions": typeof actions_quoteActions;
   "actions/testFinnhub": typeof actions_testFinnhub;
   assets: typeof assets;
   crons: typeof crons;
