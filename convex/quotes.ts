@@ -1,3 +1,4 @@
+"use node";
 import { api } from "./_generated/api";
 import { action, mutation, query, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
@@ -21,8 +22,8 @@ const COINGECKO_ID_MAP: Record<string, string> = {
   'PALM': 'palm-ai',
 };
 
-// Alpha Vantage API key for stock quotes
-const ALPHA_VANTAGE_API_KEY = "GGYT0O0DY3ZPHPOW";
+// API key for Finnhub (accessed via environment variable)
+// const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
 
 // ==========================================
 // Helper Functions
@@ -92,7 +93,7 @@ async function getPricesForSymbols(symbols: string[]) {
   return symbolPrices;
 }
 
-// Get stock prices from Alpha Vantage API
+// Get stock prices from Finnhub API
 async function getStockPrices(symbols: string[]) {
   console.log("Fetching stock prices for symbols:", symbols);
   
@@ -103,28 +104,62 @@ async function getStockPrices(symbols: string[]) {
     return {};
   }
   
+  // Get API key from environment
+  const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+  if (!FINNHUB_API_KEY) {
+    console.error("No Finnhub API key found in environment variables");
+    return {};
+  }
+  
   const symbolPrices: Record<string, number> = {};
   
-  // Alpha Vantage free tier has rate limits, so we need to fetch one at a time
-  for (const symbol of symbols) {
-    try {
-      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      console.log(`Alpha Vantage response for ${symbol}:`, data);
-      
-      // Extract the price from the response
-      if (data["Global Quote"] && data["Global Quote"]["05. price"]) {
-        const price = parseFloat(data["Global Quote"]["05. price"]);
-        symbolPrices[symbol] = price;
+  // Process symbols in batches to reduce API calls
+  // Finnhub doesn't support true batch processing, but we can still optimize our requests
+  const BATCH_SIZE = 5; // Number of symbols to process in parallel
+  
+  // Process symbols in batches
+  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
+    const batchSymbols = symbols.slice(i, i + BATCH_SIZE);
+    console.log(`Processing batch of symbols: ${batchSymbols.join(', ')}`);
+    
+    // Create an array of promises for concurrent requests
+    const promises = batchSymbols.map(async (symbol) => {
+      try {
+        const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log(`Finnhub response for ${symbol}:`, data);
+        
+        // Extract the current price from the response
+        if (data && data.c) {
+          const price = parseFloat(data.c);
+          return { symbol, price };
+        } else if (data && data.error) {
+          console.error(`Error from Finnhub for ${symbol}:`, data.error);
+          return { symbol, error: data.error };
+        }
+        return { symbol, error: "No data returned" };
+      } catch (error) {
+        console.error(`Error fetching stock price for ${symbol}:`, error);
+        return { symbol, error };
       }
-      
-      // Alpha Vantage free tier has a limit of 5 requests per minute
-      // Add a small delay between requests
-      await new Promise(resolve => setTimeout(resolve, 12000));
-    } catch (error) {
-      console.error(`Error fetching stock price for ${symbol}:`, error);
+    });
+    
+    // Wait for all requests in this batch to complete
+    const results = await Promise.all(promises);
+    
+    // Process results
+    results.forEach(result => {
+      if (result.price !== undefined) {
+        symbolPrices[result.symbol] = result.price;
+      }
+    });
+    
+    // Add a delay between batches to avoid rate limits
+    if (i + BATCH_SIZE < symbols.length) {
+      console.log(`Waiting between batches...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   
@@ -229,7 +264,7 @@ export const toggleQuoteIgnored = mutation({
 
 // Update quotes for all holdings
 export const updateQuotes = action({
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ updated: number; total: number; skipped: number }> => {
     console.log("Starting quote update...");
     // Get all holdings to determine which quotes we need
     const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
@@ -239,17 +274,17 @@ export const updateQuotes = action({
     
     // Get all quotes to check which ones are ignored
     const allQuotes = await ctx.runQuery(api.quotes.listQuotes);
-    const ignoredSymbols = new Set(
-      allQuotes.filter(q => q.ignored).map(q => q.symbol)
+    const ignoredSymbols = new Set<string>(
+      allQuotes.filter((q: any) => q.ignored).map((q: any) => q.symbol)
     );
 
     // Create map of symbols to their quote types from holdings
-    const holdingQuoteTypes = new Map(
-      holdings.map(h => [h.quoteSymbol || h.symbol, h.quoteType])
+    const holdingQuoteTypes = new Map<string, string>(
+      holdings.map((h: any) => [h.quoteSymbol || h.symbol, h.quoteType])
     );
 
     // Get unique symbols from holdings and filter out ignored ones
-    const symbolsToUpdate = [...new Set(holdings.map(h => h.quoteSymbol || h.symbol))]
+    const symbolsToUpdate = [...new Set(holdings.map((h: any) => h.quoteSymbol || h.symbol))]
       .filter(s => !ignoredSymbols.has(s));
 
     console.log("Symbols to update:", symbolsToUpdate);
@@ -260,6 +295,7 @@ export const updateQuotes = action({
     
     console.log("Crypto symbols:", cryptoSymbols);
     console.log("Stock symbols:", stockSymbols);
+    
     // Get current prices from external APIs
     const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     const stockPrices = await getStockPrices(stockSymbols);
@@ -267,6 +303,22 @@ export const updateQuotes = action({
     // Combine prices
     const prices = { ...cryptoPrices, ...stockPrices };
     console.log("All prices:", prices);
+    
+    // Check for missing prices and try to use cached values as fallback
+    const missingSymbols = symbolsToUpdate.filter(s => !prices[s]);
+    if (missingSymbols.length > 0) {
+      console.log(`Missing prices for symbols: ${missingSymbols.join(', ')}. Checking for cached values.`);
+      
+      for (const symbol of missingSymbols) {
+        // If we have a cached price for this symbol, use it as a fallback
+        if (currentQuotes[symbol]) {
+          console.log(`Using cached price for ${symbol}: ${currentQuotes[symbol]}`);
+          prices[symbol] = currentQuotes[symbol];
+        } else {
+          console.log(`No cached price available for ${symbol}`);
+        }
+      }
+    }
     
     // Update quotes in database
     let updatedCount = 0;
@@ -306,11 +358,15 @@ export const updateQuotes = action({
     }
     
     console.log(`Updated ${updatedCount} quotes`);
-    return { updated: updatedCount };
+    return { 
+      updated: updatedCount,
+      total: symbolsToUpdate.length,
+      skipped: symbolsToUpdate.length - updatedCount
+    };
   },
 });
 
-// Get a stock quote directly from Alpha Vantage (for testing)
+// Get a stock quote directly from Finnhub (for testing)
 export const getStockQuote = action({
   args: {
     symbol: v.string()
