@@ -37,4 +37,20 @@ export interface ForecastEmptyStateProps {
   setMonthlyCost: (value: number) => void;
   monthlyIncome: number;
   setMonthlyIncome: (value: number) => void;
+}
+
+export interface UserPreferences {
+  useSimulationData?: boolean;
+  monthlyIncome?: number;
+  monthlyCost?: number;
+  forecastDataView?: "all" | "real" | "projected";
+  theme?: "light" | "dark" | "system";
+  dashboardLayout?: string[];
+  customSettings?: any;
+}
+
+export interface UserPreferencesData {
+  userId: string;
+  preferences: UserPreferences;
+  lastUpdated: number;
 } 

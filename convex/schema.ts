@@ -123,4 +123,24 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_user", ["userId"])
     .index("by_user_and_type", ["userId", "type"]),
+
+  // Store user preferences
+  userPreferences: defineTable({
+    userId: v.string(), // Clerk user ID
+    preferences: v.object({
+      // Forecast preferences
+      useSimulationData: v.optional(v.boolean()),
+      monthlyIncome: v.optional(v.number()),
+      monthlyCost: v.optional(v.number()),
+      forecastDataView: v.optional(v.union(v.literal("all"), v.literal("real"), v.literal("projected"))),
+      
+      // Other preferences can be added here as needed
+      theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
+      dashboardLayout: v.optional(v.array(v.string())),
+      
+      // Free-form preferences as a JSON object
+      customSettings: v.optional(v.any()),
+    }),
+    lastUpdated: v.number(), // When preferences were last updated
+  }).index("by_user_id", ["userId"]),
 });

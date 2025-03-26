@@ -1,17 +1,16 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { DailyMetric } from './types';
+import { DailyMetric, UserPreferences, UserPreferencesData } from './types';
 import { ForecastEmptyState } from './ForecastEmptyState';
 import { ForecastControls } from './ForecastControls';
 import { ForecastSummary } from './ForecastSummary';
 import { ForecastChartView } from './ForecastChartView';
 
-// Local storage key for simulation data
+// Local storage key for simulation data - still used for simulation data only
 const SIMULATION_STORAGE_KEY = 'simulation_portfolio_summary';
-const SIMULATION_PREFERENCE_KEY = 'use_simulation_preference';
 
 interface SimulationData {
   originalValue: number;
@@ -30,50 +29,74 @@ interface ForecastClientProps {
     assets: number;
     debts: number;
   } | null;
+  initialPreferences: UserPreferencesData | null;
 }
 
-export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClientProps) {
-  const [monthlyCost, setMonthlyCost] = useState(10000);
-  const [monthlyIncome, setMonthlyIncome] = useState(18000);
-  const [useSimulationData, setUseSimulationData] = useState(false);
+export function ForecastClient({ 
+  initialMetrics, 
+  initialNetWorth,
+  initialPreferences
+}: ForecastClientProps) {
+  // Initialize state from server-side preferences, falling back to defaults
+  const defaultPrefs = initialPreferences?.preferences || {};
+  
+  const [monthlyCost, setMonthlyCost] = useState(defaultPrefs.monthlyCost || 10000);
+  const [monthlyIncome, setMonthlyIncome] = useState(defaultPrefs.monthlyIncome || 18000);
+  const [useSimulationData, setUseSimulationData] = useState(defaultPrefs.useSimulationData || false);
+  const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>(
+    (defaultPrefs.forecastDataView as 'all' | 'real' | 'projected') || 'all'
+  );
+  
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
   
   // Add state to control when to activate real-time queries
   const [shouldFetch, setShouldFetch] = useState(false);
   const [isStableState, setIsStableState] = useState(false);
   
-  // Load simulation data and preferences from local storage
+  // Get the preference update mutation
+  const updatePreferences = useMutation(api.userPreferences.updatePreferences);
+  const setPreference = useMutation(api.userPreferences.setPreference);
+  
+  // Custom setters that update server preferences
+  const updateMonthlyCost = (value: number) => {
+    setMonthlyCost(value);
+    setPreference({ key: "monthlyCost", value });
+  };
+  
+  const updateMonthlyIncome = (value: number) => {
+    setMonthlyIncome(value);
+    setPreference({ key: "monthlyIncome", value });
+  };
+  
+  const updateUseSimulationData = (value: boolean) => {
+    setUseSimulationData(value);
+    setPreference({ key: "useSimulationData", value });
+  };
+  
+  const updateDataView = (value: 'all' | 'real' | 'projected') => {
+    setDataView(value);
+    setPreference({ key: "forecastDataView", value });
+  };
+  
+  // Load simulation data from local storage
   useEffect(() => {
     try {
-      // Load simulation data
-      const savedSimulation = localStorage.getItem(SIMULATION_STORAGE_KEY);
-      if (savedSimulation) {
-        const parsed = JSON.parse(savedSimulation);
-        setSimulationData(parsed);
-        console.log('Loaded simulation data from local storage:', parsed);
-      }
-      
-      // Load preference for using simulation data
-      const savedPreference = localStorage.getItem(SIMULATION_PREFERENCE_KEY);
-      if (savedPreference) {
-        const useSimulation = savedPreference === 'true';
-        setUseSimulationData(useSimulation);
-        console.log('Loaded simulation preference from local storage:', useSimulation);
+      if (typeof window !== 'undefined') {
+        const savedSimulation = localStorage.getItem(SIMULATION_STORAGE_KEY);
+        if (savedSimulation) {
+          try {
+            const parsed = JSON.parse(savedSimulation);
+            setSimulationData(parsed);
+            console.log('Loaded simulation data from local storage:', parsed);
+          } catch (e) {
+            console.error('Failed to parse simulation data:', e);
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading simulation data from local storage:', error);
     }
   }, []);
-  
-  // Save preference whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(SIMULATION_PREFERENCE_KEY, useSimulationData.toString());
-      console.log('Saved simulation preference to localStorage:', useSimulationData);
-    } catch (error) {
-      console.error('Error saving simulation preference to localStorage:', error);
-    }
-  }, [useSimulationData]);
   
   // Set up a timer to activate queries after a short delay
   useEffect(() => {
@@ -107,13 +130,14 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
     shouldFetch ? {} : "skip"
   );
   
+  // Fetch user preferences in real-time to stay updated with changes from other sessions
+  const realtimePreferences = useQuery(
+    api.userPreferences.getUserPreferences,
+    shouldFetch ? {} : "skip"
+  );
+  
   // Always start with initial values, then optionally use real-time values once stable
   const metrics = useMemo(() => {
-    // If we have initial metrics and either:
-    // 1. We're not fetching yet, or 
-    // 2. Real-time data isn't loaded, or
-    // 3. Real-time data is empty and initial data isn't
-    // Then use initial metrics
     if (initialMetrics?.length > 0 && 
         (!shouldFetch || 
          !realtimeMetrics || 
@@ -123,7 +147,6 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
       return initialMetrics;
     }
     
-    // Otherwise use real-time metrics, falling back to initial
     return realtimeMetrics ?? initialMetrics;
   }, [initialMetrics, realtimeMetrics, shouldFetch, isStableState]);
   
@@ -269,8 +292,6 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
     return [...realPoints, ...forecastPoints];
   }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth, useSimulationData, simulationData]);
 
-  const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>('all');
-
   const realMetrics = useMemo(() => {
     return forecastedMetrics.filter(m => !m.isProjected);
   }, [forecastedMetrics]);
@@ -292,9 +313,9 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
     return (
       <ForecastEmptyState
         monthlyCost={monthlyCost}
-        setMonthlyCost={setMonthlyCost}
+        setMonthlyCost={updateMonthlyCost}
         monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
+        setMonthlyIncome={updateMonthlyIncome}
       />
     );
   }
@@ -323,7 +344,7 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
             type="checkbox"
             id="useSimulationData"
             checked={useSimulationData}
-            onChange={(e) => setUseSimulationData(e.target.checked)}
+            onChange={(e) => updateUseSimulationData(e.target.checked)}
             className="mr-2 h-4 w-4"
             disabled={!simulationData}
           />
@@ -335,7 +356,7 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
         </div>
         {simulationData && (
           <p className="text-xs text-gray-400 mt-1 ml-6">
-            This preference will be remembered for future visits
+            This preference will be saved with your account
           </p>
         )}
       </div>
@@ -344,14 +365,14 @@ export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClie
         realMetrics={realMetrics}
         projectedMetrics={projectedMetrics}
         dataView={dataView}
-        setDataView={setDataView}
+        setDataView={updateDataView}
       />
       
       <ForecastControls
         monthlyCost={monthlyCost}
-        setMonthlyCost={setMonthlyCost}
+        setMonthlyCost={updateMonthlyCost}
         monthlyIncome={monthlyIncome}
-        setMonthlyIncome={setMonthlyIncome}
+        setMonthlyIncome={updateMonthlyIncome}
       />
     </div>
   );

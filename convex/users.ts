@@ -1,5 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
+
+// Helper function to get the current user ID from the auth context
+export async function getUserId(ctx: QueryCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  return identity?.subject;
+}
 
 // Upsert a user (create if not exists, update if exists)
 export const upsertUser = mutation({

@@ -21,6 +21,7 @@ import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
 import type * as quoteActions from "../quoteActions.js";
 import type * as quotes from "../quotes.js";
+import type * as userPreferences from "../userPreferences.js";
 import type * as users from "../users.js";
 import type * as wallets from "../wallets.js";
 
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   metrics: typeof metrics;
   quoteActions: typeof quoteActions;
   quotes: typeof quotes;
+  userPreferences: typeof userPreferences;
   users: typeof users;
   wallets: typeof wallets;
 }>;
