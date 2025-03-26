@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { DailyMetric } from './types';
@@ -9,21 +9,88 @@ import { ForecastControls } from './ForecastControls';
 import { ForecastSummary } from './ForecastSummary';
 import { ForecastChartView } from './ForecastChartView';
 
-export default function ForecastWrapper({ metrics: initialMetrics }: { metrics: DailyMetric[] }) {
+interface ForecastClientProps {
+  initialMetrics: DailyMetric[];
+  initialNetWorth: {
+    netWorth: number;
+    assets: number;
+    debts: number;
+  } | null;
+}
+
+export function ForecastClient({ initialMetrics, initialNetWorth }: ForecastClientProps) {
   const [monthlyCost, setMonthlyCost] = useState(10000);
   const [monthlyIncome, setMonthlyIncome] = useState(18000);
   
-  // Fetch metrics and current net worth in real-time
-  const liveMetrics = useQuery(api.metrics.getDailyMetrics) ?? initialMetrics;
+  // Add state to control when to activate real-time queries
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const [isStableState, setIsStableState] = useState(false);
   
-  // getCurrentNetWorth will return null when user is not authenticated
-  const currentNetWorth = useQuery(api.metrics.getCurrentNetWorth, {
-    // This empty options object will make the query NOT run if options change
-    // It's more for explicitness to show we're not passing arguments
-  });
+  // Set up a timer to activate queries after a short delay
+  useEffect(() => {
+    // Don't activate queries immediately to prevent flash during auth
+    const timer = setTimeout(() => {
+      setShouldFetch(true);
+    }, 2000); // 2-second delay before activating queries
+    
+    return () => clearTimeout(timer);
+  }, []);
   
-  // Use live metrics if available, otherwise fall back to initial metrics
-  const metrics = liveMetrics || initialMetrics || [];
+  // Set up another timer to mark the state as stable after querying
+  useEffect(() => {
+    if (shouldFetch) {
+      const stabilityTimer = setTimeout(() => {
+        setIsStableState(true);
+      }, 1000); // 1-second after queries activate
+      
+      return () => clearTimeout(stabilityTimer);
+    }
+  }, [shouldFetch]);
+  
+  // Fetch metrics and current net worth in real-time, but only if shouldFetch is true
+  const realtimeMetrics = useQuery(
+    api.metrics.getDailyMetrics, 
+    shouldFetch ? {} : "skip"
+  );
+  
+  const realtimeNetWorth = useQuery(
+    api.metrics.getCurrentNetWorth, 
+    shouldFetch ? {} : "skip"
+  );
+  
+  // Always start with initial values, then optionally use real-time values once stable
+  const metrics = useMemo(() => {
+    // If we have initial metrics and either:
+    // 1. We're not fetching yet, or 
+    // 2. Real-time data isn't loaded, or
+    // 3. Real-time data is empty and initial data isn't
+    // Then use initial metrics
+    if (initialMetrics?.length > 0 && 
+        (!shouldFetch || 
+         !realtimeMetrics || 
+         (realtimeMetrics.length === 0 && initialMetrics.length > 0) ||
+         !isStableState)
+       ) {
+      return initialMetrics;
+    }
+    
+    // Otherwise use real-time metrics, falling back to initial
+    return realtimeMetrics ?? initialMetrics;
+  }, [initialMetrics, realtimeMetrics, shouldFetch, isStableState]);
+  
+  // Same logic for net worth
+  const currentNetWorth = useMemo(() => {
+    if (initialNetWorth && 
+        (!shouldFetch || 
+         !realtimeNetWorth || 
+         !realtimeNetWorth.netWorth ||
+         !isStableState)
+       ) {
+      return initialNetWorth;
+    }
+    
+    return realtimeNetWorth ?? initialNetWorth;
+  }, [initialNetWorth, realtimeNetWorth, shouldFetch, isStableState]);
   
   // Check if we have any metrics data
   const hasData = metrics && metrics.length > 0;
