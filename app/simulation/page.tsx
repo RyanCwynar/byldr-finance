@@ -14,7 +14,7 @@ export default async function SimulationPage() {
   ]);
 
   return (
-    <div className="min-h-screen p-8 pb-20 sm:p-20">
+    <div className="min-h-screen p-4 pb-20 sm:p-20">
       <main className="flex flex-col gap-8 items-center w-full max-w-6xl mx-auto">
         <div className="w-full">
           <h1 className="text-3xl font-bold mb-6">Portfolio Simulation</h1>

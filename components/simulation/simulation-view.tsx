@@ -221,7 +221,7 @@ export default function SimulationView({
       adjustedValue -= debt.adjustedValue;
     });
     
-    return {
+    const summary = {
       originalValue,
       adjustedValue,
       originalAssets,
@@ -230,6 +230,16 @@ export default function SimulationView({
       adjustedDebts,
       percentChange: originalValue ? ((adjustedValue - originalValue) / originalValue) * 100 : 0
     };
+    
+    // Save portfolio summary to localStorage for use in forecast
+    try {
+      localStorage.setItem('simulation_portfolio_summary', JSON.stringify(summary));
+      console.log('Saved simulation summary to localStorage:', summary);
+    } catch (error) {
+      console.error('Error saving simulation summary to localStorage:', error);
+    }
+    
+    return summary;
   }, [adjustedWallets, adjustedManualAssets, adjustedManualDebts]);
   
   // Debug info
