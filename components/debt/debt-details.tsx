@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -17,8 +17,10 @@ interface DebtDetailsProps {
   debt: Debt;
 }
 
-export default function DebtDetails({ debt }: DebtDetailsProps) {
+export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
   const router = useRouter();
+  const liveDebt =
+    useQuery(api.debts.getDebt, { id: initialDebt._id }) ?? initialDebt;
   const [showEditForm, setShowEditForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -26,10 +28,10 @@ export default function DebtDetails({ debt }: DebtDetailsProps) {
   const deleteDebt = useMutation(api.debts.deleteDebt);
   
   const handleUpdateDebt = async (updatedData: Partial<Doc<"debts">>) => {
-    if (!debt) return;
+    if (!liveDebt) return;
     
     await updateDebt({
-      id: debt._id,
+      id: liveDebt._id,
       ...updatedData,
     });
     
@@ -37,11 +39,11 @@ export default function DebtDetails({ debt }: DebtDetailsProps) {
   };
   
   const handleDeleteDebt = async () => {
-    if (!debt) return;
+    if (!liveDebt) return;
     
     setIsDeleting(true);
     try {
-      await deleteDebt({ id: debt._id });
+      await deleteDebt({ id: liveDebt._id });
       router.push('/');
     } catch (error) {
       console.error('Failed to delete debt:', error);
@@ -55,7 +57,7 @@ export default function DebtDetails({ debt }: DebtDetailsProps) {
     return new Date(timestamp).toLocaleDateString();
   };
   
-  if (!debt) {
+  if (!liveDebt) {
     return <div>Loading...</div>;
   }
   
@@ -65,14 +67,14 @@ export default function DebtDetails({ debt }: DebtDetailsProps) {
         <Link href="/" className="mr-4 p-2 rounded-full hover:bg-gray-800">
           <ArrowLeftIcon className="w-5 h-5" />
         </Link>
-        <h1 className="text-2xl font-bold">{debt.name}</h1>
+        <h1 className="text-2xl font-bold">{liveDebt.name}</h1>
       </div>
       
       <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-semibold">Debt Details</h2>
-            <p className="text-gray-400 text-sm">Last updated: {formatDate(debt.metadata?.lastUpdated)}</p>
+            <p className="text-gray-400 text-sm">Last updated: {formatDate(liveDebt.metadata?.lastUpdated)}</p>
           </div>
           <div className="flex space-x-2">
             <button 
@@ -95,74 +97,74 @@ export default function DebtDetails({ debt }: DebtDetailsProps) {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-gray-400">Type</h3>
-              <p className="text-lg capitalize">{debt.type.replace('_', ' ')}</p>
+              <p className="text-lg capitalize">{liveDebt.type.replace('_', ' ')}</p>
             </div>
             
             <div>
               <h3 className="text-sm font-medium text-gray-400">Value</h3>
-              <p className="text-lg text-red-500">${debt.value.toLocaleString()}</p>
+              <p className="text-lg text-red-500">${liveDebt.value.toLocaleString()}</p>
             </div>
             
-            {debt.metadata?.originalAmount && (
+            {liveDebt.metadata?.originalAmount && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Original Amount</h3>
-                <p className="text-lg">${debt.metadata.originalAmount.toLocaleString()}</p>
+                <p className="text-lg">${liveDebt.metadata.originalAmount.toLocaleString()}</p>
               </div>
             )}
             
-            {debt.metadata?.lender && (
+            {liveDebt.metadata?.lender && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Lender</h3>
-                <p className="text-lg">{debt.metadata.lender}</p>
+                <p className="text-lg">{liveDebt.metadata.lender}</p>
               </div>
             )}
           </div>
           
           <div className="space-y-4">
-            {debt.metadata?.interestRate !== undefined && (
+            {liveDebt.metadata?.interestRate !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Interest Rate</h3>
-                <p className="text-lg">{debt.metadata.interestRate}%</p>
+                <p className="text-lg">{liveDebt.metadata.interestRate}%</p>
               </div>
             )}
             
-            {debt.metadata?.startDate && (
+            {liveDebt.metadata?.startDate && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Start Date</h3>
-                <p className="text-lg">{formatDate(debt.metadata.startDate)}</p>
+                <p className="text-lg">{formatDate(liveDebt.metadata.startDate)}</p>
               </div>
             )}
             
-            {debt.metadata?.dueDate && (
+            {liveDebt.metadata?.dueDate && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Due Date</h3>
-                <p className="text-lg">{formatDate(debt.metadata.dueDate)}</p>
+                <p className="text-lg">{formatDate(liveDebt.metadata.dueDate)}</p>
               </div>
             )}
             
-            {debt.metadata?.minimumPayment !== undefined && (
+            {liveDebt.metadata?.minimumPayment !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Minimum Payment</h3>
-                <p className="text-lg">${debt.metadata.minimumPayment.toLocaleString()}</p>
+                <p className="text-lg">${liveDebt.metadata.minimumPayment.toLocaleString()}</p>
               </div>
             )}
           </div>
         </div>
         
-        {debt.metadata?.description && (
+        {liveDebt.metadata?.description && (
           <div className="mt-6">
             <h3 className="text-sm font-medium text-gray-400">Description</h3>
-            <p className="text-lg">{debt.metadata.description}</p>
+            <p className="text-lg">{liveDebt.metadata.description}</p>
           </div>
         )}
       </div>
       
       {showEditForm && (
         <Modal onClose={() => setShowEditForm(false)}>
-          <DebtForm 
-            debt={debt} 
-            onClose={() => setShowEditForm(false)} 
-            onSubmit={handleUpdateDebt} 
+          <DebtForm
+            debt={liveDebt}
+            onClose={() => setShowEditForm(false)}
+            onSubmit={handleUpdateDebt}
           />
         </Modal>
       )}

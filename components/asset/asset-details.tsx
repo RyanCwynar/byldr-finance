@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
 import { Modal } from '@/components/modal';
@@ -14,8 +14,10 @@ interface AssetDetailsProps {
   asset: Doc<"assets">;
 }
 
-export default function AssetDetails({ asset }: AssetDetailsProps) {
+export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps) {
   const router = useRouter();
+  const liveAsset =
+    useQuery(api.assets.getAsset, { id: initialAsset._id }) ?? initialAsset;
   const [showEditForm, setShowEditForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -23,10 +25,10 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
   const deleteAsset = useMutation(api.assets.deleteAsset);
   
   const handleUpdateAsset = async (updatedData: Partial<Doc<"assets">>) => {
-    if (!asset) return;
-    
+    if (!liveAsset) return;
+
     await updateAsset({
-      id: asset._id,
+      id: liveAsset._id,
       ...updatedData,
     });
     
@@ -34,11 +36,11 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
   };
   
   const handleDeleteAsset = async () => {
-    if (!asset) return;
+    if (!liveAsset) return;
     
     setIsDeleting(true);
     try {
-      await deleteAsset({ id: asset._id });
+      await deleteAsset({ id: liveAsset._id });
       router.push('/');
     } catch (error) {
       console.error('Failed to delete asset:', error);
@@ -52,7 +54,7 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
     return new Date(timestamp).toLocaleDateString();
   };
   
-  if (!asset) {
+  if (!liveAsset) {
     return <div>Loading...</div>;
   }
   
@@ -62,14 +64,14 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
         <Link href="/" className="mr-4 p-2 rounded-full hover:bg-gray-800">
           <ArrowLeftIcon className="w-5 h-5" />
         </Link>
-        <h1 className="text-2xl font-bold">{asset.name}</h1>
+        <h1 className="text-2xl font-bold">{liveAsset.name}</h1>
       </div>
       
       <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-semibold">Asset Details</h2>
-            <p className="text-gray-400 text-sm">Last updated: {formatDate(asset.metadata?.lastUpdated)}</p>
+            <p className="text-gray-400 text-sm">Last updated: {formatDate(liveAsset.metadata?.lastUpdated)}</p>
           </div>
           <div className="flex space-x-2">
             <button 
@@ -92,49 +94,49 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-gray-400">Type</h3>
-              <p className="text-lg capitalize">{asset.type.replace('_', ' ')}</p>
+              <p className="text-lg capitalize">{liveAsset.type.replace('_', ' ')}</p>
             </div>
             
             <div>
               <h3 className="text-sm font-medium text-gray-400">Value</h3>
-              <p className="text-lg text-green-500">${asset.value.toLocaleString()}</p>
+              <p className="text-lg text-green-500">${liveAsset.value.toLocaleString()}</p>
             </div>
             
-            {asset.metadata?.purchasePrice !== undefined && (
+            {liveAsset.metadata?.purchasePrice !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Purchase Price</h3>
-                <p className="text-lg">${asset.metadata.purchasePrice.toLocaleString()}</p>
+                <p className="text-lg">${liveAsset.metadata.purchasePrice.toLocaleString()}</p>
               </div>
             )}
             
-            {asset.metadata?.location && (
+            {liveAsset.metadata?.location && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Location</h3>
-                <p className="text-lg">{asset.metadata.location}</p>
+                <p className="text-lg">{liveAsset.metadata.location}</p>
               </div>
             )}
           </div>
           
           <div className="space-y-4">
-            {asset.metadata?.ticker && (
+            {liveAsset.metadata?.ticker && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Ticker</h3>
-                <p className="text-lg">{asset.metadata.ticker}</p>
+                <p className="text-lg">{liveAsset.metadata.ticker}</p>
               </div>
             )}
             
-            {asset.metadata?.purchaseDate && (
+            {liveAsset.metadata?.purchaseDate && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Purchase Date</h3>
-                <p className="text-lg">{formatDate(asset.metadata.purchaseDate)}</p>
+                <p className="text-lg">{formatDate(liveAsset.metadata.purchaseDate)}</p>
               </div>
             )}
             
-            {asset.tags && asset.tags.length > 0 && (
+            {liveAsset.tags && liveAsset.tags.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Tags</h3>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {asset.tags.map((tag, index) => (
+                  {liveAsset.tags.map((tag, index) => (
                     <span 
                       key={index} 
                       className="px-2 py-1 bg-gray-700 rounded-full text-xs"
@@ -148,20 +150,20 @@ export default function AssetDetails({ asset }: AssetDetailsProps) {
           </div>
         </div>
         
-        {asset.metadata?.description && (
+        {liveAsset.metadata?.description && (
           <div className="mt-6">
             <h3 className="text-sm font-medium text-gray-400">Description</h3>
-            <p className="text-lg">{asset.metadata.description}</p>
+            <p className="text-lg">{liveAsset.metadata.description}</p>
           </div>
         )}
       </div>
       
       {showEditForm && (
         <Modal onClose={() => setShowEditForm(false)}>
-          <AssetForm 
-            asset={asset} 
-            onClose={() => setShowEditForm(false)} 
-            onSubmit={handleUpdateAsset} 
+          <AssetForm
+            asset={liveAsset}
+            onClose={() => setShowEditForm(false)}
+            onSubmit={handleUpdateAsset}
           />
         </Modal>
       )}
