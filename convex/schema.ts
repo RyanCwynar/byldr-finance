@@ -133,7 +133,8 @@ export default defineSchema({
       monthlyIncome: v.optional(v.number()),
       monthlyCost: v.optional(v.number()),
       forecastDataView: v.optional(v.union(v.literal("all"), v.literal("real"), v.literal("projected"))),
-      
+      forecastTimeframe: v.optional(v.union(v.literal('7d'), v.literal('30d'), v.literal('90d'), v.literal('all'))),
+
       // Other preferences can be added here as needed
       theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
       dashboardLayout: v.optional(v.array(v.string())),
