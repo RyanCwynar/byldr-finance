@@ -8,6 +8,7 @@ const DEFAULT_PREFERENCES = {
   monthlyIncome: 18000,
   monthlyCost: 10000,
   forecastDataView: "all" as "all" | "real" | "projected",
+  forecastTimeframe: 'all' as '7d' | '30d' | '90d' | 'all',
   theme: "dark" as "light" | "dark" | "system",
   dashboardLayout: [] as string[],
   customSettings: {}
@@ -116,6 +117,7 @@ export const updatePreferences = mutation({
       monthlyIncome: v.optional(v.number()),
       monthlyCost: v.optional(v.number()),
       forecastDataView: v.optional(v.union(v.literal("all"), v.literal("real"), v.literal("projected"))),
+      forecastTimeframe: v.optional(v.union(v.literal('7d'), v.literal('30d'), v.literal('90d'), v.literal('all'))),
       theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
       dashboardLayout: v.optional(v.array(v.string())),
       customSettings: v.optional(v.any())

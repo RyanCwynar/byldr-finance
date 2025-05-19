@@ -30,6 +30,8 @@ export interface ForecastChartViewProps {
   projectedMetrics: DailyMetric[];
   dataView: 'all' | 'real' | 'projected';
   setDataView: (view: 'all' | 'real' | 'projected') => void;
+  timeframe: '7d' | '30d' | '90d' | 'all';
+  setTimeframe: (tf: '7d' | '30d' | '90d' | 'all') => void;
 }
 
 export interface ForecastEmptyStateProps {
@@ -44,6 +46,7 @@ export interface UserPreferences {
   monthlyIncome?: number;
   monthlyCost?: number;
   forecastDataView?: "all" | "real" | "projected";
+  forecastTimeframe?: '7d' | '30d' | '90d' | 'all';
   theme?: "light" | "dark" | "system";
   dashboardLayout?: string[];
   customSettings?: any;

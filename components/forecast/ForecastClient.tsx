@@ -46,6 +46,9 @@ export function ForecastClient({
   const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>(
     (defaultPrefs.forecastDataView as 'all' | 'real' | 'projected') || 'all'
   );
+  const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | 'all'>(
+    (defaultPrefs.forecastTimeframe as '7d' | '30d' | '90d' | 'all') || 'all'
+  );
   
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
   
@@ -76,6 +79,11 @@ export function ForecastClient({
   const updateDataView = (value: 'all' | 'real' | 'projected') => {
     setDataView(value);
     setPreference({ key: "forecastDataView", value });
+  };
+
+  const updateTimeframe = (value: '7d' | '30d' | '90d' | 'all') => {
+    setTimeframe(value);
+    setPreference({ key: 'forecastTimeframe', value });
   };
   
   // Load simulation data from local storage
@@ -366,6 +374,8 @@ export function ForecastClient({
         projectedMetrics={projectedMetrics}
         dataView={dataView}
         setDataView={updateDataView}
+        timeframe={timeframe}
+        setTimeframe={updateTimeframe}
       />
       
       <ForecastControls
