@@ -38,6 +38,7 @@ function EmptyChartState() {
 
 export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
+  const [showMovingAverage, setShowMovingAverage] = useState(false);
 
   const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
     if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1 };
@@ -68,9 +69,14 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
     let maxValue = -Infinity;
     let projectionCount = 0;
 
+    // Calculate moving average using a 30-day window
+    const MA_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+    let windowStart = 0;
+    let windowSum = 0;
+
     const data = sortedMetrics.map((m, index) => {
       const isProjection = m.isProjected === true;
-      
+
       let upperProjection = m.netWorth;
       let lowerProjection = m.netWorth;
 
@@ -112,8 +118,17 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         );
       }
 
-      minValue = Math.min(minValue, lowerProjection);
-      maxValue = Math.max(maxValue, upperProjection);
+      // Update moving average window
+      while (sortedMetrics[windowStart].date < m.date - MA_WINDOW_MS) {
+        windowSum -= sortedMetrics[windowStart].netWorth;
+        windowStart++;
+      }
+      windowSum += m.netWorth;
+      const windowSize = index - windowStart + 1;
+      const movingAverage = windowSum / windowSize;
+
+      minValue = Math.min(minValue, lowerProjection, movingAverage);
+      maxValue = Math.max(maxValue, upperProjection, movingAverage);
 
       return {
         timestamp: m.date,
@@ -121,6 +136,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         netWorth: m.netWorth,
         upperProjection,
         lowerProjection,
+        movingAverage,
         isProjection
       };
     });
@@ -191,7 +207,20 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
           />
         </div>
       )}
-      
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="showMovingAverage"
+          checked={showMovingAverage}
+          onChange={(e) => setShowMovingAverage(e.target.checked)}
+          className="mr-1 h-4 w-4"
+        />
+        <label htmlFor="showMovingAverage" className="text-sm">
+          Show 30d Moving Avg
+        </label>
+      </div>
+
       <ResponsiveContainer width="100%" height={showUncertainty ? "90%" : "100%"}>
         <LineChart
           data={chartData}
@@ -270,6 +299,17 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
             dot={{ r: 4 }}
             activeDot={{ r: 8 }}
           />
+
+          {showMovingAverage && (
+            <Line
+              type="monotone"
+              dataKey="movingAverage"
+              name="30d Moving Avg"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              dot={false}
+            />
+          )}
 
           {/* Lower projection line - only show for projected points and when showUncertainty is true */}
           {showUncertainty && (
