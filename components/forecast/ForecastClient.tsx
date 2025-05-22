@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { DailyMetric, UserPreferences, UserPreferencesData } from './types';
+import { DailyMetric, UserPreferences, UserPreferencesData, RecurringTotals } from './types';
 import { ForecastEmptyState } from './ForecastEmptyState';
 import { ForecastControls } from './ForecastControls';
 import { ForecastSummary } from './ForecastSummary';
@@ -30,12 +30,14 @@ interface ForecastClientProps {
     debts: number;
   } | null;
   initialPreferences: UserPreferencesData | null;
+  initialRecurring: { monthlyIncome: number; monthlyCost: number } | null;
 }
 
-export function ForecastClient({ 
-  initialMetrics, 
+export function ForecastClient({
+  initialMetrics,
   initialNetWorth,
-  initialPreferences
+  initialPreferences,
+  initialRecurring
 }: ForecastClientProps) {
   // Initialize state from server-side preferences, falling back to defaults
   const defaultPrefs = initialPreferences?.preferences || {};
@@ -143,6 +145,16 @@ export function ForecastClient({
     api.userPreferences.getUserPreferences,
     shouldFetch ? {} : "skip"
   );
+
+  const realtimeRecurring = useQuery(
+    api.recurring.getMonthlyTotals,
+    shouldFetch ? {} : "skip"
+  );
+
+  const recurringTotals = useMemo(() => {
+    if (shouldFetch && realtimeRecurring) return realtimeRecurring;
+    return initialRecurring || { monthlyIncome: 0, monthlyCost: 0 };
+  }, [realtimeRecurring, initialRecurring, shouldFetch]);
   
   // Always start with initial values, then optionally use real-time values once stable
   const metrics = useMemo(() => {
@@ -201,7 +213,9 @@ export function ForecastClient({
     // Start forecast from first of next month
     const forecastStart = new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, 1);
     
-    const monthlyNet = monthlyIncome - monthlyCost;
+    const combinedIncome = monthlyIncome + recurringTotals.monthlyIncome;
+    const combinedCost = monthlyCost + recurringTotals.monthlyCost;
+    const monthlyNet = combinedIncome - combinedCost;
     
     // Calculate simulation-based projections if enabled and data is available
     // 

@@ -30,14 +30,15 @@ export default async function Home() {
         <div className="w-full">
           <ForecastClient 
             initialMetrics={forecastData.initialMetrics as DailyMetric[]} 
-            initialNetWorth={forecastData.initialNetWorth as {
-              netWorth: number;
-              assets: number;
-              debts: number;
-            } | null} 
-            initialPreferences={forecastData.initialPreferences as UserPreferencesData | null}
-          />
-        </div>
+          initialNetWorth={forecastData.initialNetWorth as {
+            netWorth: number;
+            assets: number;
+            debts: number;
+          } | null}
+          initialPreferences={forecastData.initialPreferences as UserPreferencesData | null}
+          initialRecurring={forecastData.initialRecurring as { monthlyIncome: number; monthlyCost: number } | null}
+        />
+      </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
           <WalletsCard wallets={walletsPreload || []} />
           <AssetsCard assets={assetsPreload || []} />
