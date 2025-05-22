@@ -348,55 +348,6 @@ export const upsertHolding = mutation({
   });
   
  
-  // Helper function to calculate net worth - now expects an action context
-export async function updateHoldingsHelper(ctx: any) {
-    console.debug("Starting holdings update");
-  
-    // Get all wallets
-    const { wallets } = await ctx.runQuery(api.wallets.listWallets, {});
-    console.info("Found wallets:", wallets.length);
-  
-    // Process Ethereum wallets
-    const ethWallets = wallets.filter((w: Wallet) => w.chainType === "ethereum");
-    console.info("Processing ETH wallets:", ethWallets.length);
-    for (const wallet of ethWallets) {
-      try {
-       await ctx.runAction(api.holdingsNode.updateEvmWalletHoldings, { 
-          walletAddress: wallet.address,
-        });
-      } catch (error) {
-        console.error(`Error updating holdings for ETH wallet ${wallet.address}:`, error);
-      }
-    }
-  
-    // Process Bitcoin wallets
-    const btcWallets = wallets.filter((w: Wallet) => w.chainType === "bitcoin");
-  
-    console.info("Processing BTC wallets:", btcWallets.length);
-    for (const wallet of btcWallets) {
-      try {
-        // Get BTC balance using BlockCypher API
-        const balance = await ctx.runAction(api.holdingsNode.getBitcoinWalletBalance, {
-          xpub: wallet.address
-        });
-        
-        const btcBalance = Number(balance.confirmedBalance); // Convert satoshis to BTC
-        // Update BTC holding for this wallet
-        await ctx.runMutation(api.holdings.upsertHolding, {
-          walletId: wallet._id,
-          symbol: "BTC",
-          quantity: btcBalance,
-          chain: "bitcoin"
-        });
-  
-    
-      } catch (error) {
-        console.error(`Error getting balance for BTC wallet ${wallet.address}:`, error);
-      }
-    }
-  
-    return true;
-  }
 
 // Get holdings for a specific wallet
 export const getHoldingsByWallet = query({
