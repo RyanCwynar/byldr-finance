@@ -17,7 +17,7 @@ export default defineSchema({
   wallets: defineTable({
     name: v.string(),
     address: v.string(), // The wallet address
-    chainType: v.string(), // "evm", "solana", or "bitcoin"
+    chainType: v.string(), // "ethereum", "solana", "bitcoin", or "virtual"; virtual wallets are for manual entries
     value: v.optional(v.number()), // Current value in USD
     assets: v.optional(v.number()), // Current assets value in USD
     debts: v.optional(v.number()), // Current debts value in USD
