@@ -26,6 +26,11 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
     return [...assets].sort((a, b) => b.value - a.value);
   }, [assets]);
 
+  const totalAssets = useMemo(() => {
+    if (!assets) return 0;
+    return assets.reduce((sum, asset) => sum + asset.value, 0);
+  }, [assets]);
+
   // Helper function to get icon based on asset type
   const getAssetTypeIcon = (type: string) => {
     switch (type) {
@@ -46,7 +51,12 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-4">Assets</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Assets</h2>
+        <span className="text-green-500 font-mono">
+          {`Total: $${formatNumber(totalAssets)}`}
+        </span>
+      </div>
       <button
         onClick={() => setShowAddForm(true)}
         className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"

@@ -26,6 +26,11 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
     return [...debts].sort((a, b) => b.value - a.value);
   }, [debts]);
 
+  const totalDebts = useMemo(() => {
+    if (!debts) return 0;
+    return debts.reduce((sum, debt) => sum + debt.value, 0);
+  }, [debts]);
+
   // Helper function to get icon based on debt type
   const getDebtTypeIcon = (type: string) => {
     switch (type) {
@@ -44,7 +49,12 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-4">Debts</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Debts</h2>
+        <span className="text-red-500 font-mono">
+          {`Total: $${formatNumber(totalDebts)}`}
+        </span>
+      </div>
       <button
         onClick={() => setShowAddForm(true)}
         className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"

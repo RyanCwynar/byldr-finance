@@ -57,6 +57,11 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
     });
   }, [wallets]);
 
+  const totalWallets = useMemo(() => {
+    if (!wallets) return 0;
+    return wallets.reduce((sum, wallet) => sum + (wallet.value || 0), 0);
+  }, [wallets]);
+
   const handleUpdateWallets = async () => {
     try {
       setIsUpdating(true);
@@ -70,7 +75,12 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-4">Wallets</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Wallets</h2>
+        <span className="text-green-500 font-mono">
+          {`Total: $${formatNumber(totalWallets)}`}
+        </span>
+      </div>
       <AddButton onClick={() => setShowAddForm(true)} />
       <UpdateButton onClick={handleUpdateWallets} isUpdating={isUpdating} />
       
