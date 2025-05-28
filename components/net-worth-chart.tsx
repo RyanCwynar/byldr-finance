@@ -10,7 +10,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Area
+  Area,
+  ReferenceLine
 } from 'recharts';
 
 import { Doc } from "@/convex/_generated/dataModel";
@@ -39,9 +40,12 @@ function EmptyChartState() {
 export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
   const [showMovingAverage, setShowMovingAverage] = useState(false);
+  const [showWeeklyAverage, setShowWeeklyAverage] = useState(false);
+  const [showMonthlyAverage, setShowMonthlyAverage] = useState(false);
+  const [showOverallAverage, setShowOverallAverage] = useState(false);
 
-  const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
-    if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1 };
+  const { chartData, yAxisDomain, firstProjectedIndex, averages } = useMemo(() => {
+    if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1, averages: { week: 0, month: 0, all: 0 } };
 
     const sortedMetrics = metrics.sort((a, b) => a.date - b.date);
     
@@ -141,6 +145,24 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
       };
     });
 
+    // Compute averages for reference lines
+    const now = Date.now();
+    const weekCutoff = now - 7 * 24 * 60 * 60 * 1000;
+    const monthCutoff = now - 30 * 24 * 60 * 60 * 1000;
+
+    const weekMetrics = sortedMetrics.filter(m => m.date >= weekCutoff);
+    const monthMetrics = sortedMetrics.filter(m => m.date >= monthCutoff);
+
+    const averageWeek = weekMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      (weekMetrics.length || 1);
+    const averageMonth = monthMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      (monthMetrics.length || 1);
+    const averageAll = sortedMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      sortedMetrics.length;
+
+    minValue = Math.min(minValue, averageWeek, averageMonth, averageAll);
+    maxValue = Math.max(maxValue, averageWeek, averageMonth, averageAll);
+
     // Summary logging
     console.log('Projection summary:', {
       totalPoints: data.length,
@@ -179,7 +201,12 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
     return {
       chartData: data,
       yAxisDomain: domain,
-      firstProjectedIndex
+      firstProjectedIndex,
+      averages: {
+        week: averageWeek,
+        month: averageMonth,
+        all: averageAll,
+      },
     };
   }, [metrics, uncertaintyPercent, showUncertainty]);
 
@@ -219,6 +246,45 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         <label htmlFor="showMovingAverage" className="text-sm">
           Show 30d Moving Avg
         </label>
+      </div>
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showWeeklyAverage"
+            checked={showWeeklyAverage}
+            onChange={(e) => setShowWeeklyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showWeeklyAverage" className="text-sm">
+            Show 7d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showMonthlyAverage"
+            checked={showMonthlyAverage}
+            onChange={(e) => setShowMonthlyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showMonthlyAverage" className="text-sm">
+            Show 30d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showOverallAverage"
+            checked={showOverallAverage}
+            onChange={(e) => setShowOverallAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showOverallAverage" className="text-sm">
+            Show All Avg
+          </label>
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height={showUncertainty ? "90%" : "100%"}>
@@ -308,6 +374,33 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
               stroke="#f59e0b"
               strokeWidth={2}
               dot={false}
+            />
+          )}
+
+          {showWeeklyAverage && (
+            <ReferenceLine
+              y={averages.week}
+              stroke="#6366f1"
+              strokeDasharray="3 3"
+              label={{ value: '7d Avg', position: 'right', fill: '#6366f1' }}
+            />
+          )}
+
+          {showMonthlyAverage && (
+            <ReferenceLine
+              y={averages.month}
+              stroke="#10b981"
+              strokeDasharray="3 3"
+              label={{ value: '30d Avg', position: 'right', fill: '#10b981' }}
+            />
+          )}
+
+          {showOverallAverage && (
+            <ReferenceLine
+              y={averages.all}
+              stroke="#f43f5e"
+              strokeDasharray="3 3"
+              label={{ value: 'All Avg', position: 'right', fill: '#f43f5e' }}
             />
           )}
 
