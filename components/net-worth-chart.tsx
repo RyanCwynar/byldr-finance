@@ -10,7 +10,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Area
+  Area,
+  ReferenceLine
 } from 'recharts';
 
 import { Doc } from "@/convex/_generated/dataModel";
@@ -39,9 +40,12 @@ function EmptyChartState() {
 export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
   const [showMovingAverage, setShowMovingAverage] = useState(false);
+  const [showWeeklyAverage, setShowWeeklyAverage] = useState(false);
+  const [showMonthlyAverage, setShowMonthlyAverage] = useState(false);
+  const [showOverallAverage, setShowOverallAverage] = useState(false);
 
-  const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
-    if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1 };
+  const { chartData, yAxisDomain, firstProjectedIndex, averages, weeklySegments } = useMemo(() => {
+    if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1, averages: { month: 0, all: 0 }, weeklySegments: [] };
 
     const sortedMetrics = metrics.sort((a, b) => a.date - b.date);
     
@@ -141,6 +145,40 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
       };
     });
 
+    // Build non-overlapping weekly average segments
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const weeklySegments: { timestamp: number; weeklyAverage: number | null }[] = [];
+    let segmentStart = sortedMetrics[0].date;
+    while (segmentStart <= sortedMetrics[sortedMetrics.length - 1].date) {
+      const segmentEnd = segmentStart + WEEK_MS;
+      const segmentMetrics = sortedMetrics.filter(m => m.date >= segmentStart && m.date < segmentEnd);
+      if (segmentMetrics.length) {
+        const avg = segmentMetrics.reduce((sum, m) => sum + m.netWorth, 0) / segmentMetrics.length;
+        weeklySegments.push(
+          { timestamp: segmentStart, weeklyAverage: avg },
+          { timestamp: segmentEnd, weeklyAverage: avg },
+          { timestamp: segmentEnd, weeklyAverage: null },
+        );
+        minValue = Math.min(minValue, avg);
+        maxValue = Math.max(maxValue, avg);
+      }
+      segmentStart = segmentEnd;
+    }
+
+    // Compute monthly and overall averages for reference lines
+    const now = Date.now();
+    const monthCutoff = now - 30 * 24 * 60 * 60 * 1000;
+
+    const monthMetrics = sortedMetrics.filter(m => m.date >= monthCutoff);
+
+    const averageMonth = monthMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      (monthMetrics.length || 1);
+    const averageAll = sortedMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      sortedMetrics.length;
+
+    minValue = Math.min(minValue, averageMonth, averageAll);
+    maxValue = Math.max(maxValue, averageMonth, averageAll);
+
     // Summary logging
     console.log('Projection summary:', {
       totalPoints: data.length,
@@ -179,7 +217,12 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
     return {
       chartData: data,
       yAxisDomain: domain,
-      firstProjectedIndex
+      firstProjectedIndex,
+      averages: {
+        month: averageMonth,
+        all: averageAll,
+      },
+      weeklySegments,
     };
   }, [metrics, uncertaintyPercent, showUncertainty]);
 
@@ -219,6 +262,45 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         <label htmlFor="showMovingAverage" className="text-sm">
           Show 30d Moving Avg
         </label>
+      </div>
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showWeeklyAverage"
+            checked={showWeeklyAverage}
+            onChange={(e) => setShowWeeklyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showWeeklyAverage" className="text-sm">
+            Show 7d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showMonthlyAverage"
+            checked={showMonthlyAverage}
+            onChange={(e) => setShowMonthlyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showMonthlyAverage" className="text-sm">
+            Show 30d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showOverallAverage"
+            checked={showOverallAverage}
+            onChange={(e) => setShowOverallAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showOverallAverage" className="text-sm">
+            Show All Avg
+          </label>
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height={showUncertainty ? "90%" : "100%"}>
@@ -308,6 +390,37 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
               stroke="#f59e0b"
               strokeWidth={2}
               dot={false}
+            />
+          )}
+
+          {showWeeklyAverage && (
+            <Line
+              type="linear"
+              dataKey="weeklyAverage"
+              data={weeklySegments}
+              name="7d Avg"
+              stroke="#6366f1"
+              strokeWidth={2}
+              dot={false}
+              connectNulls={false}
+            />
+          )}
+
+          {showMonthlyAverage && (
+            <ReferenceLine
+              y={averages.month}
+              stroke="#10b981"
+              strokeDasharray="3 3"
+              label={{ value: '30d Avg', position: 'right', fill: '#10b981' }}
+            />
+          )}
+
+          {showOverallAverage && (
+            <ReferenceLine
+              y={averages.all}
+              stroke="#f43f5e"
+              strokeDasharray="3 3"
+              label={{ value: 'All Avg', position: 'right', fill: '#f43f5e' }}
             />
           )}
 
