@@ -1,5 +1,4 @@
-import assert from 'node:assert';
-import test from 'node:test';
+import { test, expect } from 'bun:test';
 
 function filterMetrics(metrics, timeframe) {
   if (timeframe === 'all') return metrics;
@@ -11,9 +10,9 @@ function filterMetrics(metrics, timeframe) {
 test('filters metrics within timeframe', () => {
   const now = Date.now();
   const metrics = [
-    {date: now - 10 * 24 * 60 * 60 * 1000},
-    {date: now - 5 * 24 * 60 * 60 * 1000},
+    { date: now - 10 * 24 * 60 * 60 * 1000 },
+    { date: now - 5 * 24 * 60 * 60 * 1000 },
   ];
   const result = filterMetrics(metrics, '7d');
-  assert.strictEqual(result.length, 1);
+  expect(result.length).toBe(1);
 });

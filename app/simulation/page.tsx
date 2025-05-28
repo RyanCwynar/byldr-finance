@@ -10,7 +10,7 @@ export default async function SimulationPage() {
     preloadQueryWithAuth(api.holdings.listHoldings, { filter: { includeDebts: true } }) as Promise<Array<Doc<"holdings">>>,
     preloadQueryWithAuth(api.wallets.listWallets, {}) as Promise<Array<Doc<"wallets">>>,
     preloadQueryWithAuth(api.assets.listAssets, {}) as Promise<Array<Doc<"assets">>>,
-    preloadQueryWithAuth(api.assets.listDebts, {}) as Promise<Array<Doc<"debts">>>
+    preloadQueryWithAuth(api.debts.listDebts, {}) as Promise<Array<Doc<"debts">>>
   ]);
 
   return (

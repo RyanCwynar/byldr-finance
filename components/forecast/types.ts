@@ -23,6 +23,7 @@ export interface ForecastControlsProps {
 export interface ForecastSummaryProps {
   currentNetWorth: number;
   projectedNetWorth: number;
+  prevNetWorth?: number;
 }
 
 export interface ForecastChartViewProps {
