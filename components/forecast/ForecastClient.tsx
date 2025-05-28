@@ -330,9 +330,20 @@ export function ForecastClient({
 
   // Safely get the current and projected net worth values
   const lastMetric = metrics.length > 0 ? metrics[metrics.length-1] : null;
-  const currentValue = (currentNetWorth?.netWorth !== undefined) 
-    ? currentNetWorth.netWorth 
+  const currentValue = (currentNetWorth?.netWorth !== undefined)
+    ? currentNetWorth.netWorth
     : (lastMetric?.netWorth || 0);
+
+  const yesterdayAverage = useMemo(() => {
+    if (!metrics.length) return undefined;
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yMetrics = metrics.filter(m => m.date >= start && m.date < end);
+    if (!yMetrics.length) return undefined;
+    const sum = yMetrics.reduce((acc, m) => acc + m.netWorth, 0);
+    return sum / yMetrics.length;
+  }, [metrics]);
   
   const lastForecastedMetric = forecastedMetrics.length > 0 
     ? forecastedMetrics[forecastedMetrics.length-1] 
@@ -344,6 +355,7 @@ export function ForecastClient({
       <ForecastSummary
         currentNetWorth={currentValue}
         projectedNetWorth={projectedValue}
+        prevNetWorth={yesterdayAverage}
       />
       
       <div className="flex flex-col mb-4 bg-gray-800 p-4 rounded-lg">
