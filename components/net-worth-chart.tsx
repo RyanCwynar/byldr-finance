@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 
 import { Doc } from "@/convex/_generated/dataModel";
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatCompactCurrency } from '@/lib/formatters';
 
 type DailyMetric = Doc<'dailyMetrics'> & {
   isProjected?: boolean;
@@ -242,7 +242,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
           />
           <YAxis
             domain={yAxisDomain}
-            tickFormatter={(value) => formatCurrency(value)}
+            tickFormatter={(value) => formatCompactCurrency(value)}
             tickCount={8} // Suggest number of ticks
           />
           <Tooltip 
