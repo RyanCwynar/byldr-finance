@@ -12,17 +12,28 @@ type Recurring = Doc<'recurringTransactions'>;
 
 interface RecurringPageClientProps {
   initialData: Recurring[];
+  initialTags: string[];
 }
 
-export default function RecurringPageClient({ initialData }: RecurringPageClientProps) {
+export default function RecurringPageClient({ initialData, initialTags }: RecurringPageClientProps) {
   const data = useQuery(api.recurring.listRecurringTransactions) ?? initialData;
+  const allTags = useQuery(api.recurring.listRecurringTags) ?? initialTags;
   const remove = useMutation(api.recurring.deleteRecurringTransaction);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Recurring | null>(null);
   const [sortField, setSortField] = useState<'amount' | 'type' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tagFilter, setTagFilter] = useState('');
+  const filteredData = useMemo(() => {
+    const tags = tagFilter
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length === 0) return data;
+    return data.filter((t) => tags.every((tag) => t.tags?.includes(tag)));
+  }, [data, tagFilter]);
   const sortedData = useMemo(() => {
-    const arr = [...data];
+    const arr = [...filteredData];
     if (sortField === 'amount') {
       arr.sort((a, b) =>
         sortDir === 'asc' ? a.amount - b.amount : b.amount - a.amount,
@@ -42,10 +53,10 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
       });
     }
     return arr;
-  }, [data, sortField, sortDir]);
+  }, [filteredData, sortField, sortDir]);
 
   const totals = useMemo(() => {
-    return data.reduce(
+    return filteredData.reduce(
       (acc, t) => {
         const monthly = monthlyAmount(t);
         if (t.type === 'income') acc.income += monthly;
@@ -54,7 +65,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
       },
       { income: 0, expense: 0 },
     );
-  }, [data]);
+  }, [filteredData]);
 
   const toggleSort = (field: 'amount' | 'type') => {
     if (sortField === field) {
@@ -76,15 +87,29 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl mx-auto relative">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">Recurring Transactions</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
-        >
-          <PlusIcon className="w-5 h-5" />
-          <span>Add</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            value={tagFilter}
+            onChange={(e) => setTagFilter(e.target.value)}
+            list="recurring-tag-filter"
+            placeholder="Filter tags"
+            className="px-2 py-1 rounded-md border border-gray-600 bg-gray-800"
+          />
+          <datalist id="recurring-tag-filter">
+            {allTags.map((tag) => (
+              <option key={tag} value={tag} />
+            ))}
+          </datalist>
+          <button
+            onClick={() => setShowForm(true)}
+            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>Add</span>
+          </button>
+        </div>
       </div>
       {/* Mobile card list */}
       <div className="md:hidden space-y-3">

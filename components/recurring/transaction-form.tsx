@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
 
@@ -21,6 +21,8 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
   const [month, setMonth] = useState(transaction?.month ? String(transaction.month) : '');
   const [day, setDay] = useState(transaction?.day ? String(transaction.day) : '');
   const [tags, setTags] = useState(transaction?.tags ? transaction.tags.join(',') : '');
+
+  const existingTags = useQuery(api.recurring.listRecurringTags) ?? [];
 
   const add = useMutation(api.recurring.addRecurringTransaction);
   const update = useMutation(api.recurring.updateRecurringTransaction);
@@ -145,7 +147,13 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="rent,utilities"
+            list="recurring-tag-options"
           />
+          <datalist id="recurring-tag-options">
+            {existingTags.map((tag) => (
+              <option key={tag} value={tag} />
+            ))}
+          </datalist>
         </div>
         <div className="flex justify-end gap-2">
           <button

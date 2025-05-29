@@ -97,3 +97,19 @@ export const getMonthlyTotals = query({
     return { monthlyIncome, monthlyCost };
   },
 });
+
+export const listRecurringTags = query({
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return [] as string[];
+    const recs = await ctx.db
+      .query("recurringTransactions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const tagSet = new Set<string>();
+    recs.forEach((r) => {
+      r.tags?.forEach((t: string) => tagSet.add(t));
+    });
+    return Array.from(tagSet);
+  },
+});
