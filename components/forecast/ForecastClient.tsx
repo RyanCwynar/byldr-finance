@@ -42,8 +42,16 @@ export function ForecastClient({
   // Initialize state from server-side preferences, falling back to defaults
   const defaultPrefs = initialPreferences?.preferences || {};
   
-  const [monthlyCost, setMonthlyCost] = useState(defaultPrefs.monthlyCost || 10000);
-  const [monthlyIncome, setMonthlyIncome] = useState(defaultPrefs.monthlyIncome || 18000);
+  const [monthlyCost, setMonthlyCost] = useState(
+    defaultPrefs.monthlyCost !== undefined
+      ? defaultPrefs.monthlyCost
+      : initialRecurring?.monthlyCost || 0
+  );
+  const [monthlyIncome, setMonthlyIncome] = useState(
+    defaultPrefs.monthlyIncome !== undefined
+      ? defaultPrefs.monthlyIncome
+      : initialRecurring?.monthlyIncome || 0
+  );
   const [useSimulationData, setUseSimulationData] = useState(defaultPrefs.useSimulationData || false);
   const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>(
     (defaultPrefs.forecastDataView as 'all' | 'real' | 'projected') || 'all'
