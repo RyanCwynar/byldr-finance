@@ -100,3 +100,24 @@ export const getYearlyTotals = query({
     return { income, expense };
   },
 });
+
+export const getFutureTotals = query({
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return { income: 0, expense: 0 };
+    const now = Date.now();
+    const items = await ctx.db
+      .query("oneTimeTransactions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    let income = 0;
+    let expense = 0;
+    items.forEach((i) => {
+      if (i.date >= now) {
+        if (i.type === "income") income += i.amount;
+        else expense += i.amount;
+      }
+    });
+    return { income, expense };
+  },
+});

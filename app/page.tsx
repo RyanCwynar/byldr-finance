@@ -3,7 +3,7 @@ import { Doc } from "@/convex/_generated/dataModel";
 import { preloadQueryWithAuth } from "@/lib/convex";
 import { preloadForecastData } from "@/components/forecast/ForecastPreload";
 import { ForecastClient } from "@/components/forecast/ForecastClient";
-import { DailyMetric, UserPreferencesData } from "@/components/forecast/types";
+import { DailyMetric, UserPreferencesData, OneTimeTotals } from "@/components/forecast/types";
 
 type Asset = Doc<'assets'>;
 type Debt = Doc<'debts'>;
@@ -41,6 +41,7 @@ export default async function Home() {
           } | null}
           initialPreferences={forecastData.initialPreferences as UserPreferencesData | null}
           initialRecurring={forecastData.initialRecurring as { monthlyIncome: number; monthlyCost: number } | null}
+          initialOneTimeTotals={forecastData.initialOneTimeTotals as { income: number; expense: number } | null}
         />
       </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
