@@ -210,37 +210,35 @@ export default function TransactionsPageClient({
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto relative">
       <div className="overflow-x-auto w-full">
-        <table className="text-sm mt-2 w-full">
-          <thead>
-            <tr>
-              <th className="px-2 py-1" />
-              <th className="px-2 py-1">Monthly</th>
-              <th className="px-2 py-1">Annual</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="px-2 py-1">Income</td>
-              <td className="px-2 py-1 text-green-500">{formatCurrency(monthlyTotals.income)}</td>
-              <td className="px-2 py-1 text-green-500">{formatCurrency(annualTotals.income)}</td>
-            </tr>
-            <tr>
-              <td className="px-2 py-1">Cost</td>
-              <td className="px-2 py-1 text-red-500">{formatCurrency(monthlyTotals.expense)}</td>
-              <td className="px-2 py-1 text-red-500">{formatCurrency(annualTotals.expense)}</td>
-            </tr>
-            <tr>
-              <td className="px-2 py-1 font-semibold">Net</td>
-              <td className={`px-2 py-1 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</td>
-              <td className={`px-2 py-1 ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(annualTotals.income - annualTotals.expense)}</td>
-            </tr>
-          </tbody>
-        </table>
-        {futureAnnualTotals.expense > 0 && (
-          <div className="text-sm mt-1">
-            Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
+        <div className="text-sm mt-2 w-full border border-gray-700 rounded-md overflow-hidden">
+          <div className="grid grid-cols-3 text-center">
+            <div className="p-2" />
+            <div className="p-2 font-semibold">Monthly</div>
+            <div className="p-2 font-semibold">Annual</div>
           </div>
-        )}
+          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+            <div className="p-2">Income</div>
+            <div className="p-2 text-green-500">{formatCurrency(monthlyTotals.income)}</div>
+            <div className="p-2 text-green-500">{formatCurrency(annualTotals.income)}</div>
+          </div>
+          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+            <div className="p-2">Cost</div>
+            <div className="p-2 text-red-500">{formatCurrency(monthlyTotals.expense)}</div>
+            <div className="p-2 text-red-500">{formatCurrency(annualTotals.expense)}</div>
+          </div>
+          {futureAnnualTotals.expense > 0 && (
+            <div className="grid grid-cols-3 text-center border-t border-gray-700">
+              <div className="p-2">Future One-Time Cost</div>
+              <div className="p-2 text-red-500">{formatCurrency(futureMonthlyTotals.expense)}</div>
+              <div className="p-2 text-red-500">{formatCurrency(futureAnnualTotals.expense)}</div>
+            </div>
+          )}
+          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+            <div className="p-2 font-semibold">Net</div>
+            <div className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</div>
+            <div className={`p-2 ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(annualTotals.income - annualTotals.expense)}</div>
+          </div>
+        </div>
       </div>
       <div className="flex justify-between items-center gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">Transactions</h1>
