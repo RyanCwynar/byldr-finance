@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import { i18n } from './lib/i18n-config';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  i18n,
 };
 
 export default nextConfig;

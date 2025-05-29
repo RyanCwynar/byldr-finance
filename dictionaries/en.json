@@ -1,0 +1,29 @@
+{
+  "dashboard": "Dashboard",
+  "header": {
+    "title": "Byldr Finance",
+    "simulation": "Simulation",
+    "quotes": "Quotes"
+  },
+  "cards": {
+    "assets": {
+      "title": "Assets",
+      "empty": "No assets found. Add one to get started.",
+      "total": "Total"
+    },
+    "debts": {
+      "title": "Debts",
+      "empty": "No debts found. Add one to get started.",
+      "total": "Total"
+    },
+    "wallets": {
+      "title": "Wallets",
+      "total": "Total"
+    }
+  },
+  "forms": {
+    "cancel": "Cancel",
+    "add": "Add",
+    "update": "Update"
+  }
+}

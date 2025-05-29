@@ -9,6 +9,7 @@ import { Modal } from "@/components/modal";
 import { WalletForm } from "@/components/forms/wallet-form";
 import Link from "next/link";
 import { formatNumber } from "@/lib/formatters";
+import { useDictionary } from "@/components/TranslationsProvider";
 
 type Wallet = Doc<"wallets">;
 
@@ -41,6 +42,7 @@ export const UpdateButton = ({ onClick, isUpdating }: { onClick: () => void, isU
 };
 
 export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWalletsCardProps) {
+  const dict = useDictionary();
   const wallets = useQuery(api.wallets.listWallets) ?? initialWallets;
   const [showAddForm, setShowAddForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -75,9 +77,9 @@ export default function CryptoWalletsCard({ wallets: initialWallets }: CryptoWal
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-1">Wallets</h2>
+      <h2 className="text-xl font-semibold mb-1">{dict.cards.wallets.title}</h2>
       <span className="block text-green-500 font-mono mb-4">
-        {`Total: $${formatNumber(totalWallets)}`}
+        {`${dict.cards.wallets.total}: $${formatNumber(totalWallets)}`}
       </span>
       <AddButton onClick={() => setShowAddForm(true)} />
       <UpdateButton onClick={handleUpdateWallets} isUpdating={isUpdating} />
