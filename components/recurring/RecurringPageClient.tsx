@@ -125,6 +125,10 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
                 <span>
                   {t.frequency === 'monthly'
                     ? `Monthly on ${t.daysOfMonth?.join(', ')}`
+                    : t.frequency === 'weekly'
+                    ? `Weekly on ${t.daysOfWeek?.join(', ')}`
+                    : t.frequency === 'quarterly'
+                    ? `Quarterly starting ${t.month}/${t.day}`
                     : `Yearly on ${t.month}/${t.day}`}
                 </span>
               </div>
@@ -188,6 +192,10 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
               <td className="px-2 py-1">
                 {t.frequency === 'monthly'
                   ? `Monthly on ${t.daysOfMonth?.join(', ')}`
+                  : t.frequency === 'weekly'
+                  ? `Weekly on ${t.daysOfWeek?.join(', ')}`
+                  : t.frequency === 'quarterly'
+                  ? `Quarterly starting ${t.month}/${t.day}`
                   : `Yearly on ${t.month}/${t.day}`}
               </td>
               <td className="px-2 py-1">
