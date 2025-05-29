@@ -400,7 +400,7 @@ export default function TransactionsPageClient({
       {/* Desktop table */}
       <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead>
+          <thead className="sticky top-24 z-10 bg-black/80 backdrop-blur-sm">
             <tr>
               <th className="px-2 py-1 text-left">Name</th>
               <th
