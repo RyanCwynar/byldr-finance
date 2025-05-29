@@ -7,6 +7,7 @@ import { Modal } from '@/components/modal';
 import { TransactionForm } from './transaction-form';
 import { monthlyAmount } from '@/lib/recurring';
 import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { formatCurrency } from '@/lib/formatters';
 
 type Recurring = Doc<'recurringTransactions'>;
 
@@ -139,11 +140,11 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
             <div className="text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Amount</span>
-                <span className="font-mono">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="font-mono">{formatCurrency(t.amount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Monthly</span>
-                <span className="font-mono">${monthlyAmount(t).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="font-mono">{formatCurrency(monthlyAmount(t))}</span>
               </div>
               <div className="flex justify-between">
                 <span>Type</span>
@@ -205,8 +206,8 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
           {sortedData.map((t) => (
             <tr key={t._id} className="border-t border-gray-700">
               <td className="px-2 py-1">{t.name}</td>
-              <td className="px-2 py-1">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              <td className="px-2 py-1">${monthlyAmount(t).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-2 py-1">{formatCurrency(t.amount)}</td>
+              <td className="px-2 py-1">{formatCurrency(monthlyAmount(t))}</td>
               <td className="px-2 py-1">
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
@@ -263,13 +264,13 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
       </table>
       <div className="flex flex-col items-end gap-1 text-sm mt-2">
         <div>
-          Total Income: <span className="text-green-500">${totals.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          Total Income: <span className="text-green-500">{formatCurrency(totals.income)}</span>
         </div>
         <div>
-          Total Expenses: <span className="text-red-500">${totals.expense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          Total Expenses: <span className="text-red-500">{formatCurrency(totals.expense)}</span>
         </div>
         <div>
-          Net Income: <span className={totals.net >= 0 ? 'text-green-500' : 'text-red-500'}>${totals.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          Net Income: <span className={totals.net >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(totals.net)}</span>
         </div>
       </div>
       </div>
