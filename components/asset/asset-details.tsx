@@ -9,6 +9,7 @@ import { AssetForm } from '@/components/forms/asset-form';
 import { ArrowLeftIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { formatCurrency } from '@/lib/formatters';
 
 interface AssetDetailsProps {
   asset: Doc<"assets">;
@@ -99,13 +100,13 @@ export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps)
             
             <div>
               <h3 className="text-sm font-medium text-gray-400">Value</h3>
-              <p className="text-lg text-green-500">${liveAsset.value.toLocaleString()}</p>
+              <p className="text-lg text-green-500">{formatCurrency(liveAsset.value)}</p>
             </div>
             
             {liveAsset.metadata?.purchasePrice !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Purchase Price</h3>
-                <p className="text-lg">${liveAsset.metadata.purchasePrice.toLocaleString()}</p>
+                <p className="text-lg">{formatCurrency(liveAsset.metadata.purchasePrice)}</p>
               </div>
             )}
             

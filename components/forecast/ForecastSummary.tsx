@@ -1,6 +1,7 @@
 'use client';
 
 import { ForecastSummaryProps } from './types';
+import { formatCurrency } from '@/lib/formatters';
 
 export function ForecastSummary({
   currentNetWorth,
@@ -25,11 +26,11 @@ export function ForecastSummary({
           <span className="hidden sm:inline">Current Net Worth</span>
         </div>
         <div className="text-xl sm:text-2xl font-bold">
-          ${(currentNetWorth || 0).toLocaleString()}
+          {formatCurrency(currentNetWorth || 0)}
         </div>
         {hasPrev && (
           <div className={`text-sm ${dayUp ? 'text-green-600' : 'text-red-600'}`}> 
-            {dayUp ? '+' : '-'}${Math.abs(dayChange).toLocaleString()} ({dayPercent}% )
+            {dayUp ? '+' : '-'}{formatCurrency(Math.abs(dayChange))} ({dayPercent}% )
             <span className="text-gray-500"> since yesterday</span>
           </div>
         )}
@@ -38,7 +39,7 @@ export function ForecastSummary({
         <div className="text-sm text-gray-500">Projected Change</div>
         <div className="text-xl sm:text-2xl font-bold text-green-600">
           <span>+{percentChange}%</span>
-          <span className="hidden sm:inline"> (+${difference.toLocaleString()})</span>
+          <span className="hidden sm:inline"> (+{formatCurrency(difference)})</span>
         </div>
       </div>
       <div className="text-center sm:text-right">
@@ -47,7 +48,7 @@ export function ForecastSummary({
           <span className="hidden sm:inline">Projected Net Worth (1 Year)</span>
         </div>
         <div className="text-xl sm:text-2xl font-bold">
-          ${(projectedNetWorth || 0).toLocaleString()}
+          {formatCurrency(projectedNetWorth || 0)}
         </div>
       </div>
     </div>

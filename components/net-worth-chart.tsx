@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 
 import { Doc } from "@/convex/_generated/dataModel";
+import { formatCurrency } from '@/lib/formatters';
 
 type DailyMetric = Doc<'dailyMetrics'> & {
   isProjected?: boolean;
@@ -239,9 +240,9 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
             domain={['auto', 'auto']}
             tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
           />
-          <YAxis 
+          <YAxis
             domain={yAxisDomain}
-            tickFormatter={(value) => `$${value.toLocaleString()}`}
+            tickFormatter={(value) => formatCurrency(value)}
             tickCount={8} // Suggest number of ticks
           />
           <Tooltip 
@@ -251,7 +252,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
                 upperProjection: 'Optimistic Projection',
                 lowerProjection: 'Pessimistic Projection'
               }[name] || name;
-              return [`$${value.toLocaleString()}`, label];
+              return [formatCurrency(value), label];
             }}
             labelFormatter={(timestamp) => new Date(timestamp).toLocaleString()}
             contentStyle={{ 
