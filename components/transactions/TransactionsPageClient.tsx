@@ -169,6 +169,39 @@ export default function TransactionsPageClient({
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto relative">
+      <div className="overflow-x-auto w-full">
+        <table className="text-sm mt-2 w-full">
+          <thead>
+            <tr>
+              <th className="px-2 py-1" />
+              <th className="px-2 py-1">Monthly</th>
+              <th className="px-2 py-1">Annual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="px-2 py-1">Income</td>
+              <td className="px-2 py-1 text-green-500">{formatCurrency(monthlyTotals.income)}</td>
+              <td className="px-2 py-1 text-green-500">{formatCurrency(annualTotals.income)}</td>
+            </tr>
+            <tr>
+              <td className="px-2 py-1">Cost</td>
+              <td className="px-2 py-1 text-red-500">{formatCurrency(monthlyTotals.expense)}</td>
+              <td className="px-2 py-1 text-red-500">{formatCurrency(annualTotals.expense)}</td>
+            </tr>
+            <tr>
+              <td className="px-2 py-1 font-semibold">Net</td>
+              <td className={`px-2 py-1 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</td>
+              <td className={`px-2 py-1 ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(annualTotals.income - annualTotals.expense)}</td>
+            </tr>
+          </tbody>
+        </table>
+        {futureAnnualTotals.expense > 0 && (
+          <div className="text-sm mt-1">
+            Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
+          </div>
+        )}
+      </div>
       <div className="flex justify-between items-center gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">Transactions</h1>
         <div className="flex items-center gap-2">
@@ -382,31 +415,6 @@ export default function TransactionsPageClient({
             ))}
           </tbody>
         </table>
-        <div className="flex flex-col items-end gap-1 text-sm mt-2">
-          <div>
-            Monthly Income: <span className="text-green-500">{formatCurrency(monthlyTotals.income)}</span>
-          </div>
-          <div>
-            Monthly Expenses: <span className="text-red-500">{formatCurrency(monthlyTotals.expense)}</span>
-          </div>
-          <div>
-            Monthly Net: <span className={monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</span>
-          </div>
-          <div>
-            Annual Income: <span className="text-green-500">{formatCurrency(annualTotals.income)}</span>
-          </div>
-          <div>
-            Annual Expenses: <span className="text-red-500">{formatCurrency(annualTotals.expense)}</span>
-          </div>
-          <div>
-            Annual Net: <span className={annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(annualTotals.income - annualTotals.expense)}</span>
-          </div>
-          {futureAnnualTotals.expense > 0 && (
-            <div>
-              Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
-            </div>
-          )}
-        </div>
       </div>
       <button
         onClick={() => {
