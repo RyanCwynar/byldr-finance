@@ -9,6 +9,7 @@ import { Modal } from "@/components/modal";
 import { DebtForm } from "@/components/forms/debt-form";
 import Link from "next/link";
 import { formatNumber } from "@/lib/formatters";
+import { useDictionary } from "@/components/TranslationsProvider";
 
 type Debt = Doc<"debts">;
 
@@ -17,6 +18,7 @@ interface DebtsCardProps {
 }
 
 export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
+  const dict = useDictionary();
   const debts = useQuery(api.debts.listDebts) ?? initialDebts;
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -49,9 +51,9 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-1">Debts</h2>
+      <h2 className="text-xl font-semibold mb-1">{dict.cards.debts.title}</h2>
       <span className="block text-red-500 font-mono mb-4">
-        {`Total: $${formatNumber(totalDebts)}`}
+        {`${dict.cards.debts.total}: $${formatNumber(totalDebts)}`}
       </span>
       <button
         onClick={() => setShowAddForm(true)}
@@ -62,7 +64,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
       
       <div className="space-y-3">
         {sortedDebts.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">No debts found. Add one to get started.</p>
+          <p className="text-gray-400 text-center py-4">{dict.cards.debts.empty}</p>
         ) : (
           sortedDebts.map((debt: Debt) => (
             <Link 

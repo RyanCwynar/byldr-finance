@@ -1,0 +1,29 @@
+{
+  "dashboard": "Tablero",
+  "header": {
+    "title": "Byldr Finanzas",
+    "simulation": "Simulación",
+    "quotes": "Cotizaciones"
+  },
+  "cards": {
+    "assets": {
+      "title": "Activos",
+      "empty": "No se encontraron activos. Agrega uno para comenzar.",
+      "total": "Total"
+    },
+    "debts": {
+      "title": "Deudas",
+      "empty": "No se encontraron deudas. Agrega una para comenzar.",
+      "total": "Total"
+    },
+    "wallets": {
+      "title": "Carteras",
+      "total": "Total"
+    }
+  },
+  "forms": {
+    "cancel": "Cancelar",
+    "add": "Agregar",
+    "update": "Actualizar"
+  }
+}

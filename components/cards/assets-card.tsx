@@ -9,6 +9,7 @@ import { Modal } from "@/components/modal";
 import { AssetForm } from "@/components/forms/asset-form";
 import Link from "next/link";
 import { formatNumber } from "@/lib/formatters";
+import { useDictionary } from "@/components/TranslationsProvider";
 
 type Asset = Doc<"assets">;
 
@@ -17,6 +18,7 @@ interface AssetsCardProps {
 }
 
 export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
+  const dict = useDictionary();
   const assets = useQuery(api.assets.listAssets) ?? initialAssets;
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -51,9 +53,9 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
-      <h2 className="text-xl font-semibold mb-1">Assets</h2>
+      <h2 className="text-xl font-semibold mb-1">{dict.cards.assets.title}</h2>
       <span className="block text-green-500 font-mono mb-4">
-        {`Total: $${formatNumber(totalAssets)}`}
+        {`${dict.cards.assets.total}: $${formatNumber(totalAssets)}`}
       </span>
       <button
         onClick={() => setShowAddForm(true)}
@@ -64,7 +66,7 @@ export default function AssetsCard({ assets: initialAssets }: AssetsCardProps) {
       
       <div className="space-y-3">
         {sortedAssets.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">No assets found. Add one to get started.</p>
+          <p className="text-gray-400 text-center py-4">{dict.cards.assets.empty}</p>
         ) : (
           sortedAssets.map((asset: Asset) => (
             <Link 
