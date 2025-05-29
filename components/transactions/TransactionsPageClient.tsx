@@ -154,31 +154,6 @@ export default function TransactionsPageClient({
     [monthlyTotals],
   );
 
-  const futureMonthlyTotals = useMemo(() => {
-    const now = Date.now();
-    return filteredOneTime
-      .filter((t) => !hiddenIds.has(t._id))
-      .reduce(
-        (acc, t) => {
-          if (t.date > now) {
-            const amt = monthlyOneTimeAmount(t.amount);
-            if (t.type === "income") acc.income += amt;
-            else acc.expense += amt;
-          }
-          return acc;
-        },
-        { income: 0, expense: 0 },
-      );
-  }, [filteredOneTime, hiddenIds]);
-
-  const futureAnnualTotals = useMemo(
-    () => ({
-      income: futureMonthlyTotals.income * 12,
-      expense: futureMonthlyTotals.expense * 12,
-    }),
-    [futureMonthlyTotals],
-  );
-
   const handleDelete = async (item: Item) => {
     if (item.kind === "recurring")
       await removeRecurring({ id: item._id as Id<"recurringTransactions"> });
@@ -218,25 +193,34 @@ export default function TransactionsPageClient({
           </div>
           <div className="grid grid-cols-3 text-center border-t border-gray-700">
             <div className="p-2">Income</div>
-            <div className="p-2 text-green-500">{formatCurrency(monthlyTotals.income)}</div>
-            <div className="p-2 text-green-500">{formatCurrency(annualTotals.income)}</div>
+            <div className="p-2 text-green-500">
+              {formatCurrency(monthlyTotals.income)}
+            </div>
+            <div className="p-2 text-green-500">
+              {formatCurrency(annualTotals.income)}
+            </div>
           </div>
           <div className="grid grid-cols-3 text-center border-t border-gray-700">
             <div className="p-2">Cost</div>
-            <div className="p-2 text-red-500">{formatCurrency(monthlyTotals.expense)}</div>
-            <div className="p-2 text-red-500">{formatCurrency(annualTotals.expense)}</div>
-          </div>
-          {futureAnnualTotals.expense > 0 && (
-            <div className="grid grid-cols-3 text-center border-t border-gray-700">
-              <div className="p-2">Future One-Time Cost</div>
-              <div className="p-2 text-red-500">{formatCurrency(futureMonthlyTotals.expense)}</div>
-              <div className="p-2 text-red-500">{formatCurrency(futureAnnualTotals.expense)}</div>
+            <div className="p-2 text-red-500">
+              {formatCurrency(monthlyTotals.expense)}
             </div>
-          )}
+            <div className="p-2 text-red-500">
+              {formatCurrency(annualTotals.expense)}
+            </div>
+          </div>
           <div className="grid grid-cols-3 text-center border-t border-gray-700">
             <div className="p-2 font-semibold">Net</div>
-            <div className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</div>
-            <div className={`p-2 ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(annualTotals.income - annualTotals.expense)}</div>
+            <div
+              className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+            >
+              {formatCurrency(monthlyTotals.income - monthlyTotals.expense)}
+            </div>
+            <div
+              className={`p-2 ${annualTotals.income - annualTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+            >
+              {formatCurrency(annualTotals.income - annualTotals.expense)}
+            </div>
           </div>
         </div>
       </div>
@@ -525,7 +509,6 @@ export default function TransactionsPageClient({
             ))}
           </tbody>
         </table>
-
       </div>
       <button
         onClick={() => {
