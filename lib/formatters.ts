@@ -36,3 +36,16 @@ export function formatNumber(num: number): string {
 export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
 }
+
+/**
+ * Format a currency value using compact notation for large amounts
+ * e.g. $1.2M instead of $1,200,000
+ */
+export function formatCompactCurrency(amount: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    notation: 'compact',
+    compactDisplay: 'short'
+  }).format(amount);
+}
