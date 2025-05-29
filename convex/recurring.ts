@@ -18,8 +18,14 @@ export const addRecurringTransaction = mutation({
     name: v.string(),
     amount: v.number(),
     type: v.union(v.literal("income"), v.literal("expense")),
-    frequency: v.union(v.literal("monthly"), v.literal("yearly")),
+    frequency: v.union(
+      v.literal("monthly"),
+      v.literal("yearly"),
+      v.literal("weekly"),
+      v.literal("quarterly")
+    ),
     daysOfMonth: v.optional(v.array(v.number())),
+    daysOfWeek: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
@@ -37,8 +43,16 @@ export const updateRecurringTransaction = mutation({
     name: v.optional(v.string()),
     amount: v.optional(v.number()),
     type: v.optional(v.union(v.literal("income"), v.literal("expense"))),
-    frequency: v.optional(v.union(v.literal("monthly"), v.literal("yearly"))),
+    frequency: v.optional(
+      v.union(
+        v.literal("monthly"),
+        v.literal("yearly"),
+        v.literal("weekly"),
+        v.literal("quarterly")
+      )
+    ),
     daysOfMonth: v.optional(v.array(v.number())),
+    daysOfWeek: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
@@ -72,6 +86,13 @@ export function monthlyAmount(t: any): number {
   if (t.frequency === "monthly") {
     const occurrences = t.daysOfMonth ? t.daysOfMonth.length : 1;
     return t.amount * occurrences;
+  }
+  if (t.frequency === "weekly") {
+    const occurrences = t.daysOfWeek ? t.daysOfWeek.length : 1;
+    return (t.amount * occurrences * 52) / 12;
+  }
+  if (t.frequency === "quarterly") {
+    return t.amount / 3;
   }
   if (t.frequency === "yearly") {
     return t.amount / 12;
