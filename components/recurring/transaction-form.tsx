@@ -20,6 +20,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
   );
   const [month, setMonth] = useState(transaction?.month ? String(transaction.month) : '');
   const [day, setDay] = useState(transaction?.day ? String(transaction.day) : '');
+  const [tags, setTags] = useState(transaction?.tags ? transaction.tags.join(',') : '');
 
   const add = useMutation(api.recurring.addRecurringTransaction);
   const update = useMutation(api.recurring.updateRecurringTransaction);
@@ -39,6 +40,11 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
     } else {
       data.month = month ? Number(month) : 1;
       data.day = day ? Number(day) : 1;
+    }
+    if (tags) {
+      data.tags = tags.split(',').map((t) => t.trim()).filter(Boolean);
+    } else {
+      data.tags = [];
     }
     if (transaction) {
       await update({ id: transaction._id, ...data });
@@ -132,6 +138,15 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
             </div>
           </div>
         )}
+        <div>
+          <label className="block text-sm mb-1">Tags (comma separated)</label>
+          <input
+            className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            placeholder="rent,utilities"
+          />
+        </div>
         <div className="flex justify-end gap-2">
           <button
             type="button"
