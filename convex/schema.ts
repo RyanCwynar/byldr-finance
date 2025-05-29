@@ -130,8 +130,14 @@ export default defineSchema({
     name: v.string(),
     amount: v.number(),
     type: v.union(v.literal("income"), v.literal("expense")),
-    frequency: v.union(v.literal("monthly"), v.literal("yearly")),
+    frequency: v.union(
+      v.literal("monthly"),
+      v.literal("yearly"),
+      v.literal("weekly"),
+      v.literal("quarterly")
+    ),
     daysOfMonth: v.optional(v.array(v.number())),
+    daysOfWeek: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
     tags: v.optional(v.array(v.string()))

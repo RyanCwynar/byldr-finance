@@ -14,9 +14,12 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
   const [name, setName] = useState(transaction?.name || '');
   const [amount, setAmount] = useState(transaction?.amount.toString() || '');
   const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense');
-  const [frequency, setFrequency] = useState<'monthly' | 'yearly'>(transaction?.frequency || 'monthly');
+  const [frequency, setFrequency] = useState<'monthly' | 'yearly' | 'weekly' | 'quarterly'>(transaction?.frequency || 'monthly');
   const [daysOfMonth, setDaysOfMonth] = useState(
     transaction?.daysOfMonth ? transaction.daysOfMonth.join(',') : ''
+  );
+  const [daysOfWeek, setDaysOfWeek] = useState(
+    (transaction as any)?.daysOfWeek ? (transaction as any).daysOfWeek.join(',') : ''
   );
   const [month, setMonth] = useState(transaction?.month ? String(transaction.month) : '');
   const [day, setDay] = useState(transaction?.day ? String(transaction.day) : '');
@@ -36,6 +39,10 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
     if (frequency === 'monthly') {
       data.daysOfMonth = daysOfMonth
         ? daysOfMonth.split(',').map((d) => Number(d.trim())).filter(Boolean)
+        : [1];
+    } else if (frequency === 'weekly') {
+      data.daysOfWeek = daysOfWeek
+        ? daysOfWeek.split(',').map((d) => Number(d.trim())).filter(Boolean)
         : [1];
     } else {
       data.month = month ? Number(month) : 1;
@@ -96,13 +103,19 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
           <select
             className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2"
             value={frequency}
-            onChange={(e) => setFrequency(e.target.value as 'monthly' | 'yearly')}
+            onChange={(e) =>
+              setFrequency(
+                e.target.value as 'monthly' | 'yearly' | 'weekly' | 'quarterly'
+              )
+            }
           >
             <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="quarterly">Quarterly</option>
             <option value="yearly">Yearly</option>
           </select>
         </div>
-        {frequency === 'monthly' ? (
+        {frequency === 'monthly' && (
           <div>
             <label className="block text-sm mb-1">Days of Month (comma separated)</label>
             <input
@@ -112,7 +125,19 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
               placeholder="1,15"
             />
           </div>
-        ) : (
+        )}
+        {frequency === 'weekly' && (
+          <div>
+            <label className="block text-sm mb-1">Days of Week (0-6 comma separated)</label>
+            <input
+              className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2"
+              value={daysOfWeek}
+              onChange={(e) => setDaysOfWeek(e.target.value)}
+              placeholder="1,3,5"
+            />
+          </div>
+        )}
+        {(frequency === 'yearly' || frequency === 'quarterly') && (
           <div className="flex space-x-2">
             <div>
               <label className="block text-sm mb-1">Month (1-12)</label>
