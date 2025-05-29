@@ -23,6 +23,7 @@ import type * as quoteActions from "../quoteActions.js";
 import type * as quotes from "../quotes.js";
 import type * as oneTime from "../oneTime.js";
 import type * as recurring from "../recurring.js";
+import type * as simulations from "../simulations.js";
 import type * as userPreferences from "../userPreferences.js";
 import type * as users from "../users.js";
 import type * as wallets from "../wallets.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   quotes: typeof quotes;
   oneTime: typeof oneTime;
   recurring: typeof recurring;
+  simulations: typeof simulations;
   userPreferences: typeof userPreferences;
   users: typeof users;
   wallets: typeof wallets;

@@ -59,6 +59,8 @@ export function ForecastClient({
   );
   
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
+
+  const dbSimulation = useQuery(api.simulations.getSimulation, {});
   
   // Add state to control when to activate real-time queries
   const [shouldFetch, setShouldFetch] = useState(false);
@@ -94,9 +96,20 @@ export function ForecastClient({
     setPreference({ key: 'forecastTimeframe', value });
   };
   
-  // Load simulation data from local storage
+  // Load simulation data from DB or local storage
   useEffect(() => {
     try {
+      if (dbSimulation?.summary) {
+        setSimulationData(dbSimulation.summary);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(
+            SIMULATION_STORAGE_KEY,
+            JSON.stringify(dbSimulation.summary)
+          );
+        }
+        return;
+      }
+
       if (typeof window !== 'undefined') {
         const savedSimulation = localStorage.getItem(SIMULATION_STORAGE_KEY);
         if (savedSimulation) {
@@ -110,9 +123,9 @@ export function ForecastClient({
         }
       }
     } catch (error) {
-      console.error('Error loading simulation data from local storage:', error);
+      console.error('Error loading simulation data:', error);
     }
-  }, []);
+  }, [dbSimulation]);
   
   // Set up a timer to activate queries after a short delay
   useEffect(() => {

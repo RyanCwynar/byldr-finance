@@ -153,6 +153,23 @@ export default defineSchema({
     tags: v.optional(v.array(v.string())),
   }).index("by_user", ["userId"]),
 
+  // Store simulation adjustments and results
+  simulationData: defineTable({
+    userId: v.string(),
+    adjustments: v.record(v.string(), v.number()),
+    summary: v.object({
+      originalValue: v.number(),
+      adjustedValue: v.number(),
+      originalAssets: v.number(),
+      adjustedAssets: v.number(),
+      originalDebts: v.number(),
+      adjustedDebts: v.number(),
+      percentChange: v.number(),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   // Store user preferences
   userPreferences: defineTable({
     userId: v.string(), // Clerk user ID
