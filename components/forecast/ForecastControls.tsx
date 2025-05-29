@@ -28,6 +28,9 @@ export function ForecastControls({
         step={100}
         label="Monthly Income"
       />
+      <a href="/recurring" className="text-sm text-blue-500 hover:underline self-end">
+        Manage Recurring Transactions
+      </a>
     </div>
   );
-} 
+}
