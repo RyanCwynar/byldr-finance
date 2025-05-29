@@ -143,6 +143,16 @@ export default defineSchema({
     tags: v.optional(v.array(v.string()))
   }).index("by_user", ["userId"]),
 
+  // Store one time income or expense transactions
+  oneTimeTransactions: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    amount: v.number(),
+    type: v.union(v.literal("income"), v.literal("expense")),
+    date: v.number(), // Unix timestamp
+    tags: v.optional(v.array(v.string())),
+  }).index("by_user", ["userId"]),
+
   // Store user preferences
   userPreferences: defineTable({
     userId: v.string(), // Clerk user ID
