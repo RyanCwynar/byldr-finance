@@ -38,7 +38,9 @@ export default function TransactionsPageClient({
   const removeRecurring = useMutation(api.recurring.deleteRecurringTransaction);
   const removeOneTime = useMutation(api.oneTime.deleteOneTimeTransaction);
 
-  const [view, setView] = useState<'all' | 'recurring' | 'one-time'>('all');
+  const [view, setView] = useState<'all' | 'recurring' | 'one-time' | 'future'>('all');
+  const [sortField, setSortField] = useState<'amount' | 'date'>('amount');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [tagFilter, setTagFilter] = useState('');
   const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [showOneTimeForm, setShowOneTimeForm] = useState(false);
@@ -75,22 +77,33 @@ export default function TransactionsPageClient({
     let arr: Item[] = [...recItems, ...oneItems];
     if (view === 'recurring') arr = arr.filter((i) => i.kind === 'recurring');
     else if (view === 'one-time') arr = arr.filter((i) => i.kind === 'one-time');
-    arr.sort((a, b) => {
-      if (a.type !== b.type) return a.type === 'income' ? -1 : 1;
-      const amta =
-        a.kind === 'recurring'
-          ? monthlyAmount(a)
-          : monthlyOneTimeAmount(a.amount);
-      const amtb =
-        b.kind === 'recurring'
-          ? monthlyAmount(b)
-          : monthlyOneTimeAmount(b.amount);
-      return amtb - amta;
-    });
-    return arr;
-  }, [filteredRecurring, filteredOneTime, view]);
+    else if (view === 'future') arr = arr.filter((i) => i.kind === 'one-time' && i.date > Date.now());
 
-  const totals = useMemo(() => {
+    if (sortField === 'date') {
+      arr.sort((a, b) => {
+        const da = a.kind === 'one-time' ? a.date : 0;
+        const db = b.kind === 'one-time' ? b.date : 0;
+        return sortDir === 'asc' ? da - db : db - da;
+      });
+    } else {
+      arr.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'income' ? -1 : 1;
+        const amta =
+          a.kind === 'recurring'
+            ? monthlyAmount(a)
+            : monthlyOneTimeAmount(a.amount);
+        const amtb =
+          b.kind === 'recurring'
+            ? monthlyAmount(b)
+            : monthlyOneTimeAmount(b.amount);
+        const diff = amtb - amta;
+        return sortDir === 'asc' ? -diff : diff;
+      });
+    }
+    return arr;
+  }, [filteredRecurring, filteredOneTime, view, sortField, sortDir]);
+
+  const monthlyTotals = useMemo(() => {
     return combined.reduce(
       (acc, t) => {
         const amt =
@@ -104,6 +117,37 @@ export default function TransactionsPageClient({
       { income: 0, expense: 0 },
     );
   }, [combined]);
+
+  const annualTotals = useMemo(
+    () => ({
+      income: monthlyTotals.income * 12,
+      expense: monthlyTotals.expense * 12,
+    }),
+    [monthlyTotals],
+  );
+
+  const futureMonthlyTotals = useMemo(() => {
+    const now = Date.now();
+    return filteredOneTime.reduce(
+      (acc, t) => {
+        if (t.date > now) {
+          const amt = monthlyOneTimeAmount(t.amount);
+          if (t.type === 'income') acc.income += amt;
+          else acc.expense += amt;
+        }
+        return acc;
+      },
+      { income: 0, expense: 0 },
+    );
+  }, [filteredOneTime]);
+
+  const futureAnnualTotals = useMemo(
+    () => ({
+      income: futureMonthlyTotals.income * 12,
+      expense: futureMonthlyTotals.expense * 12,
+    }),
+    [futureMonthlyTotals],
+  );
 
   const handleDelete = async (item: Item) => {
     if (item.kind === 'recurring') await removeRecurring({ id: item._id as Id<'recurringTransactions'> });
@@ -166,11 +210,17 @@ export default function TransactionsPageClient({
         <button onClick={() => setView('all')} className={pillClass(view === 'all')}>All</button>
         <button onClick={() => setView('recurring')} className={pillClass(view === 'recurring')}>Recurring</button>
         <button onClick={() => setView('one-time')} className={pillClass(view === 'one-time')}>One Time</button>
+        <button onClick={() => setView('future')} className={pillClass(view === 'future')}>Future</button>
       </div>
       {/* Mobile card list */}
       <div className="md:hidden space-y-3">
         {combined.map((t) => (
-          <div key={t._id} className="bg-white/5 rounded-lg p-4 space-y-2">
+          <div
+            key={t._id}
+            className={`bg-white/5 rounded-lg p-4 space-y-2 ${
+              t.kind === 'one-time' && t.date > Date.now() ? 'ring-2 ring-yellow-500' : ''
+            }`}
+          >
             <div className="flex justify-between items-center">
               <span className="font-medium">{t.name}</span>
               <div className="flex space-x-2">
@@ -238,18 +288,47 @@ export default function TransactionsPageClient({
           <thead>
             <tr>
               <th className="px-2 py-1 text-left">Name</th>
-              <th className="px-2 py-1 text-left">Amount</th>
+              <th
+                className="px-2 py-1 text-left cursor-pointer"
+                onClick={() => {
+                  if (sortField === 'amount') {
+                    setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                  } else {
+                    setSortField('amount');
+                    setSortDir('desc');
+                  }
+                }}
+              >
+                Amount
+              </th>
               <th className="px-2 py-1 text-left">Monthly Total</th>
               <th className="px-2 py-1 text-left">Type</th>
               <th className="px-2 py-1 text-left">Frequency</th>
-              <th className="px-2 py-1 text-left">Date</th>
+              <th
+                className="px-2 py-1 text-left cursor-pointer"
+                onClick={() => {
+                  if (sortField === 'date') {
+                    setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                  } else {
+                    setSortField('date');
+                    setSortDir('asc');
+                  }
+                }}
+              >
+                Date
+              </th>
               <th className="px-2 py-1 text-left">Tags</th>
               <th className="px-2 py-1 text-right w-20 whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
             {combined.map((t) => (
-              <tr key={t._id} className="border-t border-gray-700">
+              <tr
+                key={t._id}
+                className={`border-t border-gray-700 ${
+                  t.kind === 'one-time' && t.date > Date.now() ? 'bg-yellow-900/40' : ''
+                }`}
+              >
                 <td className="px-2 py-1">{t.name}</td>
                 <td className="px-2 py-1">{formatCurrency(t.amount)}</td>
                 <td className="px-2 py-1">
@@ -305,14 +384,28 @@ export default function TransactionsPageClient({
         </table>
         <div className="flex flex-col items-end gap-1 text-sm mt-2">
           <div>
-            Income Total: <span className="text-green-500">{formatCurrency(totals.income)}</span>
+            Monthly Income: <span className="text-green-500">{formatCurrency(monthlyTotals.income)}</span>
           </div>
           <div>
-            Expense Total: <span className="text-red-500">{formatCurrency(totals.expense)}</span>
+            Monthly Expenses: <span className="text-red-500">{formatCurrency(monthlyTotals.expense)}</span>
           </div>
           <div>
-            Net: <span className={totals.income - totals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(totals.income - totals.expense)}</span>
+            Monthly Net: <span className={monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</span>
           </div>
+          <div>
+            Annual Income: <span className="text-green-500">{formatCurrency(annualTotals.income)}</span>
+          </div>
+          <div>
+            Annual Expenses: <span className="text-red-500">{formatCurrency(annualTotals.expense)}</span>
+          </div>
+          <div>
+            Annual Net: <span className={annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(annualTotals.income - annualTotals.expense)}</span>
+          </div>
+          {futureAnnualTotals.expense > 0 && (
+            <div>
+              Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
+            </div>
+          )}
         </div>
       </div>
       <button
