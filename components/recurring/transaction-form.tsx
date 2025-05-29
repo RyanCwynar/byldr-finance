@@ -3,14 +3,16 @@ import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
+import TagInput from '../tags/tag-input';
 
 interface TransactionFormProps {
   onClose: () => void;
   transaction?: Doc<'recurringTransactions'>;
   onSubmit?: (updates: Partial<Doc<'recurringTransactions'>>) => Promise<void>;
+  tagSuggestions?: string[];
 }
 
-export function TransactionForm({ onClose, transaction, onSubmit }: TransactionFormProps) {
+export function TransactionForm({ onClose, transaction, onSubmit, tagSuggestions = [] }: TransactionFormProps) {
   const [name, setName] = useState(transaction?.name || '');
   const [amount, setAmount] = useState(transaction?.amount.toString() || '');
   const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense');
@@ -140,10 +142,10 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
         )}
         <div>
           <label className="block text-sm mb-1">Tags (comma separated)</label>
-          <input
-            className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2"
+          <TagInput
             value={tags}
-            onChange={(e) => setTags(e.target.value)}
+            onChange={setTags}
+            suggestions={tagSuggestions}
             placeholder="rent,utilities"
           />
         </div>

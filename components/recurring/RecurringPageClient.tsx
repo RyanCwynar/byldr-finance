@@ -6,6 +6,7 @@ import { Doc, Id } from '@/convex/_generated/dataModel';
 import { Modal } from '@/components/modal';
 import { TransactionForm } from './transaction-form';
 import { monthlyAmount } from '@/lib/recurring';
+import TagInput from '../tags/tag-input';
 
 type Recurring = Doc<'recurringTransactions'>;
 
@@ -20,8 +21,27 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
   const [editing, setEditing] = useState<Recurring | null>(null);
   const [sortField, setSortField] = useState<'amount' | 'type' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [tagFilter, setTagFilter] = useState('');
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    data.forEach((d) => d.tags?.forEach((t) => set.add(t)));
+    return Array.from(set);
+  }, [data]);
+
+  const filteredData = useMemo(() => {
+    const tags = tagFilter
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tags.length === 0) return data;
+    return data.filter((d) => {
+      if (!d.tags) return false;
+      return tags.every((tag) => d.tags!.includes(tag));
+    });
+  }, [data, tagFilter]);
   const sortedData = useMemo(() => {
-    const arr = [...data];
+    const arr = [...filteredData];
     if (sortField === 'amount') {
       arr.sort((a, b) =>
         sortDir === 'asc' ? a.amount - b.amount : b.amount - a.amount,
@@ -41,10 +61,10 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
       });
     }
     return arr;
-  }, [data, sortField, sortDir]);
+  }, [filteredData, sortField, sortDir]);
 
   const totals = useMemo(() => {
-    return data.reduce(
+    return filteredData.reduce(
       (acc, t) => {
         const monthly = monthlyAmount(t);
         if (t.type === 'income') acc.income += monthly;
@@ -53,7 +73,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
       },
       { income: 0, expense: 0 },
     );
-  }, [data]);
+  }, [filteredData]);
 
   const toggleSort = (field: 'amount' | 'type') => {
     if (sortField === field) {
@@ -83,6 +103,14 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
         >
           Add
         </button>
+      </div>
+      <div>
+        <TagInput
+          value={tagFilter}
+          onChange={setTagFilter}
+          suggestions={allTags}
+          placeholder="Filter by tags"
+        />
       </div>
       <table className="min-w-full text-sm">
         <thead>
@@ -173,6 +201,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
           <TransactionForm
             onClose={() => { setShowForm(false); setEditing(null); }}
             transaction={editing || undefined}
+            tagSuggestions={allTags}
           />
         </Modal>
       )}
