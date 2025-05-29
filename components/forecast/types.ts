@@ -63,3 +63,8 @@ export interface RecurringTotals {
   monthlyIncome: number;
   monthlyCost: number;
 }
+
+export interface OneTimeTotals {
+  income: number;
+  expense: number;
+}

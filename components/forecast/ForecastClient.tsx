@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { DailyMetric, UserPreferences, UserPreferencesData, RecurringTotals } from './types';
+import { DailyMetric, UserPreferences, UserPreferencesData, RecurringTotals, OneTimeTotals } from './types';
 import { ForecastEmptyState } from './ForecastEmptyState';
 import { ForecastControls } from './ForecastControls';
 import { ForecastSummary } from './ForecastSummary';
@@ -31,13 +31,15 @@ interface ForecastClientProps {
   } | null;
   initialPreferences: UserPreferencesData | null;
   initialRecurring: { monthlyIncome: number; monthlyCost: number } | null;
+  initialOneTimeTotals: OneTimeTotals | null;
 }
 
 export function ForecastClient({
   initialMetrics,
   initialNetWorth,
   initialPreferences,
-  initialRecurring
+  initialRecurring,
+  initialOneTimeTotals
 }: ForecastClientProps) {
   // Initialize state from server-side preferences, falling back to defaults
   const defaultPrefs = initialPreferences?.preferences || {};
@@ -155,10 +157,20 @@ export function ForecastClient({
     shouldFetch ? {} : "skip"
   );
 
+  const realtimeOneTimeTotals = useQuery(
+    api.oneTime.getFutureTotals,
+    shouldFetch ? {} : "skip"
+  );
+
   const recurringTotals = useMemo(() => {
     if (shouldFetch && realtimeRecurring) return realtimeRecurring;
     return initialRecurring || { monthlyIncome: 0, monthlyCost: 0 };
   }, [realtimeRecurring, initialRecurring, shouldFetch]);
+
+  const oneTimeTotals = useMemo(() => {
+    if (shouldFetch && realtimeOneTimeTotals) return realtimeOneTimeTotals;
+    return initialOneTimeTotals || { income: 0, expense: 0 };
+  }, [realtimeOneTimeTotals, initialOneTimeTotals, shouldFetch]);
 
   // Keep monthly values in sync with recurring totals
   useEffect(() => {
@@ -225,7 +237,9 @@ export function ForecastClient({
     
     const combinedIncome = monthlyIncome + recurringTotals.monthlyIncome;
     const combinedCost = monthlyCost + recurringTotals.monthlyCost;
-    const monthlyNet = combinedIncome - combinedCost;
+    const yearlyNet = (combinedIncome - combinedCost) * 12;
+    const adjustedYearlyNet = yearlyNet + oneTimeTotals.income - oneTimeTotals.expense;
+    const monthlyNet = adjustedYearlyNet / 12;
     
     // Calculate simulation-based projections if enabled and data is available
     // 
@@ -322,7 +336,7 @@ export function ForecastClient({
     const realPoints = metrics.map(m => ({ ...m, isProjected: false }));
 
     return [...realPoints, ...forecastPoints];
-  }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth, useSimulationData, simulationData]);
+  }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth, useSimulationData, simulationData, oneTimeTotals]);
 
   const realMetrics = useMemo(() => {
     return forecastedMetrics.filter(m => !m.isProjected);
