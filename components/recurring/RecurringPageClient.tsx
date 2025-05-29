@@ -56,7 +56,7 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
   }, [filteredData, sortField, sortDir]);
 
   const totals = useMemo(() => {
-    return filteredData.reduce(
+    const result = filteredData.reduce(
       (acc, t) => {
         const monthly = monthlyAmount(t);
         if (t.type === 'income') acc.income += monthly;
@@ -65,6 +65,10 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
       },
       { income: 0, expense: 0 },
     );
+    return {
+      ...result,
+      net: result.income - result.expense,
+    };
   }, [filteredData]);
 
   const toggleSort = (field: 'amount' | 'type') => {
@@ -257,12 +261,15 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
           ))}
         </tbody>
       </table>
-      <div className="flex justify-end gap-6 text-sm mt-2">
+      <div className="flex flex-col items-end gap-1 text-sm mt-2">
         <div>
           Total Income: <span className="text-green-500">${totals.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div>
           Total Expenses: <span className="text-red-500">${totals.expense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <div>
+          Net Income: <span className={totals.net >= 0 ? 'text-green-500' : 'text-red-500'}>${totals.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
       </div>
