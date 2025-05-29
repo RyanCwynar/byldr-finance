@@ -22,6 +22,7 @@ export const addRecurringTransaction = mutation({
     daysOfMonth: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -40,6 +41,7 @@ export const updateRecurringTransaction = mutation({
     daysOfMonth: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
+    tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, { id, ...updates }) => {
     const userId = await getUserId(ctx);
