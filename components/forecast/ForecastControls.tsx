@@ -29,11 +29,8 @@ export function ForecastControls({
         label="Monthly Income"
       />
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-        <a href="/recurring" className="text-sm text-blue-500 hover:underline">
-          Manage Recurring Transactions
-        </a>
-        <a href="/one-time" className="text-sm text-blue-500 hover:underline">
-          Manage One Time Transactions
+        <a href="/transactions" className="text-sm text-blue-500 hover:underline">
+          Manage Transactions
         </a>
       </div>
     </div>
