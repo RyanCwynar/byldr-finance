@@ -9,7 +9,6 @@ type Asset = Doc<'assets'>;
 type Debt = Doc<'debts'>;
 type Wallet = Doc<'wallets'>;
 
-import WalletsCard from "@/components/cards/wallets-card";
 import AssetsCard from "@/components/cards/assets-card";
 import DebtsCard from "@/components/cards/debts-card";
 import OneTimeCard from "@/components/cards/one-time-card";
@@ -45,8 +44,7 @@ export default async function Home() {
         />
       </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-          <WalletsCard wallets={walletsPreload || []} />
-          <AssetsCard assets={assetsPreload || []} />
+          <AssetsCard assets={assetsPreload || []} wallets={walletsPreload || []} />
           <DebtsCard debts={debtsPreload || []} />
           <OneTimeCard items={oneTimePreload || []} />
         </div>
