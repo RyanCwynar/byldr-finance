@@ -4,6 +4,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
+import { formatCurrency } from '@/lib/formatters';
 
 export default function QuotesTicker() {
   const quotes = useQuery(api.quotes.listQuotes) || [];
@@ -40,10 +41,7 @@ export default function QuotesTicker() {
       const priceChange = quote.price - prevPrice;
       const percentChange = prevPrice ? (priceChange / prevPrice) * 100 : 0;
       const isUp = priceChange >= 0;
-      const formattedPrice = quote.price.toLocaleString(undefined, { 
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 2 
-      });
+      const formattedPrice = formatCurrency(quote.price);
       const formattedPercent = Math.abs(percentChange).toFixed(2);
       
       // Add color spans for up/down indicators

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DebtForm } from '@/components/forms/debt-form';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { formatCurrency } from '@/lib/formatters';
 
 type Debt = Doc<"debts">;
 
@@ -102,13 +103,13 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             
             <div>
               <h3 className="text-sm font-medium text-gray-400">Value</h3>
-              <p className="text-lg text-red-500">${liveDebt.value.toLocaleString()}</p>
+              <p className="text-lg text-red-500">{formatCurrency(liveDebt.value)}</p>
             </div>
             
             {liveDebt.metadata?.originalAmount && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Original Amount</h3>
-                <p className="text-lg">${liveDebt.metadata.originalAmount.toLocaleString()}</p>
+                <p className="text-lg">{formatCurrency(liveDebt.metadata.originalAmount)}</p>
               </div>
             )}
             
@@ -145,7 +146,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             {liveDebt.metadata?.minimumPayment !== undefined && (
               <div>
                 <h3 className="text-sm font-medium text-gray-400">Minimum Payment</h3>
-                <p className="text-lg">${liveDebt.metadata.minimumPayment.toLocaleString()}</p>
+                <p className="text-lg">{formatCurrency(liveDebt.metadata.minimumPayment)}</p>
               </div>
             )}
           </div>

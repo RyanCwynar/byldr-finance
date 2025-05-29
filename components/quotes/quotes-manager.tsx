@@ -5,6 +5,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Doc } from "@/convex/_generated/dataModel";
 import { EyeIcon, EyeSlashIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
+import { formatCurrency } from '@/lib/formatters';
 
 type Quote = Doc<"quotes">;
 
@@ -165,7 +166,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
                 filteredAndSortedQuotes.map((quote) => (
                   <tr key={quote._id} className="border-t border-gray-800 hover:bg-gray-800/50">
                     <td className="px-4 py-3 font-medium">{quote.symbol}</td>
-                    <td className="px-4 py-3 text-right font-mono">${quote.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="px-4 py-3 text-right font-mono">{formatCurrency(quote.price)}</td>
                     <td className="px-4 py-3 text-gray-400 text-sm">
                       {new Date(quote.lastUpdated).toLocaleString()}
                     </td>

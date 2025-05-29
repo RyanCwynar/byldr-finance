@@ -28,4 +28,11 @@ export function formatNumber(num: number): string {
   
   // Otherwise use regular formatting
   return num.toLocaleString();
-} 
+}
+
+/**
+ * Format a currency value using the user's locale
+ */
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+}
