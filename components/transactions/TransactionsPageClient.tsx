@@ -212,6 +212,30 @@ export default function TransactionsPageClient({
         <button onClick={() => setView('one-time')} className={pillClass(view === 'one-time')}>One Time</button>
         <button onClick={() => setView('future')} className={pillClass(view === 'future')}>Future</button>
       </div>
+      <div className="self-end">
+        <div className="grid grid-cols-3 gap-x-4 gap-y-1 bg-white/5 backdrop-blur-sm border rounded-lg p-4 text-sm">
+          <div />
+          <div className="text-center text-gray-400">Monthly</div>
+          <div className="text-center text-gray-400">Annual</div>
+
+          <div className="text-gray-400">Income</div>
+          <div className="text-center text-green-500 text-lg font-mono">{formatCurrency(monthlyTotals.income)}</div>
+          <div className="text-center text-green-500 text-lg font-mono">{formatCurrency(annualTotals.income)}</div>
+
+          <div className="text-gray-400">Cost</div>
+          <div className="text-center text-red-500 text-lg font-mono">{formatCurrency(monthlyTotals.expense)}</div>
+          <div className="text-center text-red-500 text-lg font-mono">{formatCurrency(annualTotals.expense)}</div>
+
+          <div className="font-semibold">Net</div>
+          <div className={`text-center text-lg font-mono ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</div>
+          <div className={`text-center text-lg font-mono ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(annualTotals.income - annualTotals.expense)}</div>
+        </div>
+        {futureAnnualTotals.expense > 0 && (
+          <div className="text-xs mt-1 text-right">
+            Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
+          </div>
+        )}
+      </div>
       {/* Mobile card list */}
       <div className="md:hidden space-y-3">
         {combined.map((t) => (
@@ -382,31 +406,6 @@ export default function TransactionsPageClient({
             ))}
           </tbody>
         </table>
-        <div className="flex flex-col items-end gap-1 text-sm mt-2">
-          <div>
-            Monthly Income: <span className="text-green-500">{formatCurrency(monthlyTotals.income)}</span>
-          </div>
-          <div>
-            Monthly Expenses: <span className="text-red-500">{formatCurrency(monthlyTotals.expense)}</span>
-          </div>
-          <div>
-            Monthly Net: <span className={monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(monthlyTotals.income - monthlyTotals.expense)}</span>
-          </div>
-          <div>
-            Annual Income: <span className="text-green-500">{formatCurrency(annualTotals.income)}</span>
-          </div>
-          <div>
-            Annual Expenses: <span className="text-red-500">{formatCurrency(annualTotals.expense)}</span>
-          </div>
-          <div>
-            Annual Net: <span className={annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}>{formatCurrency(annualTotals.income - annualTotals.expense)}</span>
-          </div>
-          {futureAnnualTotals.expense > 0 && (
-            <div>
-              Future One-Time Cost: <span className="text-red-500">{formatCurrency(futureAnnualTotals.expense)}</span>
-            </div>
-          )}
-        </div>
       </div>
       <button
         onClick={() => {
