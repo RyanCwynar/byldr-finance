@@ -10,7 +10,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Area
+  Area,
+  ReferenceLine
 } from 'recharts';
 
 import { Doc } from "@/convex/_generated/dataModel";
@@ -39,9 +40,21 @@ function EmptyChartState() {
 export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
   const [showMovingAverage, setShowMovingAverage] = useState(false);
+  const [showWeeklyAverage, setShowWeeklyAverage] = useState(false);
+  const [showMonthlyAverage, setShowMonthlyAverage] = useState(false);
+  const [showOverallAverage, setShowOverallAverage] = useState(false);
 
-  const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
-    if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1 };
+  const { chartData, yAxisDomain, firstProjectedIndex, overallAverage, weeklySegments, monthlySegments } = useMemo(() => {
+    if (!metrics || !metrics.length) {
+      return {
+        chartData: [],
+        yAxisDomain: [0, 0],
+        firstProjectedIndex: -1,
+        overallAverage: 0,
+        weeklySegments: [],
+        monthlySegments: []
+      };
+    }
 
     const sortedMetrics = metrics.sort((a, b) => a.date - b.date);
     
@@ -141,6 +154,40 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
       };
     });
 
+    // Helper to compute fixed-size segments working backward from the end
+    function computeSegments(size: number) {
+      const segments: { start: number; end: number; average: number }[] = [];
+      let endIndex = sortedMetrics.length - 1;
+      while (endIndex - size + 1 >= 0) {
+        const startIndex = endIndex - size + 1;
+        const slice = sortedMetrics.slice(startIndex, endIndex + 1);
+        const average =
+          slice.reduce((sum, m) => sum + m.netWorth, 0) / slice.length;
+        segments.unshift({
+          start: sortedMetrics[startIndex].date,
+          end: sortedMetrics[endIndex].date,
+          average,
+        });
+        endIndex -= size;
+      }
+      return segments;
+    }
+
+    const weeklySegments = computeSegments(7);
+    const monthlySegments = computeSegments(30);
+    const averageAll =
+      sortedMetrics.reduce((sum, m) => sum + m.netWorth, 0) /
+      sortedMetrics.length;
+
+    const segmentAverages = [
+      ...weeklySegments.map((s) => s.average),
+      ...monthlySegments.map((s) => s.average),
+      averageAll,
+    ];
+
+    minValue = Math.min(minValue, ...segmentAverages);
+    maxValue = Math.max(maxValue, ...segmentAverages);
+
     // Summary logging
     console.log('Projection summary:', {
       totalPoints: data.length,
@@ -179,7 +226,10 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
     return {
       chartData: data,
       yAxisDomain: domain,
-      firstProjectedIndex
+      firstProjectedIndex,
+      overallAverage: averageAll,
+      weeklySegments,
+      monthlySegments,
     };
   }, [metrics, uncertaintyPercent, showUncertainty]);
 
@@ -219,6 +269,45 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         <label htmlFor="showMovingAverage" className="text-sm">
           Show 30d Moving Avg
         </label>
+      </div>
+
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showWeeklyAverage"
+            checked={showWeeklyAverage}
+            onChange={(e) => setShowWeeklyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showWeeklyAverage" className="text-sm">
+            Show 7d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showMonthlyAverage"
+            checked={showMonthlyAverage}
+            onChange={(e) => setShowMonthlyAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showMonthlyAverage" className="text-sm">
+            Show 30d Avg
+          </label>
+        </div>
+        <div className="flex items-center gap-1">
+          <input
+            type="checkbox"
+            id="showOverallAverage"
+            checked={showOverallAverage}
+            onChange={(e) => setShowOverallAverage(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="showOverallAverage" className="text-sm">
+            Show All Avg
+          </label>
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height={showUncertainty ? "90%" : "100%"}>
@@ -308,6 +397,35 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
               stroke="#f59e0b"
               strokeWidth={2}
               dot={false}
+            />
+          )}
+
+          {showWeeklyAverage && weeklySegments.map((seg, idx) => (
+            <ReferenceLine
+              key={`week-${idx}`}
+              segment={[{ x: seg.start, y: seg.average }, { x: seg.end, y: seg.average }]}
+              stroke="#6366f1"
+              strokeDasharray="3 3"
+              label={idx === weeklySegments.length - 1 ? { value: '7d Avg', position: 'right', fill: '#6366f1' } : undefined}
+            />
+          ))}
+
+          {showMonthlyAverage && monthlySegments.map((seg, idx) => (
+            <ReferenceLine
+              key={`month-${idx}`}
+              segment={[{ x: seg.start, y: seg.average }, { x: seg.end, y: seg.average }]}
+              stroke="#10b981"
+              strokeDasharray="3 3"
+              label={idx === monthlySegments.length - 1 ? { value: '30d Avg', position: 'right', fill: '#10b981' } : undefined}
+            />
+          ))}
+
+          {showOverallAverage && (
+            <ReferenceLine
+              y={overallAverage}
+              stroke="#f43f5e"
+              strokeDasharray="3 3"
+              label={{ value: 'All Avg', position: 'right', fill: '#f43f5e' }}
             />
           )}
 
