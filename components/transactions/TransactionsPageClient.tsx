@@ -4,6 +4,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Doc, Id } from '@/convex/_generated/dataModel';
 import { monthlyAmount } from '@/lib/recurring';
+import { monthlyOneTimeAmount } from '@/lib/oneTime';
 import { formatCurrency } from '@/lib/formatters';
 import { Modal } from '@/components/modal';
 import { TransactionForm as RecurringForm } from '@/components/recurring/transaction-form';
@@ -76,8 +77,14 @@ export default function TransactionsPageClient({
     else if (view === 'one-time') arr = arr.filter((i) => i.kind === 'one-time');
     arr.sort((a, b) => {
       if (a.type !== b.type) return a.type === 'income' ? -1 : 1;
-      const amta = a.kind === 'recurring' ? monthlyAmount(a) : a.amount;
-      const amtb = b.kind === 'recurring' ? monthlyAmount(b) : b.amount;
+      const amta =
+        a.kind === 'recurring'
+          ? monthlyAmount(a)
+          : monthlyOneTimeAmount(a.amount);
+      const amtb =
+        b.kind === 'recurring'
+          ? monthlyAmount(b)
+          : monthlyOneTimeAmount(b.amount);
       return amtb - amta;
     });
     return arr;
@@ -86,7 +93,10 @@ export default function TransactionsPageClient({
   const totals = useMemo(() => {
     return combined.reduce(
       (acc, t) => {
-        const amt = t.kind === 'recurring' ? monthlyAmount(t) : t.amount;
+        const amt =
+          t.kind === 'recurring'
+            ? monthlyAmount(t)
+            : monthlyOneTimeAmount(t.amount);
         if (t.type === 'income') acc.income += amt;
         else acc.expense += amt;
         return acc;
@@ -180,7 +190,9 @@ export default function TransactionsPageClient({
               <div className="flex justify-between">
                 <span>Monthly</span>
                 <span className="font-mono">
-                  {t.kind === 'recurring' ? formatCurrency(monthlyAmount(t)) : '-'}
+                  {t.kind === 'recurring'
+                    ? formatCurrency(monthlyAmount(t))
+                    : formatCurrency(monthlyOneTimeAmount(t.amount))}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -241,7 +253,9 @@ export default function TransactionsPageClient({
                 <td className="px-2 py-1">{t.name}</td>
                 <td className="px-2 py-1">{formatCurrency(t.amount)}</td>
                 <td className="px-2 py-1">
-                  {t.kind === 'recurring' ? formatCurrency(monthlyAmount(t)) : '-'}
+                  {t.kind === 'recurring'
+                    ? formatCurrency(monthlyAmount(t))
+                    : formatCurrency(monthlyOneTimeAmount(t.amount))}
                 </td>
                 <td className="px-2 py-1">
                   <span
