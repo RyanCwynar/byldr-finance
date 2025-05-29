@@ -12,14 +12,16 @@ type Wallet = Doc<'wallets'>;
 import WalletsCard from "@/components/cards/wallets-card";
 import AssetsCard from "@/components/cards/assets-card";
 import DebtsCard from "@/components/cards/debts-card";
+import OneTimeCard from "@/components/cards/one-time-card";
 
 export default async function Home() {
   // Preload all data with authentication
-  const [forecastData, assetsPreload, debtsPreload, walletsPreload] = await Promise.all([
+  const [forecastData, assetsPreload, debtsPreload, walletsPreload, oneTimePreload] = await Promise.all([
     preloadForecastData(),
     preloadQueryWithAuth<Asset[]>(api.assets.listAssets, {}),
     preloadQueryWithAuth<Debt[]>(api.debts.listDebts, {}),
-    preloadQueryWithAuth<Wallet[]>(api.wallets.listWallets, {})
+    preloadQueryWithAuth<Wallet[]>(api.wallets.listWallets, {}),
+    preloadQueryWithAuth(api.oneTime.listOneTimeTransactions, {})
   ]);
 
   return (
@@ -39,10 +41,11 @@ export default async function Home() {
           initialRecurring={forecastData.initialRecurring as { monthlyIncome: number; monthlyCost: number } | null}
         />
       </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 w-full">
           <WalletsCard wallets={walletsPreload || []} />
           <AssetsCard assets={assetsPreload || []} />
           <DebtsCard debts={debtsPreload || []} />
+          <OneTimeCard items={oneTimePreload || []} />
         </div>
       </div>
     </div>

@@ -44,10 +44,15 @@ export function ForecastEmptyState({
           step={100}
           label="Monthly Income"
         />
-        <a href="/recurring" className="text-sm text-blue-500 hover:underline self-end">
-          Manage Recurring Transactions
-        </a>
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
+          <a href="/recurring" className="text-sm text-blue-500 hover:underline">
+            Manage Recurring Transactions
+          </a>
+          <a href="/one-time" className="text-sm text-blue-500 hover:underline">
+            Manage One Time Transactions
+          </a>
+        </div>
       </div>
     </div>
   );
-} 
+}
