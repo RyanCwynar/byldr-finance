@@ -8,9 +8,13 @@ export default async function RecurringPage() {
     api.recurring.listRecurringTransactions,
     {}
   );
+  const initialTags = await preloadQueryWithAuth<string[]>(
+    api.recurring.listRecurringTags,
+    {}
+  );
   return (
     <div className="container mx-auto px-4 py-8">
-      <RecurringPageClient initialData={initialData || []} />
+      <RecurringPageClient initialData={initialData || []} initialTags={initialTags || []} />
     </div>
   );
 }
