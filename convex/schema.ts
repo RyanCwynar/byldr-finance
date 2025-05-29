@@ -133,7 +133,8 @@ export default defineSchema({
     frequency: v.union(v.literal("monthly"), v.literal("yearly")),
     daysOfMonth: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
-    day: v.optional(v.number())
+    day: v.optional(v.number()),
+    tags: v.optional(v.array(v.string()))
   }).index("by_user", ["userId"]),
 
   // Store user preferences
