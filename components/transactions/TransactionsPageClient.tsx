@@ -232,7 +232,7 @@ export default function TransactionsPageClient({
               <th className="px-2 py-1 text-left">Frequency</th>
               <th className="px-2 py-1 text-left">Date</th>
               <th className="px-2 py-1 text-left">Tags</th>
-              <th className="px-2 py-1 text-right">Actions</th>
+              <th className="px-2 py-1 text-right w-20 whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -277,7 +277,7 @@ export default function TransactionsPageClient({
                     </div>
                   )}
                 </td>
-                <td className="px-2 py-1 text-right space-x-2">
+                <td className="px-2 py-1 text-right space-x-2 w-20 whitespace-nowrap">
                   <button onClick={() => handleEdit(t)} className="p-1 rounded hover:bg-gray-700" title="Edit">
                     <PencilIcon className="w-5 h-5 text-blue-400" />
                   </button>
