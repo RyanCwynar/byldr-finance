@@ -44,7 +44,7 @@ export default async function Home() {
           initialRecurring={forecastData.initialRecurring as { monthlyIncome: number; monthlyCost: number } | null}
         />
       </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
           <WalletsCard wallets={walletsPreload || []} />
           <AssetsCard assets={assetsPreload || []} />
           <DebtsCard debts={debtsPreload || []} />
