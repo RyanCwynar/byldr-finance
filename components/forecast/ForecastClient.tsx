@@ -42,8 +42,12 @@ export function ForecastClient({
   // Initialize state from server-side preferences, falling back to defaults
   const defaultPrefs = initialPreferences?.preferences || {};
   
-  const [monthlyCost, setMonthlyCost] = useState(defaultPrefs.monthlyCost || 10000);
-  const [monthlyIncome, setMonthlyIncome] = useState(defaultPrefs.monthlyIncome || 18000);
+  const [monthlyCost, setMonthlyCost] = useState(
+    initialRecurring?.monthlyCost ?? 0
+  );
+  const [monthlyIncome, setMonthlyIncome] = useState(
+    initialRecurring?.monthlyIncome ?? 0
+  );
   const [useSimulationData, setUseSimulationData] = useState(defaultPrefs.useSimulationData || false);
   const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>(
     (defaultPrefs.forecastDataView as 'all' | 'real' | 'projected') || 'all'
@@ -155,6 +159,12 @@ export function ForecastClient({
     if (shouldFetch && realtimeRecurring) return realtimeRecurring;
     return initialRecurring || { monthlyIncome: 0, monthlyCost: 0 };
   }, [realtimeRecurring, initialRecurring, shouldFetch]);
+
+  // Keep monthly values in sync with recurring totals
+  useEffect(() => {
+    setMonthlyCost(recurringTotals.monthlyCost);
+    setMonthlyIncome(recurringTotals.monthlyIncome);
+  }, [recurringTotals.monthlyCost, recurringTotals.monthlyIncome]);
   
   // Always start with initial values, then optionally use real-time values once stable
   const metrics = useMemo(() => {

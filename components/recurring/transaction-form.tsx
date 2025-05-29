@@ -2,21 +2,27 @@
 import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Doc } from '@/convex/_generated/dataModel';
 
 interface TransactionFormProps {
   onClose: () => void;
+  transaction?: Doc<'recurringTransactions'>;
+  onSubmit?: (updates: Partial<Doc<'recurringTransactions'>>) => Promise<void>;
 }
 
-export function TransactionForm({ onClose }: TransactionFormProps) {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'income' | 'expense'>('expense');
-  const [frequency, setFrequency] = useState<'monthly' | 'yearly'>('monthly');
-  const [daysOfMonth, setDaysOfMonth] = useState('');
-  const [month, setMonth] = useState('');
-  const [day, setDay] = useState('');
+export function TransactionForm({ onClose, transaction, onSubmit }: TransactionFormProps) {
+  const [name, setName] = useState(transaction?.name || '');
+  const [amount, setAmount] = useState(transaction?.amount.toString() || '');
+  const [type, setType] = useState<'income' | 'expense'>(transaction?.type || 'expense');
+  const [frequency, setFrequency] = useState<'monthly' | 'yearly'>(transaction?.frequency || 'monthly');
+  const [daysOfMonth, setDaysOfMonth] = useState(
+    transaction?.daysOfMonth ? transaction.daysOfMonth.join(',') : ''
+  );
+  const [month, setMonth] = useState(transaction?.month ? String(transaction.month) : '');
+  const [day, setDay] = useState(transaction?.day ? String(transaction.day) : '');
 
   const add = useMutation(api.recurring.addRecurringTransaction);
+  const update = useMutation(api.recurring.updateRecurringTransaction);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +40,20 @@ export function TransactionForm({ onClose }: TransactionFormProps) {
       data.month = month ? Number(month) : 1;
       data.day = day ? Number(day) : 1;
     }
-    await add(data);
+    if (transaction) {
+      await update({ id: transaction._id, ...data });
+      if (onSubmit) await onSubmit(data);
+    } else {
+      await add(data);
+    }
     onClose();
   };
 
   return (
     <div>
-      <h3 className="text-lg font-medium mb-4">Add Recurring Transaction</h3>
+      <h3 className="text-lg font-medium mb-4">
+        {transaction ? 'Edit Recurring Transaction' : 'Add Recurring Transaction'}
+      </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm mb-1">Name</label>
