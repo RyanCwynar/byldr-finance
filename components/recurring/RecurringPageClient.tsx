@@ -23,7 +23,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Recurring Transactions</h1>
         <button
           onClick={() => setShowForm(true)}
@@ -32,6 +32,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
           Add
         </button>
       </div>
+      <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm">
       <table className="min-w-full text-sm">
         <thead>
           <tr>
@@ -65,6 +66,7 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
           ))}
         </tbody>
       </table>
+      </div>
       {showForm && (
         <Modal onClose={() => setShowForm(false)}>
           <TransactionForm onClose={() => setShowForm(false)} />

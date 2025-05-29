@@ -5,7 +5,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { DailyMetric, UserPreferences, UserPreferencesData, RecurringTotals } from './types';
 import { ForecastEmptyState } from './ForecastEmptyState';
-import { ForecastControls } from './ForecastControls';
+import RecurringTotalsCard from '@/components/recurring/RecurringTotalsCard';
 import { ForecastSummary } from './ForecastSummary';
 import { ForecastChartView } from './ForecastChartView';
 
@@ -404,12 +404,7 @@ export function ForecastClient({
         setTimeframe={updateTimeframe}
       />
       
-      <ForecastControls
-        monthlyCost={monthlyCost}
-        setMonthlyCost={updateMonthlyCost}
-        monthlyIncome={monthlyIncome}
-        setMonthlyIncome={updateMonthlyIncome}
-      />
+      <RecurringTotalsCard initialTotals={recurringTotals} />
     </div>
   );
-} 
+}

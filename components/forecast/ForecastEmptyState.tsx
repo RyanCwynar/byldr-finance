@@ -1,7 +1,7 @@
 'use client';
 
 import { ForecastEmptyStateProps } from './types';
-import { Slider } from './Slider';
+import RecurringTotalsCard from '@/components/recurring/RecurringTotalsCard';
 
 export function ForecastEmptyState({ 
   monthlyCost, 
@@ -20,31 +20,8 @@ export function ForecastEmptyState({
           Add some assets, debts, or wallets to start tracking your net worth and see projections.
         </p>
       </div>
-      
-      <div className="flex flex-col gap-4 p-4 border rounded-lg">
-        <h3 className="text-lg font-medium mb-2">Forecast Settings</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          These settings will be used to generate projections once you have financial data.
-        </p>
-        
-        <Slider
-          value={monthlyCost}
-          onChange={setMonthlyCost}
-          min={0}
-          max={50000}
-          step={100}
-          label="Monthly Costs"
-        />
 
-        <Slider
-          value={monthlyIncome}
-          onChange={setMonthlyIncome}
-          min={0}
-          max={50000}
-          step={100}
-          label="Monthly Income"
-        />
-      </div>
+      <RecurringTotalsCard initialTotals={{ monthlyIncome, monthlyCost }} />
     </div>
   );
-} 
+}
