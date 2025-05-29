@@ -6,6 +6,7 @@ import { Doc, Id } from '@/convex/_generated/dataModel';
 import { Modal } from '@/components/modal';
 import { TransactionForm } from './transaction-form';
 import { monthlyAmount } from '@/lib/recurring';
+import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 type Recurring = Doc<'recurringTransactions'>;
 
@@ -74,17 +75,78 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
   };
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+    <div className="flex flex-col gap-4 max-w-3xl mx-auto relative">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Recurring Transactions</h1>
         <button
           onClick={() => setShowForm(true)}
-          className="px-4 py-2 rounded-md bg-blue-600 text-white"
+          className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
         >
-          Add
+          <PlusIcon className="w-5 h-5" />
+          <span>Add</span>
         </button>
       </div>
-      <table className="min-w-full text-sm">
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {sortedData.map((t) => (
+          <div key={t._id} className="bg-white/5 rounded-lg p-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">{t.name}</span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEdit(t)}
+                  className="p-1 rounded hover:bg-gray-700"
+                >
+                  <PencilIcon className="w-5 h-5 text-blue-400" />
+                </button>
+                <button
+                  onClick={() => handleDelete(t._id)}
+                  className="p-1 rounded hover:bg-gray-700"
+                >
+                  <TrashIcon className="w-5 h-5 text-red-400" />
+                </button>
+              </div>
+            </div>
+            <div className="text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Amount</span>
+                <span className="font-mono">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Monthly</span>
+                <span className="font-mono">${monthlyAmount(t).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Type</span>
+                <span>{t.type === 'income' ? 'Income' : 'Expense'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Frequency</span>
+                <span>
+                  {t.frequency === 'monthly'
+                    ? `Monthly on ${t.daysOfMonth?.join(', ')}`
+                    : `Yearly on ${t.month}/${t.day}`}
+                </span>
+              </div>
+              {t.tags && t.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {t.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-gray-700 rounded-full text-xs"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full text-sm">
         <thead>
           <tr>
             <th className="px-2 py-1 text-left">Name</th>
@@ -110,8 +172,8 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
           {sortedData.map((t) => (
             <tr key={t._id} className="border-t border-gray-700">
               <td className="px-2 py-1">{t.name}</td>
-              <td className="px-2 py-1">${t.amount}</td>
-              <td className="px-2 py-1">${monthlyAmount(t)}</td>
+              <td className="px-2 py-1">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-2 py-1">${monthlyAmount(t).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               <td className="px-2 py-1">
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
@@ -145,15 +207,17 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
               <td className="px-2 py-1 text-right space-x-2">
                 <button
                   onClick={() => handleEdit(t)}
-                  className="text-blue-500 hover:underline"
+                  className="p-1 rounded hover:bg-gray-700"
+                  title="Edit"
                 >
-                  Edit
+                  <PencilIcon className="w-5 h-5 text-blue-400" />
                 </button>
                 <button
                   onClick={() => handleDelete(t._id)}
-                  className="text-red-500 hover:underline"
+                  className="p-1 rounded hover:bg-gray-700"
+                  title="Delete"
                 >
-                  Delete
+                  <TrashIcon className="w-5 h-5 text-red-400" />
                 </button>
               </td>
             </tr>
@@ -162,12 +226,20 @@ export default function RecurringPageClient({ initialData }: RecurringPageClient
       </table>
       <div className="flex justify-end gap-6 text-sm mt-2">
         <div>
-          Total Income: <span className="text-green-500">${totals.income.toFixed(2)}</span>
+          Total Income: <span className="text-green-500">${totals.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div>
-          Total Expenses: <span className="text-red-500">${totals.expense.toFixed(2)}</span>
+          Total Expenses: <span className="text-red-500">${totals.expense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
       </div>
+      </div>
+      <button
+        onClick={() => setShowForm(true)}
+        className="sm:hidden fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 text-white shadow-lg"
+        aria-label="Add recurring transaction"
+      >
+        <PlusIcon className="w-6 h-6" />
+      </button>
       {showForm && (
         <Modal onClose={() => { setShowForm(false); setEditing(null); }}>
           <TransactionForm
