@@ -124,6 +124,18 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_type", ["userId", "type"]),
 
+  // Store recurring income or expense transactions
+  recurringTransactions: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    amount: v.number(),
+    type: v.union(v.literal("income"), v.literal("expense")),
+    frequency: v.union(v.literal("monthly"), v.literal("yearly")),
+    daysOfMonth: v.optional(v.array(v.number())),
+    month: v.optional(v.number()),
+    day: v.optional(v.number())
+  }).index("by_user", ["userId"]),
+
   // Store user preferences
   userPreferences: defineTable({
     userId: v.string(), // Clerk user ID

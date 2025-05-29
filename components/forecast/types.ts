@@ -57,4 +57,9 @@ export interface UserPreferencesData {
   userId: string;
   preferences: UserPreferences;
   lastUpdated: number;
-} 
+}
+
+export interface RecurringTotals {
+  monthlyIncome: number;
+  monthlyCost: number;
+}
