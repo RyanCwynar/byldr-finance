@@ -249,12 +249,23 @@ export default function RecurringPageClient({ initialData, initialTags }: Recurr
           ))}
         </tbody>
       </table>
-      <div className="flex justify-end gap-6 text-sm mt-2">
+      <div className="flex flex-col items-end gap-1 text-sm mt-2">
         <div>
           Total Income: <span className="text-green-500">${totals.income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
         </div>
         <div>
           Total Expenses: <span className="text-red-500">${totals.expense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+        </div>
+        <div>
+          Net Income:{' '}
+          <span className={
+            totals.income - totals.expense >= 0 ? 'text-green-500' : 'text-red-500'
+          }>
+            ${(totals.income - totals.expense).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
       </div>
       </div>
