@@ -15,6 +15,7 @@ import DebtHistoryChart from './debt-history-chart';
 import DebtHistoryList, { DebtHistoryEntry } from './debt-history-list';
 import DebtHistoryForm from './debt-history-form';
 import DebtHistoryEditForm from './debt-history-edit-form';
+import { calculateChangeRates } from '@/lib/debt';
 
 type Debt = Doc<"debts">;
 
@@ -27,6 +28,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
   const liveDebt =
     useQuery(api.debts.getDebt, { id: initialDebt._id }) ?? initialDebt;
   const history = useQuery(api.debts.getDebtHistory, { debtId: initialDebt._id }) ?? [];
+  const { weeklyChange, monthlyChange } = calculateChangeRates(history);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAddHistoryForm, setShowAddHistoryForm] = useState(false);
   const [editHistoryEntry, setEditHistoryEntry] = useState<DebtHistoryEntry | null>(null);
@@ -178,6 +180,26 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
           </button>
         </div>
         <DebtHistoryChart history={history} />
+        {(weeklyChange !== null || monthlyChange !== null) && (
+          <div className="mt-4 text-sm text-gray-300 space-y-1">
+            {weeklyChange !== null && (
+              <p>
+                Avg change per week:{' '}
+                <span className={weeklyChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {formatCurrency(weeklyChange)}
+                </span>
+              </p>
+            )}
+            {monthlyChange !== null && (
+              <p>
+                Avg change per month:{' '}
+                <span className={monthlyChange >= 0 ? 'text-green-400' : 'text-red-400'}>
+                  {formatCurrency(monthlyChange)}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
         <DebtHistoryList history={history} onEdit={(entry) => setEditHistoryEntry(entry)} />
       </div>
 
