@@ -254,3 +254,50 @@ export const addDebtHistoryEntry = mutation({
     return await ctx.db.insert("debtHistory", { debtId, timestamp, value });
   },
 });
+
+// Update an existing debt history entry
+export const updateDebtHistoryEntry = mutation({
+  args: {
+    id: v.id("debtHistory"),
+    timestamp: v.optional(v.number()),
+    value: v.optional(v.number()),
+  },
+  handler: async (ctx, { id, ...updates }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+
+    const entry = await ctx.db.get(id);
+    if (!entry) throw new Error("Entry not found");
+
+    const debt = await ctx.db.get(entry.debtId);
+    if (!debt) throw new Error("Debt not found");
+
+    if (debt.userId && debt.userId !== userId) {
+      throw new Error("Not authorized to update this debt");
+    }
+
+    return await ctx.db.patch(id, updates);
+  },
+});
+
+// Delete a debt history entry
+export const deleteDebtHistoryEntry = mutation({
+  args: { id: v.id("debtHistory") },
+  handler: async (ctx, { id }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+
+    const entry = await ctx.db.get(id);
+    if (!entry) throw new Error("Entry not found");
+
+    const debt = await ctx.db.get(entry.debtId);
+    if (!debt) throw new Error("Debt not found");
+
+    if (debt.userId && debt.userId !== userId) {
+      throw new Error("Not authorized to update this debt");
+    }
+
+    await ctx.db.delete(id);
+    return { success: true };
+  },
+});
