@@ -10,8 +10,6 @@ import { ForecastControls } from './ForecastControls';
 import { ForecastSummary } from './ForecastSummary';
 import { ForecastChartView } from './ForecastChartView';
 
-// Local storage key for simulation data - still used for simulation data only
-const SIMULATION_STORAGE_KEY = 'simulation_portfolio_summary';
 
 interface SimulationData {
   originalValue: number;
@@ -90,34 +88,12 @@ export function ForecastClient({
     setPreference({ key: 'forecastTimeframe', value });
   };
   
-  // Load simulation data from DB or local storage
+  // Load simulation data from the database only
   useEffect(() => {
-    try {
-      if (dbSimulation?.summary) {
-        setSimulationData(dbSimulation.summary);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(
-            SIMULATION_STORAGE_KEY,
-            JSON.stringify(dbSimulation.summary)
-          );
-        }
-        return;
-      }
-
-      if (typeof window !== 'undefined') {
-        const savedSimulation = localStorage.getItem(SIMULATION_STORAGE_KEY);
-        if (savedSimulation) {
-          try {
-            const parsed = JSON.parse(savedSimulation);
-            setSimulationData(parsed);
-            console.log('Loaded simulation data from local storage:', parsed);
-          } catch (e) {
-            console.error('Failed to parse simulation data:', e);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading simulation data:', error);
+    if (dbSimulation?.summary) {
+      setSimulationData(dbSimulation.summary);
+    } else {
+      setSimulationData(null);
     }
   }, [dbSimulation]);
   

@@ -9,8 +9,6 @@ import QuoteSlider from './quote-slider';
 import SimulationSummary from './simulation-summary';
 import SimulationWallets from './simulation-wallets';
 
-// Local storage key for saving adjusted quotes
-const STORAGE_KEY = 'simulation_adjusted_quotes';
 
 type Quote = Doc<"quotes">;
 type Holding = Doc<"holdings">;
@@ -41,20 +39,12 @@ export default function SimulationView({
   const saveSimulation = useMutation(api.simulations.saveSimulation);
   const clearSimulation = useMutation(api.simulations.clearSimulation);
 
-  // Load saved adjustments from local storage on component mount
+  // Load saved adjustments from the database only
   useEffect(() => {
-    try {
-      const savedAdjustments = localStorage.getItem(STORAGE_KEY);
-      if (savedAdjustments) {
-        const parsed = JSON.parse(savedAdjustments);
-        setAdjustedQuotes(parsed);
-        console.log('Loaded saved adjustments from local storage:', parsed);
-      } else if (savedSimulation?.adjustments) {
-        setAdjustedQuotes(savedSimulation.adjustments);
-        console.log('Loaded saved adjustments from DB:', savedSimulation.adjustments);
-      }
-    } catch (error) {
-      console.error('Error loading saved adjustments from local storage:', error);
+    if (savedSimulation?.adjustments) {
+      setAdjustedQuotes(savedSimulation.adjustments);
+    } else {
+      setAdjustedQuotes({});
     }
   }, [savedSimulation]);
   
@@ -246,12 +236,6 @@ export default function SimulationView({
   // Persist summary and adjustments whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem('simulation_portfolio_summary', JSON.stringify(portfolioSummary));
-    } catch (error) {
-      console.error('Error saving simulation summary to localStorage:', error);
-    }
-
-    try {
       saveSimulation({ adjustments: adjustedQuotes, summary: portfolioSummary });
     } catch (error) {
       console.error('Error saving simulation summary to DB:', error);
@@ -334,13 +318,6 @@ export default function SimulationView({
         [symbol]: value
       };
       
-      // Save to local storage
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error('Error saving adjustments to local storage:', error);
-      }
-      
       return updated;
     });
   };
@@ -349,16 +326,8 @@ export default function SimulationView({
   const handleReset = () => {
     setAdjustedQuotes({});
 
-    // Clear from local storage
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('Error clearing adjustments from local storage:', error);
-    }
-
     try {
       clearSimulation();
-      localStorage.removeItem('simulation_portfolio_summary');
     } catch (error) {
       console.error('Error clearing simulation data from DB:', error);
     }
