@@ -118,12 +118,21 @@ export const addDebt = mutation({
     // Get the user ID from authentication
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
-    
+
     // Add the debt with the user ID
-    return await ctx.db.insert("debts", {
+    const debtId = await ctx.db.insert("debts", {
       ...args,
       userId
     });
+
+    // Record the initial value in history
+    await ctx.db.insert("debtHistory", {
+      debtId,
+      timestamp: Date.now(),
+      value: args.value
+    });
+
+    return debtId;
   }
 });
 
@@ -162,7 +171,18 @@ export const updateDebt = mutation({
     }
     
     // Update the debt
-    return await ctx.db.patch(id, updates);
+    const updated = await ctx.db.patch(id, updates);
+
+    // Record value change if provided
+    if (updates.value !== undefined && updates.value !== debt.value) {
+      await ctx.db.insert("debtHistory", {
+        debtId: id,
+        timestamp: Date.now(),
+        value: updates.value
+      });
+    }
+
+    return updated;
   }
 });
 
@@ -189,4 +209,26 @@ export const deleteDebt = mutation({
     
     return { success: true };
   },
-}); 
+});
+
+// Get history of a debt's value changes
+export const getDebtHistory = query({
+  args: { debtId: v.id("debts") },
+  handler: async (ctx, { debtId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+
+    const debt = await ctx.db.get(debtId);
+    if (!debt) throw new Error("Debt not found");
+
+    if (debt.userId && debt.userId !== userId) {
+      throw new Error("Not authorized to view this debt");
+    }
+
+    return await ctx.db
+      .query("debtHistory")
+      .withIndex("by_debt", q => q.eq("debtId", debtId))
+      .order("asc")
+      .collect();
+  },
+});

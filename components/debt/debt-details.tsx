@@ -11,6 +11,7 @@ import Link from "next/link";
 import { DebtForm } from '@/components/forms/debt-form';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/formatters';
+import DebtHistoryChart from './debt-history-chart';
 
 type Debt = Doc<"debts">;
 
@@ -22,6 +23,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
   const router = useRouter();
   const liveDebt =
     useQuery(api.debts.getDebt, { id: initialDebt._id }) ?? initialDebt;
+  const history = useQuery(api.debts.getDebtHistory, { debtId: initialDebt._id }) ?? [];
   const [showEditForm, setShowEditForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -158,6 +160,11 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             <p className="text-lg">{liveDebt.metadata.description}</p>
           </div>
         )}
+      </div>
+
+      <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
+        <h2 className="text-xl font-semibold mb-4">Value History</h2>
+        <DebtHistoryChart history={history} />
       </div>
       
       {showEditForm && (
