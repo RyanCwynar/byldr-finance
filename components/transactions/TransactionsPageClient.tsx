@@ -45,6 +45,7 @@ export default function TransactionsPageClient({
 
   const removeRecurring = useMutation(api.recurring.deleteRecurringTransaction);
   const removeOneTime = useMutation(api.oneTime.deleteOneTimeTransaction);
+  const updateOneTime = useMutation(api.oneTime.updateOneTimeTransaction);
 
   const [view, setView] = useState<"all" | "recurring" | "one-time" | "future">(
     "all",
@@ -127,7 +128,10 @@ export default function TransactionsPageClient({
   }, [filteredRecurring, filteredOneTime, view, sortField, sortDir]);
 
   const visibleItems = useMemo(
-    () => combined.filter((t) => !hiddenIds.has(t._id)),
+    () =>
+      combined.filter(
+        (t) => !hiddenIds.has(t._id) && !(t.kind === 'one-time' && t.hidden)
+      ),
     [combined, hiddenIds],
   );
 
@@ -170,13 +174,20 @@ export default function TransactionsPageClient({
     }
   };
 
-  const toggleHidden = (id: string) => {
-    setHiddenIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const toggleHidden = async (item: Item) => {
+    if (item.kind === 'one-time') {
+      await updateOneTime({
+        id: item._id as Id<'oneTimeTransactions'>,
+        hidden: !item.hidden,
+      });
+    } else {
+      setHiddenIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(item._id)) next.delete(item._id);
+        else next.add(item._id);
+        return next;
+      });
+    }
   };
 
   const pillClass = (active: boolean) =>
@@ -296,21 +307,23 @@ export default function TransactionsPageClient({
               t.kind === "one-time" && t.date > Date.now()
                 ? "ring-2 ring-yellow-500"
                 : ""
-            } ${hiddenIds.has(t._id) ? "opacity-50" : ""}`}
+            } ${t.kind === 'one-time' ? (t.hidden ? 'opacity-50' : '') : hiddenIds.has(t._id) ? 'opacity-50' : ''}`}
           >
             <div className="flex justify-between items-center">
               <span className="font-medium">{t.name}</span>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => toggleHidden(t._id)}
+                  onClick={() => toggleHidden(t)}
                   className="p-1 rounded hover:bg-gray-700"
-                  title={hiddenIds.has(t._id) ? "Show" : "Hide"}
+                  title={t.kind === 'one-time' ? (t.hidden ? 'Show' : 'Hide') : hiddenIds.has(t._id) ? 'Show' : 'Hide'}
                 >
-                  {hiddenIds.has(t._id) ? (
-                    <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="w-5 h-5 text-gray-400" />
-                  )}
+                  {t.kind === 'one-time'
+                    ? t.hidden
+                      ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                      : <EyeIcon className="w-5 h-5 text-gray-400" />
+                    : hiddenIds.has(t._id)
+                    ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                    : <EyeIcon className="w-5 h-5 text-gray-400" />}
                 </button>
                 <button
                   onClick={() => handleEdit(t)}
@@ -428,7 +441,7 @@ export default function TransactionsPageClient({
                   t.kind === "one-time" && t.date > Date.now()
                     ? "bg-yellow-900/40"
                     : ""
-                } ${hiddenIds.has(t._id) ? "opacity-50" : ""}`}
+                } ${t.kind === 'one-time' ? (t.hidden ? 'opacity-50' : '') : hiddenIds.has(t._id) ? 'opacity-50' : ''}`}
               >
                 <td className="px-2 py-1">{t.name}</td>
                 <td className="px-2 py-1">{formatCurrency(t.amount)}</td>
@@ -480,15 +493,17 @@ export default function TransactionsPageClient({
                 </td>
                 <td className="px-2 py-1 text-right space-x-2 w-20 whitespace-nowrap">
                   <button
-                    onClick={() => toggleHidden(t._id)}
+                    onClick={() => toggleHidden(t)}
                     className="p-1 rounded hover:bg-gray-700"
-                    title={hiddenIds.has(t._id) ? "Show" : "Hide"}
+                    title={t.kind === 'one-time' ? (t.hidden ? 'Show' : 'Hide') : hiddenIds.has(t._id) ? 'Show' : 'Hide'}
                   >
-                    {hiddenIds.has(t._id) ? (
-                      <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5 text-gray-400" />
-                    )}
+                    {t.kind === 'one-time'
+                      ? t.hidden
+                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                        : <EyeIcon className="w-5 h-5 text-gray-400" />
+                      : hiddenIds.has(t._id)
+                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                        : <EyeIcon className="w-5 h-5 text-gray-400" />}
                   </button>
                   <button
                     onClick={() => handleEdit(t)}
