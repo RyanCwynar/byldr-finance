@@ -232,3 +232,25 @@ export const getDebtHistory = query({
       .collect();
   },
 });
+
+// Manually add a historical value entry for a debt
+export const addDebtHistoryEntry = mutation({
+  args: {
+    debtId: v.id("debts"),
+    timestamp: v.number(),
+    value: v.number(),
+  },
+  handler: async (ctx, { debtId, timestamp, value }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+
+    const debt = await ctx.db.get(debtId);
+    if (!debt) throw new Error("Debt not found");
+
+    if (debt.userId && debt.userId !== userId) {
+      throw new Error("Not authorized to update this debt");
+    }
+
+    return await ctx.db.insert("debtHistory", { debtId, timestamp, value });
+  },
+});
