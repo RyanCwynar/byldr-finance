@@ -29,6 +29,7 @@ export const monthlyCostBreakdown = query({
     });
 
     oneTime.forEach(o => {
+      if (o.hidden) return;
       if (o.type !== 'expense') return;
       const amt = o.amount / 12;
       add(o.name, amt);

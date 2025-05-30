@@ -5,7 +5,13 @@ import { api } from '@/convex/_generated/api';
 import { Doc, Id } from '@/convex/_generated/dataModel';
 import { Modal } from '@/components/modal';
 import { TransactionForm } from './transaction-form';
-import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import {
+  PencilIcon,
+  TrashIcon,
+  PlusIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from '@heroicons/react/24/outline';
 
 type OneTime = Doc<'oneTimeTransactions'>;
 
@@ -18,6 +24,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
   const data = useQuery(api.oneTime.listOneTimeTransactions) ?? initialData;
   const allTags = useQuery(api.oneTime.listOneTimeTags) ?? initialTags;
   const remove = useMutation(api.oneTime.deleteOneTimeTransaction);
+  const update = useMutation(api.oneTime.updateOneTimeTransaction);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<OneTime | null>(null);
   const [sortField, setSortField] = useState<'amount' | 'date' | 'type' | null>(null);
@@ -32,6 +39,10 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
     if (tags.length === 0) return data;
     return data.filter((t) => tags.every((tag) => t.tags?.includes(tag)));
   }, [data, tagFilter]);
+
+  const visibleData = useMemo(() => {
+    return filteredData.filter((t) => !t.hidden);
+  }, [filteredData]);
 
   const sortedData = useMemo(() => {
     const arr = [...filteredData];
@@ -52,7 +63,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
   }, [filteredData, sortField, sortDir]);
 
   const totals = useMemo(() => {
-    const result = filteredData.reduce(
+    const result = visibleData.reduce(
       (acc, t) => {
         if (t.type === 'income') acc.income += t.amount;
         else acc.expense += t.amount;
@@ -64,7 +75,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
       ...result,
       net: result.income - result.expense,
     };
-  }, [filteredData]);
+  }, [visibleData]);
 
   const toggleSort = (field: 'amount' | 'date' | 'type') => {
     if (sortField === field) {
@@ -82,6 +93,10 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
   const handleEdit = (item: OneTime) => {
     setEditing(item);
     setShowForm(true);
+  };
+
+  const toggleHidden = async (item: OneTime) => {
+    await update({ id: item._id, hidden: !item.hidden });
   };
 
   return (
@@ -113,10 +128,26 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
       {/* Mobile card list */}
       <div className="md:hidden space-y-3">
         {sortedData.map((t) => (
-          <div key={t._id} className="bg-white/5 rounded-lg p-4 space-y-2">
+          <div
+            key={t._id}
+            className={`bg-white/5 rounded-lg p-4 space-y-2 ${
+              t.hidden ? 'opacity-50' : ''
+            }`}
+          >
             <div className="flex justify-between items-center">
               <span className="font-medium">{t.name}</span>
               <div className="flex space-x-2">
+                <button
+                  onClick={() => toggleHidden(t)}
+                  className="p-1 rounded hover:bg-gray-700"
+                  title={t.hidden ? 'Show' : 'Hide'}
+                >
+                  {t.hidden ? (
+                    <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
                 <button
                   onClick={() => handleEdit(t)}
                   className="p-1 rounded hover:bg-gray-700"
@@ -190,7 +221,10 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
           </thead>
           <tbody>
             {sortedData.map((t) => (
-              <tr key={t._id} className="border-t border-gray-700">
+              <tr
+                key={t._id}
+                className={`border-t border-gray-700 ${t.hidden ? 'opacity-50' : ''}`}
+              >
                 <td className="px-2 py-1">{t.name}</td>
                 <td className="px-2 py-1">${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="px-2 py-1">{new Date(t.date).toLocaleDateString()}</td>
@@ -220,6 +254,17 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
                   )}
                 </td>
                 <td className="px-2 py-1 text-right space-x-2">
+                  <button
+                    onClick={() => toggleHidden(t)}
+                    className="p-1 rounded hover:bg-gray-700"
+                    title={t.hidden ? 'Show' : 'Hide'}
+                  >
+                    {t.hidden ? (
+                      <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5 text-gray-400" />
+                    )}
+                  </button>
                   <button
                     onClick={() => handleEdit(t)}
                     className="p-1 rounded hover:bg-gray-700"

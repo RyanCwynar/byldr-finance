@@ -20,6 +20,7 @@ export const addOneTimeTransaction = mutation({
     type: v.union(v.literal("income"), v.literal("expense")),
     date: v.number(),
     tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -36,6 +37,7 @@ export const updateOneTimeTransaction = mutation({
     type: v.optional(v.union(v.literal("income"), v.literal("expense"))),
     date: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...updates }) => {
     const userId = await getUserId(ctx);
@@ -92,6 +94,7 @@ export const getYearlyTotals = query({
     let income = 0;
     let expense = 0;
     items.forEach((i) => {
+      if (i.hidden) return;
       if (i.date >= start && i.date < end) {
         if (i.type === "income") income += i.amount;
         else expense += i.amount;
@@ -113,6 +116,7 @@ export const getFutureTotals = query({
     let income = 0;
     let expense = 0;
     items.forEach((i) => {
+      if (i.hidden) return;
       if (i.date >= now) {
         if (i.type === "income") income += i.amount;
         else expense += i.amount;

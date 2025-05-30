@@ -9,7 +9,7 @@ const recurring = [
 
 const oneTime = [
   { name: 'Vacation', amount: 1200, type: 'expense' },
-  { name: 'Treat', amount: 60, type: 'expense' }
+  { name: 'Treat', amount: 60, type: 'expense', hidden: true }
 ];
 
 test('aggregates monthly cost by name and groups small ones', () => {
@@ -18,5 +18,5 @@ test('aggregates monthly cost by name and groups small ones', () => {
   expect(result.find(r => r.label === 'Coffee')!.amount).toBe(200);
   expect(result.find(r => r.label === 'Vacation')!.amount).toBe(100);
   expect(result.find(r => r.label === 'Insurance')!.amount).toBe(20);
-  expect(result.find(r => r.label === 'Other')!.amount).toBeCloseTo(5);
+  expect(result.find(r => r.label === 'Other')).toBeUndefined();
 });

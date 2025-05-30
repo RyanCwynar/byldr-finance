@@ -18,6 +18,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
     transaction?.date ? new Date(transaction.date).toISOString().slice(0, 10) : ''
   );
   const [tags, setTags] = useState(transaction?.tags ? transaction.tags.join(',') : '');
+  const [hidden, setHidden] = useState(transaction?.hidden || false);
 
   const existingTags = useQuery(api.oneTime.listOneTimeTags) ?? [];
 
@@ -31,6 +32,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
       amount: Number(amount),
       type,
       date: date ? new Date(date).getTime() : Date.now(),
+      hidden,
     };
     if (tags) {
       data.tags = tags.split(',').map((t: string) => t.trim()).filter(Boolean);
@@ -105,6 +107,17 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
               <option key={tag} value={tag} />
             ))}
           </datalist>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="hidden"
+            type="checkbox"
+            checked={hidden}
+            onChange={(e) => setHidden(e.target.checked)}
+          />
+          <label htmlFor="hidden" className="text-sm">
+            Hidden
+          </label>
         </div>
         <div className="flex justify-end gap-2">
           <button

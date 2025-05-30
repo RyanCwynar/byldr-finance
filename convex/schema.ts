@@ -160,6 +160,7 @@ export default defineSchema({
     type: v.union(v.literal("income"), v.literal("expense")),
     date: v.number(), // Unix timestamp
     tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   // Store simulation adjustments and results
