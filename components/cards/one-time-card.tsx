@@ -23,14 +23,19 @@ export default function OneTimeCard({ items: initialItems }: OneTimeCardProps) {
   const total = useMemo(() => {
     if (!items) return 0;
     return items
-      .filter((i) => new Date(i.date).getFullYear() === currentYear && i.type === 'expense')
+      .filter(
+        (i) =>
+          !i.hidden &&
+          new Date(i.date).getFullYear() === currentYear &&
+          i.type === 'expense'
+      )
       .reduce((sum, t) => sum + t.amount, 0);
   }, [items, currentYear]);
 
   const sorted = useMemo(() => {
     if (!items) return [];
     return [...items]
-      .filter((i) => new Date(i.date).getFullYear() === currentYear)
+      .filter((i) => new Date(i.date).getFullYear() === currentYear && !i.hidden)
       .sort((a, b) => b.date - a.date)
       .slice(0, 5);
   }, [items, currentYear]);

@@ -33,6 +33,10 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
     return data.filter((t) => tags.every((tag) => t.tags?.includes(tag)));
   }, [data, tagFilter]);
 
+  const visibleData = useMemo(() => {
+    return filteredData.filter((t) => !t.hidden);
+  }, [filteredData]);
+
   const sortedData = useMemo(() => {
     const arr = [...filteredData];
     if (sortField === 'amount') {
@@ -52,7 +56,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
   }, [filteredData, sortField, sortDir]);
 
   const totals = useMemo(() => {
-    const result = filteredData.reduce(
+    const result = visibleData.reduce(
       (acc, t) => {
         if (t.type === 'income') acc.income += t.amount;
         else acc.expense += t.amount;
@@ -64,7 +68,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
       ...result,
       net: result.income - result.expense,
     };
-  }, [filteredData]);
+  }, [visibleData]);
 
   const toggleSort = (field: 'amount' | 'date' | 'type') => {
     if (sortField === field) {

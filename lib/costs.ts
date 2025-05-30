@@ -14,6 +14,7 @@ export interface OneTimeTransaction {
   amount: number;
   type: 'income' | 'expense';
   name: string;
+  hidden?: boolean;
 }
 
 export interface CostBreakdownItem {
@@ -38,6 +39,7 @@ export function getMonthlyCostBreakdown(
   });
 
   oneTime.forEach((o) => {
+    if (o.hidden) return;
     if (o.type !== 'expense') return;
     const amt = monthlyOneTimeAmount(o.amount);
     add(o.name, amt);
