@@ -37,6 +37,14 @@ export default defineSchema({
     ignored: v.optional(v.boolean()), // Whether to ignore this quote in updates and ticker
   }).index("by_symbol", ["symbol"]),
 
+  // Map symbols to alternative quote symbols or fixed prices
+  quoteAliases: defineTable({
+    symbol: v.string(), // Original symbol
+    quoteSymbol: v.optional(v.string()), // Symbol to use for quoting
+    fixedPrice: v.optional(v.number()), // Optional fixed price override
+    quoteType: v.optional(v.union(v.literal("crypto"), v.literal("stock")))
+  }).index("by_symbol", ["symbol"]),
+
   // Store snapshots of quotes at different points in time
   quoteSnapshots: defineTable({
     timestamp: v.number(), // When the snapshot was taken
