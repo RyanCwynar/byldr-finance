@@ -19,6 +19,7 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
   const data = history
     .sort((a, b) => a.timestamp - b.timestamp)
     .map(h => ({
+      ...h,
       timestamp: h.timestamp,
       value: h.value,
     }));
@@ -55,8 +56,23 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
         <Tooltip
           formatter={(v: number) => formatCurrency(v)}
           labelFormatter={(ts) => new Date(ts as number).toLocaleString()}
+          contentStyle={{
+            backgroundColor: '#1f2937',
+            borderColor: '#374151',
+            color: '#f3f4f6',
+            borderRadius: '0.375rem',
+            boxShadow:
+              '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)'
+          }}
+          itemStyle={{ color: '#f3f4f6' }}
+          labelStyle={{ color: '#d1d5db' }}
         />
-        <Line type="monotone" dataKey="value" stroke="#3b82f6" dot />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#3b82f6"
+          dot
+        />
       </LineChart>
     </ResponsiveContainer>
   );
