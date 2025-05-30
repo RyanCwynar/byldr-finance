@@ -9,9 +9,10 @@ export type DebtHistoryEntry = Doc<'debtHistory'>;
 
 interface DebtHistoryChartProps {
   history: DebtHistoryEntry[];
+  onPointClick?: (entry: DebtHistoryEntry) => void;
 }
 
-export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
+export default function DebtHistoryChart({ history, onPointClick }: DebtHistoryChartProps) {
   if (!history || history.length === 0) {
     return <div className="text-center text-gray-400">No history available</div>;
   }
@@ -19,6 +20,7 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
   const data = history
     .sort((a, b) => a.timestamp - b.timestamp)
     .map(h => ({
+      ...h,
       timestamp: h.timestamp,
       value: h.value,
     }));
@@ -56,7 +58,15 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
           formatter={(v: number) => formatCurrency(v)}
           labelFormatter={(ts) => new Date(ts as number).toLocaleString()}
         />
-        <Line type="monotone" dataKey="value" stroke="#3b82f6" dot />
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#3b82f6"
+          dot
+          onClick={(data) =>
+            onPointClick?.((data as any).payload as DebtHistoryEntry)
+          }
+        />
       </LineChart>
     </ResponsiveContainer>
   );

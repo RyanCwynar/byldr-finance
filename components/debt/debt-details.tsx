@@ -11,8 +11,9 @@ import Link from "next/link";
 import { DebtForm } from '@/components/forms/debt-form';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/formatters';
-import DebtHistoryChart from './debt-history-chart';
+import DebtHistoryChart, { DebtHistoryEntry } from './debt-history-chart';
 import DebtHistoryForm from './debt-history-form';
+import DebtHistoryEditForm from './debt-history-edit-form';
 
 type Debt = Doc<"debts">;
 
@@ -27,6 +28,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
   const history = useQuery(api.debts.getDebtHistory, { debtId: initialDebt._id }) ?? [];
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAddHistoryForm, setShowAddHistoryForm] = useState(false);
+  const [editHistoryEntry, setEditHistoryEntry] = useState<DebtHistoryEntry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const updateDebt = useMutation(api.debts.updateDebt);
@@ -174,7 +176,10 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             <PlusIcon className="w-5 h-5" />
           </button>
         </div>
-        <DebtHistoryChart history={history} />
+        <DebtHistoryChart
+          history={history}
+          onPointClick={(entry) => setEditHistoryEntry(entry)}
+        />
       </div>
 
       {showAddHistoryForm && (
@@ -192,6 +197,15 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             debt={liveDebt}
             onClose={() => setShowEditForm(false)}
             onSubmit={handleUpdateDebt}
+          />
+        </Modal>
+      )}
+
+      {editHistoryEntry && (
+        <Modal onClose={() => setEditHistoryEntry(null)}>
+          <DebtHistoryEditForm
+            entry={editHistoryEntry}
+            onClose={() => setEditHistoryEntry(null)}
           />
         </Modal>
       )}
