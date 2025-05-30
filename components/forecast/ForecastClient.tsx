@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { DailyMetric, UserPreferences, UserPreferencesData, RecurringTotals, OneTimeTotals } from './types';
@@ -50,7 +51,6 @@ export function ForecastClient({
   const [monthlyIncome, setMonthlyIncome] = useState(
     initialRecurring?.monthlyIncome ?? 0
   );
-  const [useSimulationData, setUseSimulationData] = useState(defaultPrefs.useSimulationData || false);
   const [dataView, setDataView] = useState<'all' | 'real' | 'projected'>(
     (defaultPrefs.forecastDataView as 'all' | 'real' | 'projected') || 'all'
   );
@@ -66,8 +66,7 @@ export function ForecastClient({
   const [shouldFetch, setShouldFetch] = useState(false);
   const [isStableState, setIsStableState] = useState(false);
   
-  // Get the preference update mutation
-  const updatePreferences = useMutation(api.userPreferences.updatePreferences);
+  // Mutation to save individual preference values
   const setPreference = useMutation(api.userPreferences.setPreference);
   
   // Custom setters that update server preferences
@@ -79,11 +78,6 @@ export function ForecastClient({
   const updateMonthlyIncome = (value: number) => {
     setMonthlyIncome(value);
     setPreference({ key: "monthlyIncome", value });
-  };
-  
-  const updateUseSimulationData = (value: boolean) => {
-    setUseSimulationData(value);
-    setPreference({ key: "useSimulationData", value });
   };
   
   const updateDataView = (value: 'all' | 'real' | 'projected') => {
@@ -268,7 +262,7 @@ export function ForecastClient({
     let simulationMonthlyChangeAssets = 0;
     let simulationMonthlyChangeDebts = 0;
     
-    if (useSimulationData && simulationData) {
+    if (simulationData) {
       // Calculate the target values from simulation
       simulationTargetNetWorth = simulationData.adjustedValue;
       simulationTargetAssets = simulationData.adjustedAssets;
@@ -317,15 +311,15 @@ export function ForecastClient({
       // 2. PLUS the monthly cash flow impact (income minus expenses)
       // This gives a more accurate projection that factors in both market performance 
       // and personal financial decisions
-      const projectedNetWorth = useSimulationData && simulationData 
+      const projectedNetWorth = simulationData
         ? startingNetWorth + simulationMonthlyChangeNetWorth * (i + 1) + (monthlyNet * (i + 1))
         : cashFlowNetWorth;
-      
-      const projectedAssets = useSimulationData && simulationData
+
+      const projectedAssets = simulationData
         ? simulationAssets
         : startingAssets;
-      
-      const projectedDebts = useSimulationData && simulationData
+
+      const projectedDebts = simulationData
         ? simulationDebts
         : startingDebts;
 
@@ -339,7 +333,7 @@ export function ForecastClient({
         prices: lastMetric.prices,
         metadata: {
           ...lastMetric.metadata,
-          forecastType: useSimulationData ? 'simulation' : 'cashflow'
+          forecastType: simulationData ? 'simulation' : 'cashflow'
         },
         isProjected: true // Mark as projected
       } as DailyMetric & { isProjected: boolean };
@@ -349,7 +343,7 @@ export function ForecastClient({
     const realPoints = metrics.map(m => ({ ...m, isProjected: false }));
 
     return [...realPoints, ...forecastPoints];
-  }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth, useSimulationData, simulationData, oneTimeTotals]);
+  }, [metrics, monthlyCost, monthlyIncome, hasData, currentNetWorth, simulationData, oneTimeTotals]);
 
   const realMetrics = useMemo(() => {
     return forecastedMetrics.filter(m => !m.isProjected);
@@ -410,26 +404,13 @@ export function ForecastClient({
       />
       
       <div className="flex flex-col mb-4 bg-gray-800 p-4 rounded-lg">
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="useSimulationData"
-            checked={useSimulationData}
-            onChange={(e) => updateUseSimulationData(e.target.checked)}
-            className="mr-2 h-4 w-4"
-            disabled={!simulationData}
-          />
-          <label htmlFor="useSimulationData" className={`text-sm ${!simulationData ? 'text-gray-500' : 'text-gray-300'}`}>
-            {simulationData 
-              ? `Use portfolio simulation data (${Math.round(simulationData.percentChange)}% change in asset values) + monthly cash flow`
-              : "No simulation data available - run a simulation first"}
-          </label>
-        </div>
-        {simulationData && (
-          <p className="text-xs text-gray-400 mt-1 ml-6">
-            This preference will be saved with your account
-          </p>
-        )}
+        <p className="text-sm text-gray-300">
+          Forecasts use your latest simulation data.&nbsp;
+          <Link href="/simulation" className="underline text-blue-300">
+            Go to the Simulation tab
+          </Link>
+          &nbsp;to adjust where you think your assets will be a year from now.
+        </p>
       </div>
       
       <ForecastChartView
