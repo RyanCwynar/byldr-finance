@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc } from "@/convex/_generated/dataModel";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@/components/modal";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { DebtForm } from '@/components/forms/debt-form';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/formatters';
 import DebtHistoryChart from './debt-history-chart';
+import DebtHistoryForm from './debt-history-form';
 
 type Debt = Doc<"debts">;
 
@@ -25,6 +26,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
     useQuery(api.debts.getDebt, { id: initialDebt._id }) ?? initialDebt;
   const history = useQuery(api.debts.getDebtHistory, { debtId: initialDebt._id }) ?? [];
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showAddHistoryForm, setShowAddHistoryForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const updateDebt = useMutation(api.debts.updateDebt);
@@ -163,9 +165,26 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
       </div>
 
       <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
-        <h2 className="text-xl font-semibold mb-4">Value History</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Value History</h2>
+          <button
+            onClick={() => setShowAddHistoryForm(true)}
+            className="p-2 rounded-full hover:bg-gray-800"
+          >
+            <PlusIcon className="w-5 h-5" />
+          </button>
+        </div>
         <DebtHistoryChart history={history} />
       </div>
+
+      {showAddHistoryForm && (
+        <Modal onClose={() => setShowAddHistoryForm(false)}>
+          <DebtHistoryForm
+            debtId={liveDebt._id}
+            onClose={() => setShowAddHistoryForm(false)}
+          />
+        </Modal>
+      )}
       
       {showEditForm && (
         <Modal onClose={() => setShowEditForm(false)}>
