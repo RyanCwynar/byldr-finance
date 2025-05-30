@@ -47,9 +47,17 @@ export default function TransactionsPageClient({
   const removeOneTime = useMutation(api.oneTime.deleteOneTimeTransaction);
   const updateOneTime = useMutation(api.oneTime.updateOneTimeTransaction);
 
-  const [view, setView] = useState<"all" | "recurring" | "one-time" | "future">(
-    "all",
+  const [views, setViews] = useState<Set<"recurring" | "one-time" | "future">>(
+    new Set(["recurring", "one-time"]),
   );
+  const toggleView = (v: "recurring" | "one-time" | "future") => {
+    setViews((prev) => {
+      const next = new Set(prev);
+      if (next.has(v)) next.delete(v);
+      else next.add(v);
+      return next;
+    });
+  };
   const [sortField, setSortField] = useState<"amount" | "date">("amount");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [tagFilter, setTagFilter] = useState("");
@@ -97,11 +105,15 @@ export default function TransactionsPageClient({
       kind: "one-time",
     }));
     let arr: Item[] = [...recItems, ...oneItems];
-    if (view === "recurring") arr = arr.filter((i) => i.kind === "recurring");
-    else if (view === "one-time")
-      arr = arr.filter((i) => i.kind === "one-time");
-    else if (view === "future")
-      arr = arr.filter((i) => i.kind === "one-time" && i.date > Date.now());
+    arr = arr.filter((i) => {
+      const cats =
+        i.kind === "recurring"
+          ? ["recurring"]
+          : i.date > Date.now()
+          ? ["one-time", "future"]
+          : ["one-time"];
+      return cats.some((c) => views.has(c as typeof c & ("recurring" | "one-time" | "future")));
+    });
 
     if (sortField === "date") {
       arr.sort((a, b) => {
@@ -125,7 +137,7 @@ export default function TransactionsPageClient({
       });
     }
     return arr;
-  }, [filteredRecurring, filteredOneTime, view, sortField, sortDir]);
+  }, [filteredRecurring, filteredOneTime, views, sortField, sortDir]);
 
   const visibleItems = useMemo(
     () =>
@@ -138,9 +150,6 @@ export default function TransactionsPageClient({
   const monthlyTotals = useMemo(() => {
     return visibleItems.reduce(
       (acc, t) => {
-        if (t.kind === "one-time" && view === "all" && t.date < Date.now()) {
-          return acc;
-        }
         const amt =
           t.kind === "recurring"
             ? monthlyAmount(t)
@@ -151,7 +160,7 @@ export default function TransactionsPageClient({
       },
       { income: 0, expense: 0 },
     );
-  }, [visibleItems, view]);
+  }, [visibleItems]);
 
   const annualTotals = useMemo(
     () => ({
@@ -277,26 +286,20 @@ export default function TransactionsPageClient({
       </div>
       <div className="flex gap-2">
         <button
-          onClick={() => setView("all")}
-          className={pillClass(view === "all")}
-        >
-          All
-        </button>
-        <button
-          onClick={() => setView("recurring")}
-          className={pillClass(view === "recurring")}
+          onClick={() => toggleView("recurring")}
+          className={pillClass(views.has("recurring"))}
         >
           Recurring
         </button>
         <button
-          onClick={() => setView("one-time")}
-          className={pillClass(view === "one-time")}
+          onClick={() => toggleView("one-time")}
+          className={pillClass(views.has("one-time"))}
         >
           One Time
         </button>
         <button
-          onClick={() => setView("future")}
-          className={pillClass(view === "future")}
+          onClick={() => toggleView("future")}
+          className={pillClass(views.has("future"))}
         >
           Future
         </button>
