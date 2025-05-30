@@ -2,13 +2,14 @@ import { query, mutation, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { getQuotesHelper } from "./quotes";
 import { updateAllWalletValuesHelper } from "./wallets";
+import { getUserIdentity } from "./users";
 
 type DailyMetric = Doc<"dailyMetrics">;
 
 // Query to get historical metrics
 export const getDailyMetrics = query({
     handler: async (ctx): Promise<DailyMetric[]> => {
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
 
         if (userId) {
@@ -204,7 +205,7 @@ export async function getCurrentNetWorthHelper(ctx: QueryCtx, userId: string) {
 export const getCurrentNetWorth = query({
     handler: async (ctx) => {
         // Get the user ID from authentication or use the override
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const authUserId = identity?.subject;
 
         if (!authUserId) {

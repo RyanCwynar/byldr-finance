@@ -3,6 +3,7 @@ import { query, mutation, QueryCtx } from "./_generated/server";
 import { Id, Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import { getQuotesHelper } from "./quotes";
+import { getUserIdentity } from "./users";
 
 type Wallet = Doc<"wallets">;
 type Holding = Doc<"holdings">;
@@ -276,7 +277,7 @@ export const upsertHolding = mutation({
     },
     handler: async (ctx, { walletId, symbol, quantity, chain, ignore, quoteSymbol, isDebt, quoteType }) => {
       // Get the user ID from authentication
-      const identity = await ctx.auth.getUserIdentity();
+      const identity = await getUserIdentity(ctx);
       const authUserId = identity?.subject;
       
       // Check if wallet exists
@@ -373,7 +374,7 @@ export const addHolding = mutation({
   },
   handler: async (ctx, args) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the wallet to check if the user has access
@@ -429,7 +430,7 @@ export const updateHolding = mutation({
   },
   handler: async (ctx, { id, ...updates }) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the holding
@@ -463,7 +464,7 @@ export const deleteHolding = mutation({
   },
   handler: async (ctx, { id }) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the holding
@@ -496,7 +497,7 @@ export const toggleHoldingIgnore = mutation({
     }
     
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the wallet to check ownership

@@ -1,11 +1,12 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { getUserIdentity } from "./users";
 
 // Asset queries
 export const listAssets = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (userId) {
@@ -29,7 +30,7 @@ export const getAssetsByType = query({
     type: v.union(v.literal("real_estate"), v.literal("stocks"), v.literal("crypto"), v.literal("cash"), v.literal("other"))
   },
   handler: async (ctx, { type }) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (userId) {
@@ -51,7 +52,7 @@ export const getAssetsByType = query({
 
 export const getAssetsTotal = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     let assets;
@@ -85,7 +86,7 @@ export const getAsset = query({
     }
     
     // If the asset has a userId, verify the current user has access
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (asset.userId && asset.userId !== userId) {
@@ -115,7 +116,7 @@ export const addAsset = mutation({
   },
   handler: async (ctx, args) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Add the asset with the user ID
@@ -144,7 +145,7 @@ export const updateAsset = mutation({
   },
   handler: async (ctx, { id, ...updates }) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the asset
@@ -169,7 +170,7 @@ export const deleteAsset = mutation({
   },
   handler: async (ctx, { id }) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the asset

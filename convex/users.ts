@@ -1,9 +1,20 @@
 import { v } from "convex/values";
 import { mutation, query, QueryCtx } from "./_generated/server";
 
+// Return a fake identity when BYPASS_AUTH is enabled for local development
+export async function getUserIdentity(ctx: QueryCtx) {
+  if (process.env.BYPASS_AUTH === "true") {
+    return {
+      tokenIdentifier: "bypass-token",
+      subject: process.env.BYPASS_AUTH_EMAIL ?? "dev-user",
+    };
+  }
+  return await ctx.auth.getUserIdentity();
+}
+
 // Helper function to get the current user ID from the auth context
 export async function getUserId(ctx: QueryCtx) {
-  const identity = await ctx.auth.getUserIdentity();
+  const identity = await getUserIdentity(ctx);
   return identity?.subject;
 }
 
@@ -17,7 +28,7 @@ export const upsertUser = mutation({
   },
   handler: async (ctx, args) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     if (!identity) {
       throw new Error("Not authenticated");
     }
@@ -52,7 +63,7 @@ export const upsertUser = mutation({
 // Get the current user
 export const getMe = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     if (!identity) {
       return null;
     }

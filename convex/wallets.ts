@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { DatabaseReader, mutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { getHoldingsValueHelper } from "./holdings";
+import { getUserIdentity } from "./users";
 
 // Get a wallet by address
 export const getWalletByAddress = query({
@@ -10,7 +11,7 @@ export const getWalletByAddress = query({
     },
     handler: async (ctx, { address }) => {
         // Get the user ID from authentication
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
         
         // Find the wallet by address
@@ -42,7 +43,7 @@ async function updateWalletValueHelper(ctx: MutationCtx, walletId: Id<"wallets">
     // Check authentication if not skipped
     if (!options?.skipAuth) {
         // Get the user ID from authentication
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
         
         console.log("User ID from auth:", userId);
@@ -116,7 +117,7 @@ export const addWallet = mutation({
     },
     handler: async (ctx, { name, address, chainType }) => {
         // Get the user ID from authentication
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
         
         // Validate address format based on chain type
@@ -172,7 +173,7 @@ export async function updateWalletHelper(ctx: MutationCtx, args: {
     }
     
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Check if the user has access to this wallet
@@ -206,7 +207,7 @@ export const deleteWallet = mutation({
     },
     handler: async (ctx, { id }) => {
         // Get the user ID from authentication
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
         
         // Get the wallet
@@ -240,7 +241,7 @@ export const deleteWallet = mutation({
 // Helper function to list wallets
 export async function listWalletsHelper(ctx: { db: DatabaseReader, auth?: { getUserIdentity: () => Promise<any> } }) {
     // Get the user ID from authentication if available
-    const identity = ctx.auth ? await ctx.auth.getUserIdentity() : null;
+    const identity = ctx.auth ? await getUserIdentity(ctx as any) : null;
     const userId = identity?.subject;
     
     if (userId) {
@@ -279,7 +280,7 @@ export const getWallet = query({
         }
         
         // If the wallet has a userId, verify the current user has access
-        const identity = await ctx.auth.getUserIdentity();
+        const identity = await getUserIdentity(ctx);
         const userId = identity?.subject;
         
         if (wallet.userId && wallet.userId !== userId) {

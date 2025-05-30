@@ -1,10 +1,11 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { getUserIdentity } from "./users";
 
 // Debt queries
 export const listDebts = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (userId) {
@@ -34,7 +35,7 @@ export const getDebt = query({
     }
     
     // If the debt has a userId, verify the current user has access
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (debt.userId && debt.userId !== userId) {
@@ -51,7 +52,7 @@ export const getDebtsByType = query({
     type: v.union(v.literal("mortgage"), v.literal("loan"), v.literal("credit_card"), v.literal("crypto"), v.literal("other"))
   },
   handler: async (ctx, { type }) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     if (userId) {
@@ -73,7 +74,7 @@ export const getDebtsByType = query({
 
 export const getDebtsTotal = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     let debts;
@@ -116,7 +117,7 @@ export const addDebt = mutation({
   },
   handler: async (ctx, args) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Add the debt with the user ID
@@ -147,7 +148,7 @@ export const updateDebt = mutation({
   },
   handler: async (ctx, { id, ...updates }) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the debt
@@ -170,7 +171,7 @@ export const deleteDebt = mutation({
   args: { id: v.id("debts") },
   handler: async (ctx, args) => {
     // Get the user ID from authentication
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getUserIdentity(ctx);
     const userId = identity?.subject;
     
     // Get the debt
