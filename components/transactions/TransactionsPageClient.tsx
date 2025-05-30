@@ -134,6 +134,9 @@ export default function TransactionsPageClient({
   const monthlyTotals = useMemo(() => {
     return visibleItems.reduce(
       (acc, t) => {
+        if (t.kind === "one-time" && view === "all" && t.date < Date.now()) {
+          return acc;
+        }
         const amt =
           t.kind === "recurring"
             ? monthlyAmount(t)
@@ -144,7 +147,7 @@ export default function TransactionsPageClient({
       },
       { income: 0, expense: 0 },
     );
-  }, [visibleItems]);
+  }, [visibleItems, view]);
 
   const annualTotals = useMemo(
     () => ({
