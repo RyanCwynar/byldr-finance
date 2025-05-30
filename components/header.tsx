@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import {
   BeakerIcon,
   CurrencyDollarIcon,
@@ -14,6 +14,7 @@ import { useState } from 'react';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user } = useUser();
 
   const navigation = [
     { href: '/', label: 'Dashboard', icon: HomeIcon },
@@ -21,6 +22,10 @@ export default function Header() {
     { href: '/quotes', label: 'Quotes', icon: CurrencyDollarIcon },
     { href: '/transactions', label: 'Transactions', icon: BanknotesIcon },
   ];
+
+  if (user?.emailAddresses[0]?.emailAddress === 'rtcx86@gmail.com') {
+    navigation.push({ href: '/admin/quote-aliases', label: 'Quote Aliases', icon: CurrencyDollarIcon });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-700 bg-black/80 backdrop-blur-sm">

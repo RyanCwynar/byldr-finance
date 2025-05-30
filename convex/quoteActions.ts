@@ -156,6 +156,11 @@ export const updateQuotes = action({
     console.log("Starting quote update...");
     // Get all holdings to determine which quotes we need
     const holdings = await ctx.runQuery(api.holdings.listHoldings, {});
+
+    // Get quote alias mappings
+    const aliases = await ctx.runQuery(api.quoteAliases.listAliases, {});
+    const aliasMap = new Map<string, any>();
+    aliases.forEach((a: any) => aliasMap.set(a.symbol, a));
     
     // Get current quotes
     const currentQuotes = await ctx.runQuery(api.quotes.getQuotes);
@@ -172,28 +177,62 @@ export const updateQuotes = action({
     );
 
     // Get unique symbols from holdings and filter out ignored ones
-    const symbolsToUpdate = [...new Set(holdings.map((h: any) => h.quoteSymbol || h.symbol))]
-      .filter(s => !ignoredSymbols.has(s));
+    const baseSymbols = [...new Set(holdings.map((h: any) => h.quoteSymbol || h.symbol))];
+    const symbolsToProcess = baseSymbols.filter(s => !ignoredSymbols.has(s));
 
-    console.log("Symbols to update:", symbolsToUpdate);
-    
-    // Separate crypto and stock symbols based on holding quote types
-    const cryptoSymbols = symbolsToUpdate.filter(s => holdingQuoteTypes.get(s) === "crypto");
-    const stockSymbols = symbolsToUpdate.filter(s => holdingQuoteTypes.get(s) === "stock");
-    
-    console.log("Crypto symbols:", cryptoSymbols);
-    console.log("Stock symbols:", stockSymbols);
-    
+    console.log("Symbols to process:", symbolsToProcess);
+
+    // Determine which symbols we need to fetch and handle aliases
+    const fetchSymbolSet = new Set<string>();
+    const aliasForSymbol: Record<string, string> = {};
+    const fixedPrices: Record<string, number> = {};
+    const fetchSymbolTypes = new Map<string, string>();
+
+    symbolsToProcess.forEach(symbol => {
+      const alias = aliasMap.get(symbol);
+      if (alias && alias.fixedPrice !== undefined) {
+        fixedPrices[symbol] = alias.fixedPrice;
+      } else {
+        const resolved = alias?.quoteSymbol || symbol;
+        aliasForSymbol[symbol] = resolved;
+        fetchSymbolSet.add(resolved);
+        const t = alias?.quoteType || holdingQuoteTypes.get(symbol);
+        if (t) fetchSymbolTypes.set(resolved, t);
+      }
+    });
+
+    const fetchSymbols = Array.from(fetchSymbolSet);
+    const cryptoSymbols = fetchSymbols.filter(s => fetchSymbolTypes.get(s) === "crypto");
+    const stockSymbols = fetchSymbols.filter(s => fetchSymbolTypes.get(s) === "stock");
+
+    console.log("Fetch crypto symbols:", cryptoSymbols);
+    console.log("Fetch stock symbols:", stockSymbols);
+
     // Get current prices from external APIs
     const cryptoPrices = await getPricesForSymbols(cryptoSymbols);
     const stockPrices = await getStockPrices(stockSymbols);
-    
+
     // Combine prices
-    const prices = { ...cryptoPrices, ...stockPrices };
+    const fetchedPrices = { ...cryptoPrices, ...stockPrices };
+    console.log("Fetched prices:", fetchedPrices);
+
+    // Resolve final prices for each symbol
+    const prices: Record<string, number> = {};
+    symbolsToProcess.forEach(symbol => {
+      if (fixedPrices[symbol] !== undefined) {
+        prices[symbol] = fixedPrices[symbol];
+        return;
+      }
+      const resolved = aliasForSymbol[symbol] || symbol;
+      if (fetchedPrices[resolved] !== undefined) {
+        prices[symbol] = fetchedPrices[resolved];
+      }
+    });
+
     console.log("All prices:", prices);
     
     // Check for missing prices and try to use cached values as fallback
-    const missingSymbols = symbolsToUpdate.filter(s => !prices[s]);
+    const missingSymbols = symbolsToProcess.filter(s => !prices[s]);
     if (missingSymbols.length > 0) {
       console.log(`Missing prices for symbols: ${missingSymbols.join(', ')}. Checking for cached values.`);
       
@@ -246,10 +285,10 @@ export const updateQuotes = action({
     }
     
     console.log(`Updated ${updatedCount} quotes`);
-    return { 
+    return {
       updated: updatedCount,
-      total: symbolsToUpdate.length,
-      skipped: symbolsToUpdate.length - updatedCount
+      total: symbolsToProcess.length,
+      skipped: symbolsToProcess.length - updatedCount
     };
   },
 });
@@ -291,4 +330,13 @@ export const getCryptoQuote = action({
     }
     return prices[symbol] || null;
   }
-}); 
+});
+
+// List all coins from CoinGecko
+export const listCoinGeckoCoins = action({
+  handler: async () => {
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/list');
+    const data = await res.json();
+    return data;
+  }
+});
