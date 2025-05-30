@@ -124,6 +124,15 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_type", ["userId", "type"]),
 
+  // Track changes to manual debts over time
+  debtHistory: defineTable({
+    debtId: v.id("debts"), // Reference to the debt
+    timestamp: v.number(), // When the value changed
+    value: v.number(), // New debt value in USD
+  })
+    .index("by_debt", ["debtId"])
+    .index("by_debt_and_timestamp", ["debtId", "timestamp"]),
+
   // Store recurring income or expense transactions
   recurringTransactions: defineTable({
     userId: v.string(),
