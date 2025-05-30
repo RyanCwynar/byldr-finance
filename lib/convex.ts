@@ -14,8 +14,9 @@ export async function preloadQueryWithAuth<T>(
   args: any
 ): Promise<T> {
   // Get the auth token from Clerk
-  const token = await getAuthToken() as string;
-  
-  // Preload the query with the auth token
-  return (await preloadQuery(query, args, { token }))._valueJSON as unknown as T;
-} 
+  const token = await getAuthToken();
+
+  // Preload the query with the auth token when available
+  const options = token ? { token } : {};
+  return (await preloadQuery(query, args, options))._valueJSON as unknown as T;
+}
