@@ -20,6 +20,12 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
     debt?.metadata?.interestRate !== undefined ? debt?.metadata.interestRate.toString() : ""
   );
   const [description, setDescription] = useState(debt?.metadata?.description || "");
+  const [originalAmount, setOriginalAmount] = useState(
+    debt?.metadata?.originalAmount !== undefined ? debt.metadata.originalAmount.toString() : value
+  );
+  const [startDate, setStartDate] = useState(
+    debt?.metadata?.startDate ? new Date(debt.metadata.startDate).toISOString().split('T')[0] : ''
+  );
   
   const addDebt = useMutation(api.debts.addDebt);
 
@@ -28,8 +34,8 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
     
     const metadata = {
       description,
-      startDate: debt?.metadata?.startDate || Date.now(),
-      originalAmount: debt?.metadata?.originalAmount || Number(value),
+      startDate: startDate ? new Date(startDate).getTime() : (debt?.metadata?.startDate || Date.now()),
+      originalAmount: originalAmount ? Number(originalAmount) : (debt?.metadata?.originalAmount || Number(value)),
       lastUpdated: Date.now(),
       interestRate: interestRate ? Number(interestRate) : undefined,
       lender: lender || undefined,
@@ -109,6 +115,34 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             required
             min="0"
             step="0.01"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="originalAmount" className="block text-sm font-medium text-gray-300">
+            Original Amount (USD)
+          </label>
+          <input
+            type="number"
+            id="originalAmount"
+            value={originalAmount}
+            onChange={(e) => setOriginalAmount(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="startDate" className="block text-sm font-medium text-gray-300">
+            Start Date
+          </label>
+          <input
+            type="date"
+            id="startDate"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
