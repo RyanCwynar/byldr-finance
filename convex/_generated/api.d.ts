@@ -21,6 +21,7 @@ import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
 import type * as quoteActions from "../quoteActions.js";
 import type * as quotes from "../quotes.js";
+import type * as costs from "../costs.js";
 import type * as oneTime from "../oneTime.js";
 import type * as recurring from "../recurring.js";
 import type * as simulations from "../simulations.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   metrics: typeof metrics;
   quoteActions: typeof quoteActions;
   quotes: typeof quotes;
+  costs: typeof costs;
   oneTime: typeof oneTime;
   recurring: typeof recurring;
   simulations: typeof simulations;
