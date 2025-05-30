@@ -3,7 +3,7 @@ import { Doc } from "@/convex/_generated/dataModel";
 import { preloadQueryWithAuth } from "@/lib/convex";
 import { preloadForecastData } from "@/components/forecast/ForecastPreload";
 import { ForecastClient } from "@/components/forecast/ForecastClient";
-import { DailyMetric, UserPreferencesData, OneTimeTotals } from "@/components/forecast/types";
+import { DailyMetric, UserPreferencesData } from "@/components/forecast/types";
 
 type Asset = Doc<'assets'>;
 type Debt = Doc<'debts'>;
@@ -11,19 +11,14 @@ type Wallet = Doc<'wallets'>;
 
 import AssetsCard from "@/components/cards/assets-card";
 import DebtsCard from "@/components/cards/debts-card";
-import OneTimeCard from "@/components/cards/one-time-card";
 
 export default async function Home() {
   // Preload all data with authentication
-  const [forecastData, assetsPreload, debtsPreload, walletsPreload, oneTimePreload] = await Promise.all([
+  const [forecastData, assetsPreload, debtsPreload, walletsPreload] = await Promise.all([
     preloadForecastData(),
     preloadQueryWithAuth<Asset[]>(api.assets.listAssets, {}),
     preloadQueryWithAuth<Debt[]>(api.debts.listDebts, {}),
-    preloadQueryWithAuth<Wallet[]>(api.wallets.listWallets, {}),
-    preloadQueryWithAuth<Doc<'oneTimeTransactions'>[]>(
-      api.oneTime.listOneTimeTransactions,
-      {},
-    )
+    preloadQueryWithAuth<Wallet[]>(api.wallets.listWallets, {})
   ]);
 
   return (
@@ -47,7 +42,6 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
           <AssetsCard assets={assetsPreload || []} wallets={walletsPreload || []} />
           <DebtsCard debts={debtsPreload || []} />
-          <OneTimeCard items={oneTimePreload || []} />
         </div>
       </div>
     </div>
