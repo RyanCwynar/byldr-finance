@@ -162,6 +162,14 @@ export default function TransactionsPageClient({
     );
   }, [visibleItems]);
 
+  const dailyTotals = useMemo(
+    () => ({
+      income: monthlyTotals.income / 30,
+      expense: monthlyTotals.expense / 30,
+    }),
+    [monthlyTotals],
+  );
+
   const annualTotals = useMemo(
     () => ({
       income: monthlyTotals.income * 12,
@@ -209,13 +217,17 @@ export default function TransactionsPageClient({
     <div className="flex flex-col gap-4 max-w-4xl mx-auto relative">
       <div className="overflow-x-auto w-full">
         <div className="text-sm mt-2 w-full border border-gray-700 rounded-md overflow-hidden">
-          <div className="grid grid-cols-3 text-center">
+          <div className="grid grid-cols-4 text-center">
             <div className="p-2" />
+            <div className="p-2 font-semibold">Daily</div>
             <div className="p-2 font-semibold">Monthly</div>
             <div className="p-2 font-semibold">Annual</div>
           </div>
-          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+          <div className="grid grid-cols-4 text-center border-t border-gray-700">
             <div className="p-2">Income</div>
+            <div className="p-2 text-green-500">
+              {formatCurrency(dailyTotals.income)}
+            </div>
             <div className="p-2 text-green-500">
               {formatCurrency(monthlyTotals.income)}
             </div>
@@ -223,8 +235,11 @@ export default function TransactionsPageClient({
               {formatCurrency(annualTotals.income)}
             </div>
           </div>
-          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+          <div className="grid grid-cols-4 text-center border-t border-gray-700">
             <div className="p-2">Cost</div>
+            <div className="p-2 text-red-500">
+              {formatCurrency(dailyTotals.expense)}
+            </div>
             <div className="p-2 text-red-500">
               {formatCurrency(monthlyTotals.expense)}
             </div>
@@ -232,8 +247,13 @@ export default function TransactionsPageClient({
               {formatCurrency(annualTotals.expense)}
             </div>
           </div>
-          <div className="grid grid-cols-3 text-center border-t border-gray-700">
+          <div className="grid grid-cols-4 text-center border-t border-gray-700">
             <div className="p-2 font-semibold">Net</div>
+            <div
+              className={`p-2 ${dailyTotals.income - dailyTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+            >
+              {formatCurrency(dailyTotals.income - dailyTotals.expense)}
+            </div>
             <div
               className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
             >
