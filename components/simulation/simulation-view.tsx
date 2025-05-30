@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { Doc } from "@/convex/_generated/dataModel";
 import { formatNumber } from '@/lib/formatters';
 import QuoteSlider from './quote-slider';
@@ -34,7 +36,11 @@ export default function SimulationView({
   // State for adjusted quote values
   const [adjustedQuotes, setAdjustedQuotes] = useState<Record<string, number>>({});
   const [debug, setDebug] = useState<any>({});
-  
+
+  const savedSimulation = useQuery(api.simulations.getSimulation, {});
+  const saveSimulation = useMutation(api.simulations.saveSimulation);
+  const clearSimulation = useMutation(api.simulations.clearSimulation);
+
   // Load saved adjustments from local storage on component mount
   useEffect(() => {
     try {
@@ -43,11 +49,14 @@ export default function SimulationView({
         const parsed = JSON.parse(savedAdjustments);
         setAdjustedQuotes(parsed);
         console.log('Loaded saved adjustments from local storage:', parsed);
+      } else if (savedSimulation?.adjustments) {
+        setAdjustedQuotes(savedSimulation.adjustments);
+        console.log('Loaded saved adjustments from DB:', savedSimulation.adjustments);
       }
     } catch (error) {
       console.error('Error loading saved adjustments from local storage:', error);
     }
-  }, []);
+  }, [savedSimulation]);
   
   // Get unique symbols from holdings
   const uniqueSymbols = useMemo(() => {
@@ -231,16 +240,23 @@ export default function SimulationView({
       percentChange: originalValue ? ((adjustedValue - originalValue) / originalValue) * 100 : 0
     };
     
-    // Save portfolio summary to localStorage for use in forecast
+    return summary;
+  }, [adjustedWallets, adjustedManualAssets, adjustedManualDebts]);
+
+  // Persist summary and adjustments whenever they change
+  useEffect(() => {
     try {
-      localStorage.setItem('simulation_portfolio_summary', JSON.stringify(summary));
-      console.log('Saved simulation summary to localStorage:', summary);
+      localStorage.setItem('simulation_portfolio_summary', JSON.stringify(portfolioSummary));
     } catch (error) {
       console.error('Error saving simulation summary to localStorage:', error);
     }
-    
-    return summary;
-  }, [adjustedWallets, adjustedManualAssets, adjustedManualDebts]);
+
+    try {
+      saveSimulation({ adjustments: adjustedQuotes, summary: portfolioSummary });
+    } catch (error) {
+      console.error('Error saving simulation summary to DB:', error);
+    }
+  }, [portfolioSummary, adjustedQuotes, saveSimulation]);
   
   // Debug info
   useEffect(() => {
@@ -332,12 +348,19 @@ export default function SimulationView({
   // Reset all adjustments
   const handleReset = () => {
     setAdjustedQuotes({});
-    
+
     // Clear from local storage
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error('Error clearing adjustments from local storage:', error);
+    }
+
+    try {
+      clearSimulation();
+      localStorage.removeItem('simulation_portfolio_summary');
+    } catch (error) {
+      console.error('Error clearing simulation data from DB:', error);
     }
   };
   
