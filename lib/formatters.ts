@@ -49,3 +49,17 @@ export function formatCompactCurrency(amount: number, currency: string = 'USD'):
     compactDisplay: 'short'
   }).format(amount);
 }
+
+/**
+ * Format a number using compact notation without a currency symbol.
+ * e.g. 1250000 -> "1.3m"
+ */
+export function formatCompactNumber(amount: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: 'compact',
+    compactDisplay: 'short',
+    maximumFractionDigits: 1
+  })
+    .format(amount)
+    .toLowerCase();
+}
