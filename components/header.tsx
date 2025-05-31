@@ -11,10 +11,13 @@ import {
 } from '@heroicons/react/24/outline';
 import QuotesTicker from './quotes-ticker';
 import { useState } from 'react';
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { useTheme } from './theme-provider';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn } = useUser();
+  const { theme, toggle } = useTheme();
 
   const navigation = [
     { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
@@ -62,6 +65,17 @@ export default function Header() {
                   )}
                 </button>
               )}
+              <button
+                className="p-2 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                onClick={toggle}
+                aria-label="Toggle theme"
+              >
+                {theme === 'dark' ? (
+                  <SunIcon className="w-5 h-5 text-yellow-400" />
+                ) : (
+                  <MoonIcon className="w-5 h-5 text-gray-800" />
+                )}
+              </button>
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/sign-in" />
               ) : (
