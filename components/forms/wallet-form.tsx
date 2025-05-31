@@ -37,7 +37,7 @@ export function WalletForm({ onClose }: WalletFormProps) {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             placeholder={chainType === "virtual" ? "My Coinbase Account" : "My Ethereum Wallet"}
           />
@@ -51,7 +51,7 @@ export function WalletForm({ onClose }: WalletFormProps) {
             id="chainType"
             value={chainType}
             onChange={(e) => setChainType(e.target.value as typeof chainType)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ethereum">Ethereum (EVM)</option>
             <option value="solana">Solana</option>
@@ -75,7 +75,7 @@ export function WalletForm({ onClose }: WalletFormProps) {
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
               placeholder={
                 chainType === "ethereum" 
@@ -97,7 +97,7 @@ export function WalletForm({ onClose }: WalletFormProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md border border-gray-600 bg-gray-800 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>

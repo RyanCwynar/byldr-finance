@@ -88,14 +88,14 @@ export default function QuotesTicker() {
   // If no quotes to display, show a message
   if (filteredQuotes.length === 0) {
     return (
-      <div className="w-full bg-black/80 border-b border-gray-800 py-1 text-center">
+      <div className="w-full border-b border-gray-800 py-1 text-center">
         No quotes available
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-black/80 border-b border-gray-800 overflow-hidden py-1 relative">
+    <div className="w-full border-b border-gray-800 overflow-hidden py-1 relative">
       <div className="ticker-container px-4">
         <div className="ticker-text">
           {tickerWords.map((word, index) => (
@@ -105,9 +105,9 @@ export default function QuotesTicker() {
       </div>
       
       {/* Pause/Play button */}
-      <button 
+      <button
         onClick={togglePause}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700/70 rounded-full p-1 z-10"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700/70 text-white rounded-full p-1 z-10"
         aria-label={isPaused ? "Play ticker" : "Pause ticker"}
       >
         {isPaused ? (
