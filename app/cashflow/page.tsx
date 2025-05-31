@@ -1,7 +1,7 @@
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
 import { preloadQueryWithAuth } from '@/lib/convex';
-import TransactionsPageClient from '@/components/transactions/TransactionsPageClient';
+import CashflowPageClient from '@/components/cashflow/CashflowPageClient';
 
 export default async function TransactionsPage() {
   const [recurringData, recurringTags, oneTimeData, oneTimeTags] = await Promise.all([
@@ -12,7 +12,7 @@ export default async function TransactionsPage() {
   ]);
   return (
     <div className="container mx-auto px-4 py-8">
-      <TransactionsPageClient
+      <CashflowPageClient
         initialRecurring={recurringData || []}
         initialRecurringTags={recurringTags || []}
         initialOneTime={oneTimeData || []}
