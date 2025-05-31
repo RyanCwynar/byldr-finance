@@ -2,8 +2,15 @@ import { api } from "@/convex/_generated/api";
 import { preloadQueryWithAuth } from "@/lib/convex";
 import QuotesManager from "@/components/quotes/quotes-manager";
 import { Doc } from "@/convex/_generated/dataModel";
+import { currentUser } from '@clerk/nextjs/server';
 
 export default async function QuotesPage() {
+  const user = await currentUser();
+  const email = user?.emailAddresses[0]?.emailAddress;
+  if (email !== 'rtcx86@gmail.com') {
+    return <div className="p-8">Not authorized</div>;
+  }
+
   // Preload quotes data
   const quotes = await (await preloadQueryWithAuth(api.quotes.listQuotes, {})) as Array<Doc<"quotes">>;
 
