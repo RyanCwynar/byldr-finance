@@ -11,8 +11,9 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen p-8 pb-20 sm:p-20">
       <main className="flex flex-col gap-8 items-center w-full max-w-4xl mx-auto">
-        <h1 className="text-5xl sm:text-7xl font-extrabold mb-6 text-center">
-          <span className="text-blue-600">Forecast</span> Your Financial <span className="text-blue-600 italic">Life</span>
+        <h1 className="font-extrabold mb-6 text-center">
+          <span className="block text-blue-600 text-6xl sm:text-8xl">Forecast</span>
+          <span className="block text-white text-5xl sm:text-7xl">Your Financial Life</span>
         </h1>
         <p className="text-gray-400 text-lg sm:text-2xl text-center max-w-2xl">
           Byldr Finance helps you track the real value of your wallets and plan ahead with powerful forecasting tools.
