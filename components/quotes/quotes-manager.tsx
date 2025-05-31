@@ -151,6 +151,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
                   </div>
                 </th>
                 <th className="px-4 py-3 text-center">Type</th>
+                <th className="px-4 py-3 text-center">Source</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-center">Actions</th>
               </tr>
@@ -158,7 +159,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             <tbody>
               {filteredAndSortedQuotes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
                     No quotes found
                   </td>
                 </tr>
@@ -174,6 +175,9 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
                       <span className={`px-2 py-1 rounded-full text-xs ${quote.type === 'crypto' ? 'bg-blue-900/50 text-blue-300' : 'bg-green-900/50 text-green-300'}`}>
                         {quote.type}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-xs" title={quote.source || undefined}>
+                      {quote.source?.includes('coingecko') ? '✓' : '-'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 rounded-full text-xs ${quote.ignored ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}`}>

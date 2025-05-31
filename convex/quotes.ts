@@ -68,9 +68,10 @@ export const upsertQuote = mutation({
     symbol: v.string(),
     price: v.number(),
     type: v.optional(v.union(v.literal("crypto"), v.literal("stock"))),
+    source: v.optional(v.string()),
     ignored: v.optional(v.boolean())
   },
-  handler: async (ctx, { symbol, price, type, ignored }) => {
+  handler: async (ctx, { symbol, price, type, source, ignored }) => {
     // Try to find existing quote
     const existingQuote = await ctx.db
       .query("quotes")
@@ -83,7 +84,8 @@ export const upsertQuote = mutation({
         price,
         lastUpdated: Date.now(),
         type: type || existingQuote.type || "crypto", // Keep existing type if not provided, default to crypto
-        ...(ignored !== undefined ? { ignored } : {}) // Only update ignored if provided
+        ...(ignored !== undefined ? { ignored } : {}), // Only update ignored if provided
+        ...(source ? { source } : {})
       });
     } else {
       // Create new quote
@@ -92,7 +94,8 @@ export const upsertQuote = mutation({
         price,
         lastUpdated: Date.now(),
         type: type || "crypto", // Default to crypto if not provided
-        ...(ignored !== undefined ? { ignored } : {}) // Only include ignored if provided
+        ...(ignored !== undefined ? { ignored } : {}), // Only include ignored if provided
+        ...(source ? { source } : {})
       });
     }
   }
