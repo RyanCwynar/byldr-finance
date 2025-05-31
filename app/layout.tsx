@@ -9,7 +9,15 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Byldr Finance",
-  description: "Track your net worth and financial assets.",
+  description:
+    "Plan and forecast your finances across crypto and traditional assets. Track unusual tokens, simulate future prices and break down spending.",
+  keywords: [
+    "crypto",
+    "finance",
+    "budgeting",
+    "forecasting",
+    "net worth",
+  ],
 };
 
 export default function RootLayout({
