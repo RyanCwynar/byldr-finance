@@ -187,18 +187,65 @@ export const getSnapshots = query({
   handler: async (ctx, { startTimestamp, endTimestamp, limit }) => {
     let query = ctx.db
       .query("quoteSnapshots")
-      .filter(q => 
+      .filter(q =>
         q.and(
           q.gte(q.field("timestamp"), startTimestamp),
           q.lte(q.field("timestamp"), endTimestamp)
         )
       )
       .order("desc");
-    
+
     const snapshots = limit
       ? await query.take(limit)
       : await query.collect();
-    
+
     return snapshots;
+  }
+});
+
+// Get all quotes along with percent change from the average price over the last 24 hours
+export const listQuotesWithChange = query({
+  handler: async (ctx) => {
+    const now = Date.now();
+    const dayAgo = now - 24 * 60 * 60 * 1000;
+
+    // Get all snapshots from the last 24 hours
+    const snapshots = await ctx.db
+      .query("quoteSnapshots")
+      .filter(q =>
+        q.and(
+          q.gte(q.field("timestamp"), dayAgo),
+          q.lte(q.field("timestamp"), now)
+        )
+      )
+      .order("asc")
+      .collect();
+
+    // Calculate average price for each symbol
+    const totals: Record<string, number> = {};
+    const counts: Record<string, number> = {};
+
+    snapshots.forEach(snapshot => {
+      Object.entries(snapshot.prices).forEach(([symbol, price]) => {
+        totals[symbol] = (totals[symbol] || 0) + price;
+        counts[symbol] = (counts[symbol] || 0) + 1;
+      });
+    });
+
+    const averages: Record<string, number> = {};
+    Object.keys(totals).forEach(symbol => {
+      averages[symbol] = totals[symbol] / counts[symbol];
+    });
+
+    // Get current quotes
+    const quotes = await ctx.db.query("quotes").collect();
+
+    return quotes.map(quote => {
+      const avgPrice = averages[quote.symbol];
+      const percentChange = avgPrice
+        ? ((quote.price - avgPrice) / avgPrice) * 100
+        : 0;
+      return { ...quote, percentChange };
+    });
   }
 });
