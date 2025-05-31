@@ -11,7 +11,9 @@ interface ThemeState {
 
 const ThemeContext = createContext<ThemeState>({
   theme: 'light',
-  toggle: () => {},
+  toggle: () => {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  },
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
