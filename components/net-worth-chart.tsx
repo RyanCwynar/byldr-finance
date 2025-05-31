@@ -233,12 +233,18 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
+          <XAxis
             dataKey="timestamp"
             scale="time"
             type="number"
             domain={['auto', 'auto']}
-            tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
+            tickFormatter={(timestamp) =>
+              new Date(timestamp).toLocaleDateString(undefined, {
+                year: '2-digit',
+                month: 'numeric',
+                day: 'numeric'
+              })
+            }
           />
           <YAxis
             domain={yAxisDomain}
