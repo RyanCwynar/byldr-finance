@@ -238,7 +238,7 @@ export default function CashflowPageClient({
     `px-3 py-1 rounded-full text-sm cursor-pointer ${active ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`;
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl mx-auto relative">
+    <div className="flex flex-col gap-4 max-w-6xl mx-auto relative">
       <div className="overflow-x-auto w-full">
         <div className="text-sm mt-2 w-full border border-gray-700 rounded-md overflow-hidden">
           <div className="grid grid-cols-4 text-center">
