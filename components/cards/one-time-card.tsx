@@ -55,7 +55,7 @@ export default function OneTimeCard({ items: initialItems }: OneTimeCardProps) {
 
       <div className="space-y-3">
         {sorted.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">No expenses added.</p>
+          <p className=" text-center py-4">No expenses added.</p>
         ) : (
           sorted.map((t) => (
             <div key={t._id} className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">

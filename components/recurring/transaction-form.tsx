@@ -188,7 +188,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
           >
             Cancel
           </button>
-          <button type="submit" className="px-4 py-2 rounded-md bg-blue-600 text-white">
+          <button type="submit" className="px-4 py-2 rounded-md bg-blue-600">
             Save
           </button>
         </div>

@@ -118,7 +118,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
           </datalist>
           <button
             onClick={() => setShowForm(true)}
-            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
+            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600"
           >
             <PlusIcon className="w-5 h-5" />
             <span>Add</span>
@@ -143,9 +143,9 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
                   title={t.hidden ? 'Show' : 'Hide'}
                 >
                   {t.hidden ? (
-                    <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                    <EyeSlashIcon className="w-5 h-5" />
                   ) : (
-                    <EyeIcon className="w-5 h-5 text-gray-400" />
+                    <EyeIcon className="w-5 h-5" />
                   )}
                 </button>
                 <button
@@ -260,9 +260,9 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
                     title={t.hidden ? 'Show' : 'Hide'}
                   >
                     {t.hidden ? (
-                      <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                      <EyeSlashIcon className="w-5 h-5" />
                     ) : (
-                      <EyeIcon className="w-5 h-5 text-gray-400" />
+                      <EyeIcon className="w-5 h-5" />
                     )}
                   </button>
                   <button
@@ -298,7 +298,7 @@ export default function OneTimePageClient({ initialData, initialTags }: OneTimeP
       </div>
       <button
         onClick={() => setShowForm(true)}
-        className="sm:hidden fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 text-white shadow-lg"
+        className="sm:hidden fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 shadow-lg"
         aria-label="Add one time transaction"
       >
         <PlusIcon className="w-6 h-6" />

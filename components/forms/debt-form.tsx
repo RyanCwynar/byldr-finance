@@ -66,12 +66,12 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
 
   return (
     <div>
-      <h3 className="text-lg font-medium leading-6 text-gray-100 mb-4">
+      <h3 className="text-lg font-medium leading-6 mb-4">
         {debt ? "Edit Debt" : "Add New Debt"}
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="name" className="block text-sm font-medium">
             Debt Name
           </label>
           <input
@@ -79,20 +79,20 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="type" className="block text-sm font-medium">
             Debt Type
           </label>
           <select
             id="type"
             value={type}
             onChange={(e) => setType(e.target.value as typeof type)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="mortgage">Mortgage</option>
             <option value="loan">Loan</option>
@@ -103,7 +103,7 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
         </div>
 
         <div>
-          <label htmlFor="value" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="value" className="block text-sm font-medium">
             Value (USD)
           </label>
           <input
@@ -111,7 +111,7 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="value"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             min="0"
             step="0.01"
@@ -119,7 +119,7 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
         </div>
 
         <div>
-          <label htmlFor="originalAmount" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="originalAmount" className="block text-sm font-medium">
             Original Amount (USD)
           </label>
           <input
@@ -127,14 +127,14 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="originalAmount"
             value={originalAmount}
             onChange={(e) => setOriginalAmount(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             min="0"
             step="0.01"
           />
         </div>
 
         <div>
-          <label htmlFor="startDate" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="startDate" className="block text-sm font-medium">
             Start Date
           </label>
           <input
@@ -142,12 +142,12 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="startDate"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label htmlFor="lender" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="lender" className="block text-sm font-medium">
             Lender
           </label>
           <input
@@ -155,12 +155,12 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="lender"
             value={lender}
             onChange={(e) => setLender(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
         <div>
-          <label htmlFor="interestRate" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="interestRate" className="block text-sm font-medium">
             Interest Rate (%)
           </label>
           <input
@@ -168,21 +168,21 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
             id="interestRate"
             value={interestRate}
             onChange={(e) => setInterestRate(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             min="0"
             step="0.01"
           />
         </div>
         
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="description" className="block text-sm font-medium">
             Description
           </label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             rows={3}
           />
         </div>
@@ -191,13 +191,13 @@ export function DebtForm({ onClose, debt, onSubmit }: DebtFormProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {debt ? "Update Debt" : "Add Debt"}
           </button>

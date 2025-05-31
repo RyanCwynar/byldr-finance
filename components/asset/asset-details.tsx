@@ -72,7 +72,7 @@ export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps)
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-semibold">Asset Details</h2>
-            <p className="text-gray-400 text-sm">Last updated: {formatDate(liveAsset.metadata?.lastUpdated)}</p>
+            <p className=" text-sm">Last updated: {formatDate(liveAsset.metadata?.lastUpdated)}</p>
           </div>
           <div className="flex space-x-2">
             <button 
@@ -94,25 +94,25 @@ export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps)
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-400">Type</h3>
+              <h3 className="text-sm font-medium">Type</h3>
               <p className="text-lg capitalize">{liveAsset.type.replace('_', ' ')}</p>
             </div>
             
             <div>
-              <h3 className="text-sm font-medium text-gray-400">Value</h3>
+              <h3 className="text-sm font-medium">Value</h3>
               <p className="text-lg text-green-500">{formatCurrency(liveAsset.value)}</p>
             </div>
             
             {liveAsset.metadata?.purchasePrice !== undefined && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Purchase Price</h3>
+                <h3 className="text-sm font-medium">Purchase Price</h3>
                 <p className="text-lg">{formatCurrency(liveAsset.metadata.purchasePrice)}</p>
               </div>
             )}
             
             {liveAsset.metadata?.location && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Location</h3>
+                <h3 className="text-sm font-medium">Location</h3>
                 <p className="text-lg">{liveAsset.metadata.location}</p>
               </div>
             )}
@@ -121,21 +121,21 @@ export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps)
           <div className="space-y-4">
             {liveAsset.metadata?.ticker && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Ticker</h3>
+                <h3 className="text-sm font-medium">Ticker</h3>
                 <p className="text-lg">{liveAsset.metadata.ticker}</p>
               </div>
             )}
             
             {liveAsset.metadata?.purchaseDate && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Purchase Date</h3>
+                <h3 className="text-sm font-medium">Purchase Date</h3>
                 <p className="text-lg">{formatDate(liveAsset.metadata.purchaseDate)}</p>
               </div>
             )}
             
             {liveAsset.tags && liveAsset.tags.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Tags</h3>
+                <h3 className="text-sm font-medium">Tags</h3>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {liveAsset.tags.map((tag, index) => (
                     <span 
@@ -153,7 +153,7 @@ export default function AssetDetails({ asset: initialAsset }: AssetDetailsProps)
         
         {liveAsset.metadata?.description && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-400">Description</h3>
+            <h3 className="text-sm font-medium">Description</h3>
             <p className="text-lg">{liveAsset.metadata.description}</p>
           </div>
         )}

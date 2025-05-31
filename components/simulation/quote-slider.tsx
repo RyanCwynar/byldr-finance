@@ -85,7 +85,7 @@ export default function QuoteSlider({
         </div>
       </div>
       
-      <div className="flex justify-between text-xs text-gray-400">
+      <div className="flex justify-between text-xs">
         <span>${formatNumber(originalPrice)}</span>
         <span>${formatNumber(adjustedPrice)}</span>
       </div>

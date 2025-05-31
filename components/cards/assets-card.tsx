@@ -112,7 +112,7 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
 
           <div className="space-y-3 mt-6">
             {sortedWallets.length === 0 ? (
-              <p className="text-gray-400 text-center py-4">No wallets found. Add one to get started.</p>
+              <p className=" text-center py-4">No wallets found. Add one to get started.</p>
             ) : (
               sortedWallets.map((wallet: Wallet) => (
                 <Link
@@ -122,9 +122,9 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{wallet.name}</span>
-                    <span className="text-xs text-gray-400">{wallet.chainType}</span>
+                    <span className="text-xs">{wallet.chainType}</span>
                   </div>
-                  <span className={`${wallet.value && wallet.value > 0 ? 'text-green-500' : 'text-gray-400'} font-mono`}>
+                  <span className={`${wallet.value && wallet.value > 0 ? 'text-green-500' : ''} font-mono`}>
                     ${formatNumber(wallet.value || 0)}
                   </span>
                 </Link>
@@ -144,7 +144,7 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
 
           <div className="space-y-3 mt-6">
             {sortedAssets.length === 0 ? (
-              <p className="text-gray-400 text-center py-4">No assets found. Add one to get started.</p>
+              <p className=" text-center py-4">No assets found. Add one to get started.</p>
             ) : (
               sortedAssets.map((asset: Asset) => (
                 <Link
@@ -156,7 +156,7 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
                     <span className="mr-3 text-xl" aria-hidden="true">{getAssetTypeIcon(asset.type)}</span>
                     <div className="flex flex-col">
                       <span className="font-medium">{asset.name}</span>
-                      <span className="text-xs text-gray-400 capitalize">{asset.type.replace('_', ' ')}</span>
+                      <span className="text-xs capitalize">{asset.type.replace('_', ' ')}</span>
                     </div>
                   </div>
                   <span className="text-green-500 font-mono">

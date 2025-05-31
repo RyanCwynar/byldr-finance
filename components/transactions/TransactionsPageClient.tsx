@@ -235,7 +235,7 @@ export default function TransactionsPageClient({
   };
 
   const pillClass = (active: boolean) =>
-    `px-3 py-1 rounded-full text-sm cursor-pointer ${active ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`;
+    `px-3 py-1 rounded-full text-sm cursor-pointer ${active ? "bg-blue-600" : "bg-gray-700"}`;
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto relative">
@@ -248,21 +248,21 @@ export default function TransactionsPageClient({
             <div className="p-2 font-semibold">Annual</div>
           </div>
           <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
-            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block text-gray-400 pointer-events-none">Income</div>
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block pointer-events-none">Income</div>
             <div className="p-2 text-green-500">{formatCurrency(dailyTotals.income)}</div>
             <div className="p-2 text-green-500">{formatCurrency(weeklyTotals.income)}</div>
             <div className="p-2 text-green-500">{formatCurrency(monthlyTotals.income)}</div>
             <div className="p-2 text-green-500">{formatCurrency(annualTotals.income)}</div>
           </div>
           <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
-            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block text-gray-400 pointer-events-none">Cost</div>
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block pointer-events-none">Cost</div>
             <div className="p-2 text-red-500">{formatCurrency(dailyTotals.expense)}</div>
             <div className="p-2 text-red-500">{formatCurrency(weeklyTotals.expense)}</div>
             <div className="p-2 text-red-500">{formatCurrency(monthlyTotals.expense)}</div>
             <div className="p-2 text-red-500">{formatCurrency(annualTotals.expense)}</div>
           </div>
           <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
-            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block font-semibold text-gray-400 pointer-events-none">Net</div>
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block font-semibold pointer-events-none">Net</div>
             <div
               className={`p-2 ${dailyTotals.income - dailyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}
             >
@@ -306,7 +306,7 @@ export default function TransactionsPageClient({
               setEditingRecurring(null);
               setShowRecurringForm(true);
             }}
-            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
+            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600"
           >
             <PlusIcon className="w-5 h-5" />
             <span>Add Recurring</span>
@@ -316,7 +316,7 @@ export default function TransactionsPageClient({
               setEditingOneTime(null);
               setShowOneTimeForm(true);
             }}
-            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
+            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600"
           >
             <PlusIcon className="w-5 h-5" />
             <span>Add One Time</span>
@@ -364,11 +364,11 @@ export default function TransactionsPageClient({
                 >
                   {t.kind === 'one-time'
                     ? t.hidden
-                      ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                      : <EyeIcon className="w-5 h-5 text-gray-400" />
+                      ? <EyeSlashIcon className="w-5 h-5" />
+                      : <EyeIcon className="w-5 h-5" />
                     : hiddenIds.has(t._id)
-                    ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                    : <EyeIcon className="w-5 h-5 text-gray-400" />}
+                    ? <EyeSlashIcon className="w-5 h-5" />
+                    : <EyeIcon className="w-5 h-5" />}
                 </button>
                 <button
                   onClick={() => handleEdit(t)}
@@ -544,11 +544,11 @@ export default function TransactionsPageClient({
                   >
                     {t.kind === 'one-time'
                       ? t.hidden
-                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                        : <EyeIcon className="w-5 h-5 text-gray-400" />
+                        ? <EyeSlashIcon className="w-5 h-5" />
+                        : <EyeIcon className="w-5 h-5" />
                       : hiddenIds.has(t._id)
-                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                        : <EyeIcon className="w-5 h-5 text-gray-400" />}
+                        ? <EyeSlashIcon className="w-5 h-5" />
+                        : <EyeIcon className="w-5 h-5" />}
                   </button>
                   <button
                     onClick={() => handleEdit(t)}
@@ -575,7 +575,7 @@ export default function TransactionsPageClient({
           setEditingRecurring(null);
           setShowRecurringForm(true);
         }}
-        className="sm:hidden fixed bottom-20 right-4 p-4 rounded-full bg-blue-600 text-white shadow-lg"
+        className="sm:hidden fixed bottom-20 right-4 p-4 rounded-full bg-blue-600 shadow-lg"
         aria-label="Add recurring transaction"
       >
         <PlusIcon className="w-6 h-6" />
@@ -585,7 +585,7 @@ export default function TransactionsPageClient({
           setEditingOneTime(null);
           setShowOneTimeForm(true);
         }}
-        className="sm:hidden fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 text-white shadow-lg"
+        className="sm:hidden fixed bottom-4 right-4 p-4 rounded-full bg-blue-600 shadow-lg"
         aria-label="Add one time transaction"
       >
         <PlusIcon className="w-6 h-6" />
@@ -625,16 +625,16 @@ export default function TransactionsPageClient({
       {/* Pie chart drawer */}
       <button
         onClick={() => setShowChart((prev) => !prev)}
-        className="fixed top-1/4 right-0 z-30 p-2 rounded-l-md bg-blue-600 text-white"
+        className="fixed top-1/4 right-0 z-30 p-2 rounded-l-md bg-blue-600"
         aria-label="Toggle chart"
       >
         <ChartPieIcon className="w-5 h-5" />
       </button>
       <div
-        className={`fixed top-0 right-0 h-full w-96 bg-gray-900 text-gray-100 p-6 transform transition-transform z-20 ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 right-0 h-full w-96 bg-gray-900 p-6 transform transition-transform z-20 ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <button
-          className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white"
+          className="absolute top-2 right-2 p-1"
           onClick={() => setShowChart(false)}
           aria-label="Close chart"
         >

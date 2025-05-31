@@ -37,13 +37,13 @@ export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditF
       <h3 className="text-lg font-medium mb-4">Edit History Entry</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300" htmlFor="value">
+          <label className="block text-sm font-medium" htmlFor="value">
             Value (USD)
           </label>
           <input
             id="value"
             type="number"
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             required
@@ -51,13 +51,13 @@ export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditF
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300" htmlFor="date">
+          <label className="block text-sm font-medium" htmlFor="date">
             Date
           </label>
           <input
             id="date"
             type="date"
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
@@ -74,13 +74,13 @@ export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditF
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Save
             </button>

@@ -158,7 +158,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
             <tbody>
               {filteredAndSortedQuotes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-8 text-center">
                     No quotes found
                   </td>
                 </tr>
@@ -167,7 +167,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
                   <tr key={quote._id} className="border-t border-gray-800 hover:bg-gray-800/50">
                     <td className="px-4 py-3 font-medium">{quote.symbol}</td>
                     <td className="px-4 py-3 text-right font-mono">{formatCurrency(quote.price)}</td>
-                    <td className="px-4 py-3 text-gray-400 text-sm">
+                    <td className="px-4 py-3 text-sm">
                       {new Date(quote.lastUpdated).toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -189,7 +189,7 @@ export default function QuotesManager({ initialQuotes }: QuotesManagerProps) {
                         {quote.ignored ? (
                           <EyeIcon className="w-5 h-5 text-blue-400" />
                         ) : (
-                          <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                          <EyeSlashIcon className="w-5 h-5" />
                         )}
                       </button>
                     </td>

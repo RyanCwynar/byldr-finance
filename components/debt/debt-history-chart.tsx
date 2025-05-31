@@ -13,7 +13,7 @@ interface DebtHistoryChartProps {
 
 export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
   if (!history || history.length === 0) {
-    return <div className="text-center text-gray-400">No history available</div>;
+    return <div className="text-center">No history available</div>;
   }
 
   const data = history
