@@ -8,6 +8,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   HomeIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import QuotesTicker from './quotes-ticker';
 import { useState } from 'react';
@@ -16,7 +17,8 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navigation = [
-    { href: '/', label: 'Dashboard', icon: HomeIcon },
+    { href: '/', label: 'About', icon: InformationCircleIcon },
+    { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
     { href: '/simulation', label: 'Simulation', icon: BeakerIcon },
     { href: '/quotes', label: 'Quotes', icon: CurrencyDollarIcon },
     { href: '/transactions', label: 'Transactions', icon: BanknotesIcon },
