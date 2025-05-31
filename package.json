@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.4",
+    "@clerk/themes": "^2.2.20",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "@moralisweb3/common-evm-utils": "^2.27.2",
