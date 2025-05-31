@@ -18,7 +18,7 @@ import {
   ChartPieIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import TransactionsPieChart from "./TransactionsPieChart";
+import CashflowPieChart from "./CashflowPieChart";
 
 interface Props {
   initialRecurring: Doc<"recurringTransactions">[];
@@ -640,7 +640,7 @@ export default function TransactionsPageClient({
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
-        <TransactionsPieChart data={pieData} />
+        <CashflowPieChart data={pieData} />
       </div>
     </div>
   );
