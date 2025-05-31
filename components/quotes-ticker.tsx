@@ -102,14 +102,14 @@ export default function QuotesTicker() {
   // If no quotes to display, show a message
   if (filteredQuotes.length === 0) {
     return (
-      <div className="w-full bg-black/80 border-b border-gray-800 py-1 text-center text-gray-400">
+      <div className="w-full bg-white/80 dark:bg-black/80 border-b border-gray-200 dark:border-gray-800 py-1 text-center text-gray-600 dark:text-gray-400">
         No quotes available
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-black/80 border-b border-gray-800 overflow-hidden py-1 relative">
+    <div className="w-full bg-white/80 dark:bg-black/80 border-b border-gray-200 dark:border-gray-800 overflow-hidden py-1 relative text-gray-800 dark:text-gray-100">
       <div className="ticker-container px-4">
         <div className="ticker-text">
           {tickerWords.map((word, index) => (
@@ -119,15 +119,15 @@ export default function QuotesTicker() {
       </div>
       
       {/* Pause/Play button */}
-      <button 
+      <button
         onClick={togglePause}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700/70 rounded-full p-1 z-10"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200/70 dark:bg-gray-800/70 hover:bg-gray-300/70 dark:hover:bg-gray-700/70 rounded-full p-1 z-10"
         aria-label={isPaused ? "Play ticker" : "Pause ticker"}
       >
         {isPaused ? (
-          <PlayIcon className="w-4 h-4 text-white" />
+          <PlayIcon className="w-4 h-4 text-gray-800 dark:text-white" />
         ) : (
-          <PauseIcon className="w-4 h-4 text-white" />
+          <PauseIcon className="w-4 h-4 text-gray-800 dark:text-white" />
         )}
       </button>
     </div>
