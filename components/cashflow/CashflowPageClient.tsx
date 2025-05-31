@@ -31,7 +31,7 @@ type Recurring = Doc<"recurringTransactions"> & { kind: "recurring" };
 type OneTime = Doc<"oneTimeTransactions"> & { kind: "one-time" };
 type Item = Recurring | OneTime;
 
-export default function TransactionsPageClient({
+export default function CashflowPageClient({
   initialRecurring,
   initialRecurringTags,
   initialOneTime,
@@ -287,7 +287,7 @@ export default function TransactionsPageClient({
         </div>
       </div>
       <div className="flex justify-between items-center gap-2 flex-wrap">
-        <h1 className="text-2xl font-bold">Transactions</h1>
+        <h1 className="text-2xl font-bold">Incomes and Expenses</h1>
         <div className="flex items-center gap-2">
           <input
             value={tagFilter}
