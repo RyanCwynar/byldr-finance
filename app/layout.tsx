@@ -4,6 +4,7 @@ import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import Header from "@/components/header";
 import UserTracker from "@/components/user-tracker";
+import { ThemeProvider } from "@/lib/theme-context";
 
 import type { Metadata } from "next";
 
@@ -28,14 +29,16 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="min-h-screen antialiased bg-black text-white">
-          <ConvexClientProvider>
-            <UserTracker />
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-          </ConvexClientProvider>
+        <body className="min-h-screen antialiased bg-white text-black dark:bg-black dark:text-white">
+          <ThemeProvider>
+            <ConvexClientProvider>
+              <UserTracker />
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+            </ConvexClientProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

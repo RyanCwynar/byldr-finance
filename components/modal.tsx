@@ -20,7 +20,7 @@ export function Modal({ children, onClose, isOpen = true }: ModalProps) {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-50" />
+          <div className="fixed inset-0 bg-black/50" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -34,7 +34,7 @@ export function Modal({ children, onClose, isOpen = true }: ModalProps) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-900 text-gray-100 p-6 shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-6 shadow-xl transition-all">
                 {children}
               </Dialog.Panel>
             </Transition.Child>

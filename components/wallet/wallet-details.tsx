@@ -192,7 +192,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
             </div>
             <div className="flex flex-wrap items-baseline">
               <span className="text-gray-400 w-24 text-sm sm:text-base">Address:</span>
-              <span className="ml-2 break-all text-xs sm:text-sm font-mono bg-black/30 p-1 rounded">
+              <span className="ml-2 break-all text-xs sm:text-sm font-mono bg-gray-200/50 dark:bg-black/30 p-1 rounded">
                 {liveWallet.address.length > 20 
                   ? `${liveWallet.address.substring(0, 10)}...${liveWallet.address.substring(liveWallet.address.length - 10)}`
                   : liveWallet.address
