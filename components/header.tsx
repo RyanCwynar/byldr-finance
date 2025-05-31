@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { UserButton } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import {
   BeakerIcon,
   CurrencyDollarIcon,
@@ -15,6 +15,7 @@ import { useState } from 'react';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isSignedIn } = useUser();
 
   const navigation = [
     { href: '/', label: 'About', icon: InformationCircleIcon },
@@ -33,36 +34,46 @@ export default function Header() {
               <Link href="/" className="flex items-center gap-2">
                 <span className="text-xl font-bold">Byldr Finance</span>
               </Link>
-              <nav className="hidden lg:flex items-center gap-6">
-                {navigation.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1"
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{label}</span>
-                  </Link>
-                ))}
-              </nav>
+              {isSignedIn && (
+                <nav className="hidden lg:flex items-center gap-6">
+                  {navigation.map(({ href, label, icon: Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </Link>
+                  ))}
+                </nav>
+              )}
             </div>
             <div className="flex items-center gap-4">
-              <button
-                className="lg:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
-                onClick={() => setMobileOpen(!mobileOpen)}
-                aria-label="Toggle navigation"
-                aria-expanded={mobileOpen}
-              >
-                {mobileOpen ? (
-                  <XMarkIcon className="w-6 h-6 text-white" />
-                ) : (
-                  <Bars3Icon className="w-6 h-6 text-white" />
-                )}
-              </button>
-              <UserButton />
+              {isSignedIn && (
+                <button
+                  className="lg:hidden p-2 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  onClick={() => setMobileOpen(!mobileOpen)}
+                  aria-label="Toggle navigation"
+                  aria-expanded={mobileOpen}
+                >
+                  {mobileOpen ? (
+                    <XMarkIcon className="w-6 h-6 text-white" />
+                  ) : (
+                    <Bars3Icon className="w-6 h-6 text-white" />
+                  )}
+                </button>
+              )}
+              {isSignedIn ? (
+                <UserButton afterSignOutUrl="/sign-in" />
+              ) : (
+                <Link href="/sign-in" className="text-sm font-medium text-gray-200 hover:text-white">
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
-          {mobileOpen && (
+          {mobileOpen && isSignedIn && (
             <nav className="lg:hidden mt-2 flex flex-col gap-2">
               {navigation.map(({ href, label, icon: Icon }) => (
                 <Link
@@ -77,7 +88,7 @@ export default function Header() {
             </nav>
           )}
         </div>
-        <QuotesTicker />
+        {isSignedIn && <QuotesTicker />}
       </div>
     </header>
   );
