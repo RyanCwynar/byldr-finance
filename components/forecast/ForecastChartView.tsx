@@ -72,21 +72,21 @@ export function ForecastChartView({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="w-full">
             <h3 className="text-lg font-medium mb-2">Historical Data</h3>
-            <div className="w-full h-[400px]">
+            <div className="w-full h-[450px] md:h-[400px]">
               <NetWorthChart metrics={filteredReal} showUncertainty={false} />
             </div>
           </div>
           
           <div className="w-full">
             <h3 className="text-lg font-medium mb-2">Projected Data</h3>
-            <div className="w-full h-[400px]">
+            <div className="w-full h-[450px] md:h-[400px]">
               <NetWorthChart metrics={filteredProjected} showUncertainty={true} />
             </div>
           </div>
         </div>
       ) : (
-        <div className="w-full h-[400px]">
-          <NetWorthChart 
+        <div className="w-full h-[450px] md:h-[400px]">
+          <NetWorthChart
             metrics={dataView === 'real' ? filteredReal : filteredProjected}
             showUncertainty={dataView === 'projected'}
           />
