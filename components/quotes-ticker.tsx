@@ -7,22 +7,10 @@ import { PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
 import { formatCurrency } from '@/lib/formatters';
 
 export default function QuotesTicker() {
-  const quotes = useQuery(api.quotes.listQuotes) || [];
-  const [prevQuotes, setPrevQuotes] = useState<Record<string, number>>({});
+  const quotes = useQuery(api.quotes.listQuotesWithChange) || [];
   const [tickerWords, setTickerWords] = useState<string[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const tickerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Track previous quotes to show price changes
-  useEffect(() => {
-    if (quotes.length > 0) {
-      const quoteMap: Record<string, number> = {};
-      quotes.forEach((quote) => {
-        quoteMap[quote.symbol] = quote.price;
-      });
-      setPrevQuotes(quoteMap);
-    }
-  }, [quotes]);
 
   // Filter out ignored quotes and sort by symbol
   const filteredQuotes = useMemo(() => {
@@ -37,10 +25,8 @@ export default function QuotesTicker() {
     const quoteElements: string[] = [];
     
     filteredQuotes.forEach((quote) => {
-      const prevPrice = prevQuotes[quote.symbol] || quote.price;
-      const priceChange = quote.price - prevPrice;
-      const percentChange = prevPrice ? (priceChange / prevPrice) * 100 : 0;
-      const isUp = priceChange >= 0;
+      const percentChange = quote.percentChange || 0;
+      const isUp = percentChange >= 0;
       const formattedPrice = formatCurrency(quote.price);
       const formattedPercent = Math.abs(percentChange).toFixed(2);
       
@@ -56,7 +42,7 @@ export default function QuotesTicker() {
     // Duplicate the elements to ensure continuous scrolling
     const allElements = [...quoteElements, ...quoteElements, ...quoteElements];
     setTickerWords(allElements);
-  }, [filteredQuotes, prevQuotes]);
+  }, [filteredQuotes]);
 
   // Set up the ticker animation
   useEffect(() => {
