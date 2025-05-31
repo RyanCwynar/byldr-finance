@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import QuotesTicker from './quotes-ticker';
 import { useState } from 'react';
+import ThemeToggle from './theme-toggle';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,7 +27,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-700 bg-black/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-black/80 backdrop-blur-sm">
       <div className="flex flex-col">
         <div className="px-4">
           <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between">
@@ -40,7 +41,7 @@ export default function Header() {
                     <Link
                       key={href}
                       href={href}
-                      className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1"
+                      className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white flex items-center gap-1"
                     >
                       <Icon className="w-4 h-4" />
                       <span>{label}</span>
@@ -58,35 +59,36 @@ export default function Header() {
                   aria-expanded={mobileOpen}
                 >
                   {mobileOpen ? (
-                    <XMarkIcon className="w-6 h-6 text-white" />
+                    <XMarkIcon className="w-6 h-6 text-gray-800 dark:text-white" />
                   ) : (
-                    <Bars3Icon className="w-6 h-6 text-white" />
+                    <Bars3Icon className="w-6 h-6 text-gray-800 dark:text-white" />
                   )}
                 </button>
               )}
+              <ThemeToggle />
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/sign-in" />
               ) : (
-                <Link href="/sign-in" className="text-sm font-medium text-gray-200 hover:text-white">
+                <Link href="/sign-in" className="text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white">
                   Sign In
                 </Link>
               )}
             </div>
           </div>
-          {mobileOpen && isSignedIn && (
-            <nav className="lg:hidden mt-2 flex flex-col gap-2">
-              {navigation.map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex items-center gap-2 rounded px-2 py-1 text-gray-200 hover:text-white hover:bg-gray-800"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{label}</span>
-                </Link>
-              ))}
-            </nav>
-          )}
+            {mobileOpen && isSignedIn && (
+              <nav className="lg:hidden mt-2 flex flex-col gap-2">
+                {navigation.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex items-center gap-2 rounded px-2 py-1 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{label}</span>
+                  </Link>
+                ))}
+              </nav>
+            )}
         </div>
         {isSignedIn && <QuotesTicker />}
       </div>
