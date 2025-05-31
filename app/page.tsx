@@ -11,31 +11,49 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen p-8 pb-20 sm:p-20">
       <main className="flex flex-col gap-8 items-center w-full max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-center">
+        <h1 className="text-5xl sm:text-7xl font-extrabold mb-6 text-center">
           Forecast your financial life
         </h1>
-        <p className="text-gray-400 text-center max-w-2xl">
+        <p className="text-gray-400 text-lg sm:text-2xl text-center max-w-2xl">
           Byldr Finance helps you track the real value of your wallets and plan ahead with powerful forecasting tools.
         </p>
-        <ul className="list-disc pl-6 space-y-4 text-left self-start">
-          <li>Accurately represent unusual tokens like Aave debt tokens.</li>
-          <li>
-            Forecast your portfolio by entering future prices in the simulation tab.
+        <ul className="list-none pl-0 space-y-4 text-left self-start">
+          <li className="flex items-start">
+            <span className="mr-2">🪙</span>
+            <span>Accurately represent unusual tokens like Aave debt tokens.</span>
           </li>
-          <li>Plug in recurring income and expenses on any schedule.</li>
-          <li>
-            See the daily, weekly, monthly and yearly impact of every expense.
+          <li className="flex items-start">
+            <span className="mr-2">🔮</span>
+            <span>
+              Forecast your portfolio by entering future prices in the simulation tab.
+            </span>
           </li>
-          <li>
-            Tag and filter expenses to quickly separate controllable and fixed costs.
+          <li className="flex items-start">
+            <span className="mr-2">📅</span>
+            <span>Plug in recurring income and expenses on any schedule.</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">📊</span>
+            <span>
+              See the daily, weekly, monthly and yearly impact of every expense.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">🏷️</span>
+            <span>
+              Tag and filter expenses to quickly separate controllable and fixed costs.
+            </span>
           </li>
         </ul>
         <Link
           href="/sign-in"
-          className="mt-8 text-blue-400 underline hover:text-blue-300"
+          className="mt-8 inline-block rounded-md bg-blue-600 px-6 py-3 text-lg font-medium text-white shadow hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          Sign in to get started
+          Start for free
         </Link>
+        <p className="text-gray-400 text-sm mt-2">
+          Sign in now—it’s completely free while we’re in beta.
+        </p>
       </main>
     </div>
   );
