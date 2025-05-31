@@ -18,9 +18,9 @@ export default function Header() {
 
   const navigation = [
     { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+    { href: '/cashflow', label: 'Cashflow', icon: BanknotesIcon },
     { href: '/simulation', label: 'Simulation', icon: BeakerIcon },
     { href: '/quotes', label: 'Quotes', icon: CurrencyDollarIcon },
-    { href: '/cashflow', label: 'Cashflow', icon: BanknotesIcon },
   ];
 
   return (
