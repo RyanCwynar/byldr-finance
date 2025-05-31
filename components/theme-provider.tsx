@@ -20,11 +20,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as Theme | null
-    if (stored) {
-      setTheme(stored)
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark')
+    try {
+      const stored = localStorage.getItem('theme') as Theme | null
+      if (stored) {
+        setTheme(stored)
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark')
+      }
+    } catch (error) {
+      console.error('Error accessing localStorage:', error)
     }
   }, [])
 
