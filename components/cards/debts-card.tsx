@@ -62,7 +62,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
       
       <div className="space-y-3">
         {sortedDebts.length === 0 ? (
-          <p className="text-gray-400 text-center py-4">No debts found. Add one to get started.</p>
+          <p className=" text-center py-4">No debts found. Add one to get started.</p>
         ) : (
           sortedDebts.map((debt: Debt) => (
             <Link 
@@ -74,7 +74,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
                 <span className="mr-3 text-xl" aria-hidden="true">{getDebtTypeIcon(debt.type)}</span>
                 <div className="flex flex-col">
                   <span className="font-medium">{debt.name}</span>
-                  <span className="text-xs text-gray-400 capitalize">{debt.type.replace('_', ' ')}</span>
+                  <span className="text-xs capitalize">{debt.type.replace('_', ' ')}</span>
                 </div>
               </div>
               <span className="text-red-500 font-mono">

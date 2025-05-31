@@ -13,7 +13,7 @@ interface Props {
 
 export default function TransactionsPieChart({ data }: Props) {
   if (!data || data.length === 0) {
-    return <p className="text-gray-400 text-center">No transaction data.</p>;
+    return <p className=" text-center">No transaction data.</p>;
   }
   const COLORS = ['#f87171','#fb923c','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6','#facc15','#4ade80','#fca5a5'];
   const chartData = data.map(d => ({ name: d.label, value: Math.abs(d.amount) }));

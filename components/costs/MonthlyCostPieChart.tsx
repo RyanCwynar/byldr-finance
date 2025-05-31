@@ -8,7 +8,7 @@ interface Props { data: CostData[] }
 
 export default function MonthlyCostPieChart({ data }: Props) {
   if (!data || data.length === 0) {
-    return <p className="text-gray-400 text-center">No expense data.</p>;
+    return <p className=" text-center">No expense data.</p>;
   }
   const COLORS = ['#f87171','#fb923c','#fbbf24','#34d399','#60a5fa','#a78bfa','#f472b6','#facc15'];
   const chartData = data.map(d => ({ name: d.label, value: d.amount }));

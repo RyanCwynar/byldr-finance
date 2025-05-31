@@ -52,12 +52,12 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
   
   return (
     <div>
-      <h3 className="text-lg font-medium leading-6 text-gray-100 mb-4">
+      <h3 className="text-lg font-medium leading-6 mb-4">
         {holding ? "Edit Holding" : "Add New Holding"}
       </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="symbol" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="symbol" className="block text-sm font-medium">
             Token Symbol
           </label>
           <input
@@ -65,7 +65,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="symbol"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             placeholder="ETH, BTC, USDC, etc."
             disabled={!!holding} // Disable editing symbol for existing holdings
@@ -73,7 +73,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
         </div>
         
         <div>
-          <label htmlFor="quantity" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="quantity" className="block text-sm font-medium">
             Quantity
           </label>
           <input
@@ -81,7 +81,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="quantity"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             step="any"
             min="0"
@@ -90,14 +90,14 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
         </div>
         
         <div>
-          <label htmlFor="chain" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="chain" className="block text-sm font-medium">
             Chain
           </label>
           <select
             id="chain"
             value={chain}
             onChange={(e) => setChain(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             disabled={!!holding} // Disable editing chain for existing holdings
           >
             <option value="ethereum">Ethereum</option>
@@ -119,7 +119,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             onChange={(e) => setIsDebt(e.target.checked)}
             className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="isDebt" className="ml-2 block text-sm font-medium text-gray-300">
+          <label htmlFor="isDebt" className="ml-2 block text-sm font-medium">
             This is a debt (negative balance)
           </label>
         </div>
@@ -132,13 +132,13 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             onChange={(e) => setIgnore(e.target.checked)}
             className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
           />
-          <label htmlFor="ignore" className="ml-2 block text-sm font-medium text-gray-300">
+          <label htmlFor="ignore" className="ml-2 block text-sm font-medium">
             Ignore this holding in calculations
           </label>
         </div>
         
         <div>
-          <label htmlFor="quoteSymbol" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="quoteSymbol" className="block text-sm font-medium">
             Quote Symbol (Optional)
           </label>
           <input
@@ -146,28 +146,28 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="quoteSymbol"
             value={quoteSymbol}
             onChange={(e) => setQuoteSymbol(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="For price lookup, e.g. WETH → ETH"
           />
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs">
             If the token has a different symbol for price lookup, enter it here.
           </p>
         </div>
         
         <div>
-          <label htmlFor="quoteType" className="block text-sm font-medium text-gray-300">
+          <label htmlFor="quoteType" className="block text-sm font-medium">
             Quote Type
           </label>
           <select
             id="quoteType"
             value={quoteType}
             onChange={(e) => setQuoteType(e.target.value as "crypto" | "stock")}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="crypto">Cryptocurrency</option>
             <option value="stock">Stock</option>
           </select>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs">
             Select whether this is a cryptocurrency or stock market symbol.
           </p>
         </div>
@@ -176,13 +176,13 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {holding ? "Update Holding" : "Add Holding"}
           </button>

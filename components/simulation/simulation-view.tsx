@@ -352,7 +352,7 @@ export default function SimulationView({
           <h2 className="text-xl font-semibold mb-4">Adjust Asset Prices</h2>
           
           {quotedSymbols.length === 0 ? (
-            <p className="text-gray-400 text-center py-4">No quoted assets found.</p>
+            <p className=" text-center py-4">No quoted assets found.</p>
           ) : (
             <div className="space-y-6">
               {quotedSymbols.map(symbol => {
@@ -374,7 +374,7 @@ export default function SimulationView({
             </div>
           )}
           
-          <div className="mt-4 text-sm text-gray-400">
+          <div className="mt-4 text-sm">
             <p>Note: Manual assets and debts without quotes are not adjustable in the simulation.</p>
           </div>
         </div>
@@ -392,7 +392,7 @@ export default function SimulationView({
             <div>
               <h3 className="text-lg font-medium mb-3 text-green-400">Assets</h3>
               {manualAssets.length === 0 ? (
-                <p className="text-gray-400">No manual assets found.</p>
+                <p className="">No manual assets found.</p>
               ) : (
                 <div className="space-y-3">
                   {manualAssets.map(asset => (
@@ -401,7 +401,7 @@ export default function SimulationView({
                         <span>{asset.name}</span>
                         <span className="text-green-400">${formatNumber(asset.value)}</span>
                       </div>
-                      <div className="text-xs text-gray-400">{asset.type}</div>
+                      <div className="text-xs">{asset.type}</div>
                     </div>
                   ))}
                 </div>
@@ -412,7 +412,7 @@ export default function SimulationView({
             <div>
               <h3 className="text-lg font-medium mb-3 text-red-400">Debts</h3>
               {manualDebts.length === 0 ? (
-                <p className="text-gray-400">No manual debts found.</p>
+                <p className="">No manual debts found.</p>
               ) : (
                 <div className="space-y-3">
                   {manualDebts.map(debt => (
@@ -421,7 +421,7 @@ export default function SimulationView({
                         <span>{debt.name}</span>
                         <span className="text-red-400">${formatNumber(debt.value)}</span>
                       </div>
-                      <div className="text-xs text-gray-400">{debt.type}</div>
+                      <div className="text-xs">{debt.type}</div>
                     </div>
                   ))}
                 </div>

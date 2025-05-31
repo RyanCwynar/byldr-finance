@@ -133,7 +133,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
               isUpdatingValue 
                 ? 'bg-green-700 cursor-wait' 
                 : 'bg-green-600 hover:bg-green-700'
-            } text-gray-200 flex items-center gap-2`}
+            } flex items-center gap-2`}
             title="Update wallet value based on current quotes"
           >
             <CalculatorIcon className={`w-5 h-5 ${isUpdatingValue ? 'animate-spin' : ''}`} />
@@ -148,7 +148,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                 : isUpdatingHoldings 
                   ? 'bg-blue-700 cursor-wait' 
                   : 'bg-blue-600 hover:bg-blue-700'
-            } text-gray-200 flex items-center gap-2`}
+            } flex items-center gap-2`}
             title={liveWallet.chainType !== 'ethereum' && liveWallet.chainType !== 'bitcoin' ? 'Only Ethereum and Bitcoin wallets are supported' : 'Update holdings'}
           >
             <ArrowPathIcon className={`w-5 h-5 ${isUpdatingHoldings ? 'animate-spin' : ''}`} />
@@ -156,14 +156,14 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           </button>
           <button 
             onClick={() => setIsEditModalOpen(true)}
-            className="p-2 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200"
+            className="p-2 rounded-md bg-gray-800 hover:bg-gray-700"
             title="Edit wallet"
           >
             <PencilIcon className="w-5 h-5" />
           </button>
           <button 
             onClick={() => setIsDeleteModalOpen(true)}
-            className="p-2 rounded-md bg-red-800 hover:bg-red-700 text-gray-200"
+            className="p-2 rounded-md bg-red-800 hover:bg-red-700"
             title="Delete wallet"
           >
             <TrashIcon className="w-5 h-5" />
@@ -183,15 +183,15 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           <h2 className="text-lg sm:text-xl font-semibold mb-4">Wallet Details</h2>
           <div className="space-y-3">
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Name:</span>
+              <span className=" w-24 text-sm sm:text-base">Name:</span>
               <span className="ml-2 break-all">{liveWallet.name}</span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Chain Type:</span>
+              <span className=" w-24 text-sm sm:text-base">Chain Type:</span>
               <span className="ml-2 capitalize">{liveWallet.chainType}</span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Address:</span>
+              <span className=" w-24 text-sm sm:text-base">Address:</span>
               <span className="ml-2 break-all text-xs sm:text-sm font-mono bg-black/30 p-1 rounded">
                 {liveWallet.address.length > 20 
                   ? `${liveWallet.address.substring(0, 10)}...${liveWallet.address.substring(liveWallet.address.length - 10)}`
@@ -209,19 +209,19 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
               </span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Total Value:</span>
+              <span className=" w-24 text-sm sm:text-base">Total Value:</span>
               <span className="ml-2 font-medium">${formatNumber(liveWallet.value || 0)}</span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Assets:</span>
+              <span className=" w-24 text-sm sm:text-base">Assets:</span>
               <span className="ml-2 text-green-500 font-medium">${formatNumber(liveWallet.assets || 0)}</span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Debts:</span>
+              <span className=" w-24 text-sm sm:text-base">Debts:</span>
               <span className="ml-2 text-red-500 font-medium">${formatNumber(liveWallet.debts || 0)}</span>
             </div>
             <div className="flex flex-wrap items-baseline">
-              <span className="text-gray-400 w-24 text-sm sm:text-base">Last Updated:</span>
+              <span className=" w-24 text-sm sm:text-base">Last Updated:</span>
               <span className="ml-2 text-xs sm:text-sm">
                 {liveWallet.metadata?.lastUpdated 
                   ? new Date(liveWallet.metadata.lastUpdated).toLocaleString() 
@@ -236,7 +236,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
             <h2 className="text-lg sm:text-xl font-semibold">Holdings</h2>
             <button 
               onClick={() => setIsAddHoldingModalOpen(true)}
-              className="p-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="p-2 rounded-full bg-blue-600 hover:bg-blue-700"
               title="Add new holding"
             >
               <PlusIcon className="w-5 h-5" />
@@ -244,12 +244,12 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
           </div>
           
           {activeHoldings.length === 0 && ignoredHoldings.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No holdings found for this wallet.</p>
+            <p className=" text-center py-8">No holdings found for this wallet.</p>
           ) : (
             <div className="space-y-4">
               {/* Active Holdings */}
               {activeHoldings.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">No active holdings found.</p>
+                <p className=" text-center py-4">No active holdings found.</p>
               ) : (
                 <div className="space-y-3">
                   {activeHoldings.map(holding => (
@@ -259,19 +259,19 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                     >
                       <div className="flex-1 min-w-0" onClick={() => handleEditHolding(holding)}>
                         <div className="font-medium truncate">{holding.symbol}</div>
-                        <div className="text-xs text-gray-400">{holding.chain}</div>
+                        <div className="text-xs">{holding.chain}</div>
                       </div>
                       <div className="text-right pl-2" onClick={() => handleEditHolding(holding)}>
                         <div className={`${holding.isDebt ? "text-red-500" : "text-green-500"} font-mono text-sm sm:text-base`}>
                           {holding.isDebt ? "-" : ""}{formatNumber(holding.quantity)}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs">
                           {holding.isDebt ? "Debt" : "Asset"}
                         </div>
                       </div>
                       <button 
                         onClick={(e) => handleToggleIgnore(holding._id, e)}
-                        className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 flex-shrink-0"
+                        className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 flex-shrink-0"
                         title="Ignore this holding"
                       >
                         <EyeSlashIcon className="w-4 h-4" />
@@ -286,7 +286,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                 <div className="mt-6 border-t border-gray-700 pt-4">
                   <button 
                     onClick={() => setShowIgnoredHoldings(!showIgnoredHoldings)}
-                    className="flex items-center justify-between w-full text-left text-gray-300 hover:text-white py-2"
+                    className="flex items-center justify-between w-full text-left py-2"
                   >
                     <span className="flex items-center">
                       {showIgnoredHoldings ? 
@@ -305,21 +305,21 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                           className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
                         >
                           <div className="flex-1 min-w-0" onClick={() => handleEditHolding(holding)}>
-                            <div className="font-medium text-gray-400 truncate">{holding.symbol}</div>
-                            <div className="text-xs text-gray-500">{holding.chain}</div>
+                            <div className="font-medium truncate">{holding.symbol}</div>
+                            <div className="text-xs">{holding.chain}</div>
                           </div>
                           <div className="text-right pl-2" onClick={() => handleEditHolding(holding)}>
                             <div className={`${holding.isDebt ? "text-red-500/70" : "text-green-500/70"} font-mono text-sm sm:text-base`}>
                               {holding.isDebt ? "-" : ""}{formatNumber(holding.quantity)}
                             </div>
-                            <div className="text-xs text-gray-500 flex items-center justify-end gap-2">
+                            <div className="text-xs flex items-center justify-end gap-2">
                               {holding.isDebt ? "Debt" : "Asset"}
                               <span className="px-1.5 py-0.5 bg-yellow-800/50 text-yellow-200/70 rounded-full text-[10px]">Ignored</span>
                             </div>
                           </div>
                           <button 
                             onClick={(e) => handleToggleIgnore(holding._id, e)}
-                            className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 flex-shrink-0"
+                            className="ml-2 p-1.5 rounded-full bg-gray-700 hover:bg-gray-600 flex-shrink-0"
                             title="Unignore this holding"
                           >
                             <EyeIcon className="w-4 h-4" />
@@ -338,12 +338,12 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
       {/* Edit Wallet Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <div>
-          <h3 className="text-lg font-medium leading-6 text-gray-100 mb-4">
+          <h3 className="text-lg font-medium leading-6 mb-4">
             Edit Wallet
           </h3>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300">
+              <label htmlFor="name" className="block text-sm font-medium">
                 Wallet Name
               </label>
               <input
@@ -351,7 +351,7 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
                 id="name"
                 value={editedName}
                 onChange={(e) => setEditedName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
             </div>
@@ -359,14 +359,14 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleUpdateWallet}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Update Wallet
               </button>
@@ -378,24 +378,24 @@ export default function WalletDetails({ wallet: initialWallet, holdings: initial
       {/* Delete Wallet Confirmation Modal */}
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
         <div>
-          <h3 className="text-lg font-medium leading-6 text-gray-100 mb-4">
+          <h3 className="text-lg font-medium leading-6 mb-4">
             Delete Wallet
           </h3>
-          <p className="text-gray-300 mb-4">
+          <p className=" mb-4">
             Are you sure you want to delete this wallet? This action cannot be undone.
           </p>
           <div className="mt-5 flex justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsDeleteModalOpen(false)}
-              className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleDeleteWallet}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               Delete Wallet
             </button>

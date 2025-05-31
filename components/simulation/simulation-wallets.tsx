@@ -22,7 +22,7 @@ export default function SimulationWallets({ wallets }: SimulationWalletsProps) {
       <h2 className="text-xl font-semibold mb-4">Wallet Impact</h2>
       
       {sortedWallets.length === 0 ? (
-        <p className="text-gray-400 text-center py-4">No wallets found.</p>
+        <p className=" text-center py-4">No wallets found.</p>
       ) : (
         <div className="space-y-4">
           {sortedWallets.map(wallet => (
@@ -36,19 +36,19 @@ export default function SimulationWallets({ wallets }: SimulationWalletsProps) {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs text-gray-400">Original Value</div>
+                  <div className="text-xs">Original Value</div>
                   <div className="font-medium">${formatNumber(wallet.originalValue)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400">Adjusted Value</div>
+                  <div className="text-xs">Adjusted Value</div>
                   <div className="font-medium">${formatNumber(wallet.adjustedValue)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400">Assets</div>
+                  <div className="text-xs">Assets</div>
                   <div className="font-medium text-green-500">${formatNumber(wallet.adjustedAssets)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-400">Debts</div>
+                  <div className="text-xs">Debts</div>
                   <div className="font-medium text-red-500">${formatNumber(wallet.adjustedDebts)}</div>
                 </div>
               </div>

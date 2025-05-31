@@ -84,7 +84,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-semibold">Debt Details</h2>
-            <p className="text-gray-400 text-sm">Last updated: {formatDate(liveDebt.metadata?.lastUpdated)}</p>
+            <p className=" text-sm">Last updated: {formatDate(liveDebt.metadata?.lastUpdated)}</p>
           </div>
           <div className="flex space-x-2">
             <button 
@@ -106,25 +106,25 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-400">Type</h3>
+              <h3 className="text-sm font-medium">Type</h3>
               <p className="text-lg capitalize">{liveDebt.type.replace('_', ' ')}</p>
             </div>
             
             <div>
-              <h3 className="text-sm font-medium text-gray-400">Value</h3>
+              <h3 className="text-sm font-medium">Value</h3>
               <p className="text-lg text-red-500">{formatCurrency(liveDebt.value)}</p>
             </div>
             
             {liveDebt.metadata?.originalAmount && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Original Amount</h3>
+                <h3 className="text-sm font-medium">Original Amount</h3>
                 <p className="text-lg">{formatCurrency(liveDebt.metadata.originalAmount)}</p>
               </div>
             )}
             
             {liveDebt.metadata?.lender && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Lender</h3>
+                <h3 className="text-sm font-medium">Lender</h3>
                 <p className="text-lg">{liveDebt.metadata.lender}</p>
               </div>
             )}
@@ -133,28 +133,28 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
           <div className="space-y-4">
             {liveDebt.metadata?.interestRate !== undefined && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Interest Rate</h3>
+                <h3 className="text-sm font-medium">Interest Rate</h3>
                 <p className="text-lg">{liveDebt.metadata.interestRate}%</p>
               </div>
             )}
             
             {liveDebt.metadata?.startDate && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Start Date</h3>
+                <h3 className="text-sm font-medium">Start Date</h3>
                 <p className="text-lg">{formatDate(liveDebt.metadata.startDate)}</p>
               </div>
             )}
             
             {liveDebt.metadata?.dueDate && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Due Date</h3>
+                <h3 className="text-sm font-medium">Due Date</h3>
                 <p className="text-lg">{formatDate(liveDebt.metadata.dueDate)}</p>
               </div>
             )}
             
             {liveDebt.metadata?.minimumPayment !== undefined && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400">Minimum Payment</h3>
+                <h3 className="text-sm font-medium">Minimum Payment</h3>
                 <p className="text-lg">{formatCurrency(liveDebt.metadata.minimumPayment)}</p>
               </div>
             )}
@@ -163,7 +163,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         
         {liveDebt.metadata?.description && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-400">Description</h3>
+            <h3 className="text-sm font-medium">Description</h3>
             <p className="text-lg">{liveDebt.metadata.description}</p>
           </div>
         )}
@@ -181,7 +181,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         </div>
         <DebtHistoryChart history={history} />
         {(weeklyChange !== null || monthlyChange !== null) && (
-          <div className="mt-4 text-sm text-gray-300 space-y-1">
+          <div className="mt-4 text-sm space-y-1">
             {weeklyChange !== null && (
               <p>
                 Avg change per week:{' '}

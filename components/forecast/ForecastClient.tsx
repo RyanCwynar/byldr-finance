@@ -382,7 +382,7 @@ export function ForecastClient({
       />
       
       <div className="flex flex-col mb-4 bg-gray-800 p-4 rounded-lg">
-        <p className="text-sm text-gray-300">
+        <p className="text-sm">
           Forecasts use your latest simulation data.&nbsp;
           <Link href="/simulation" className="underline text-blue-300">
             Go to the Simulation tab

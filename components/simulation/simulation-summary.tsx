@@ -41,20 +41,20 @@ export default function SimulationSummary({ summary, onReset }: SimulationSummar
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
-          <h3 className="text-gray-400 text-sm">Net Worth</h3>
+          <h3 className=" text-sm">Net Worth</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold">${formatNumber(adjustedValue)}</span>
             <span className={`text-sm ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
               {isPositiveChange ? '+' : ''}{percentChange.toFixed(2)}%
             </span>
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm">
             Original: ${formatNumber(originalValue)}
           </div>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-gray-400 text-sm">Assets</h3>
+          <h3 className=" text-sm">Assets</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-green-500">${formatNumber(adjustedAssets)}</span>
             <span className={`text-sm ${adjustedAssets >= originalAssets ? 'text-green-500' : 'text-red-500'}`}>
@@ -62,13 +62,13 @@ export default function SimulationSummary({ summary, onReset }: SimulationSummar
               {originalAssets ? ((adjustedAssets - originalAssets) / originalAssets * 100).toFixed(2) : 0}%
             </span>
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm">
             Original: ${formatNumber(originalAssets)}
           </div>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-gray-400 text-sm">Debts</h3>
+          <h3 className=" text-sm">Debts</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-red-500">${formatNumber(adjustedDebts)}</span>
             <span className={`text-sm ${adjustedDebts <= originalDebts ? 'text-green-500' : 'text-red-500'}`}>
@@ -76,7 +76,7 @@ export default function SimulationSummary({ summary, onReset }: SimulationSummar
               {originalDebts ? (Math.abs(adjustedDebts - originalDebts) / originalDebts * 100).toFixed(2) : 0}%
             </span>
           </div>
-          <div className="text-sm text-gray-400">
+          <div className="text-sm">
             Original: ${formatNumber(originalDebts)}
           </div>
         </div>

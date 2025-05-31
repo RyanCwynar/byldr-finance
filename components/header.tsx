@@ -38,7 +38,7 @@ export default function Header() {
                     <Link
                       key={href}
                       href={href}
-                      className="text-sm font-medium text-gray-200 hover:text-white flex items-center gap-1"
+                      className="text-sm font-medium flex items-center gap-1"
                     >
                       <Icon className="w-4 h-4" />
                       <span>{label}</span>
@@ -56,16 +56,16 @@ export default function Header() {
                   aria-expanded={mobileOpen}
                 >
                   {mobileOpen ? (
-                    <XMarkIcon className="w-6 h-6 text-white" />
+                    <XMarkIcon className="w-6 h-6" />
                   ) : (
-                    <Bars3Icon className="w-6 h-6 text-white" />
+                    <Bars3Icon className="w-6 h-6" />
                   )}
                 </button>
               )}
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/sign-in" />
               ) : (
-                <Link href="/sign-in" className="text-sm font-medium text-gray-200 hover:text-white">
+                <Link href="/sign-in" className="text-sm font-medium">
                   Sign In
                 </Link>
               )}
@@ -77,7 +77,7 @@ export default function Header() {
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-2 rounded px-2 py-1 text-gray-200 hover:text-white hover:bg-gray-800"
+                  className="flex items-center gap-2 rounded px-2 py-1 hover:bg-gray-800"
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{label}</span>

@@ -28,7 +28,7 @@ export function ForecastChartView({
             onClick={() => setDataView('all')}
             className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
               dataView === 'all'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-blue-500'
                 : 'hover:bg-gray-800 dark:hover:bg-gray-700'
             }`}
           >
@@ -38,7 +38,7 @@ export function ForecastChartView({
             onClick={() => setDataView('real')}
             className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
               dataView === 'real'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-blue-500'
                 : 'hover:bg-gray-800 dark:hover:bg-gray-700'
             }`}
           >
@@ -48,7 +48,7 @@ export function ForecastChartView({
             onClick={() => setDataView('projected')}
             className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
               dataView === 'projected'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-blue-500'
                 : 'hover:bg-gray-800 dark:hover:bg-gray-700'
             }`}
           >
@@ -56,7 +56,7 @@ export function ForecastChartView({
           </button>
         </div>
         <select
-          className="ml-2 px-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-900 text-white"
+          className="ml-2 px-3 py-2 text-sm rounded-lg border border-gray-700 bg-gray-900"
           value={timeframe}
           onChange={(e) => setTimeframe(e.target.value as '7d' | '30d' | '90d' | 'all')}
         >
