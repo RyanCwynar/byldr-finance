@@ -20,7 +20,7 @@ export default function Header() {
     { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
     { href: '/simulation', label: 'Simulation', icon: BeakerIcon },
     { href: '/quotes', label: 'Quotes', icon: CurrencyDollarIcon },
-    { href: '/transactions', label: 'Transactions', icon: BanknotesIcon },
+    { href: '/expenses', label: 'Expenses', icon: BanknotesIcon },
   ];
 
   return (
