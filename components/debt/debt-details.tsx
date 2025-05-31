@@ -80,7 +80,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         <h1 className="text-2xl font-bold">{liveDebt.name}</h1>
       </div>
       
-      <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
+      <div className="bg-white/5 rounded-lg p-4 sm:p-6 backdrop-blur-sm mb-6">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-semibold">Debt Details</h2>
@@ -169,7 +169,7 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
         )}
       </div>
 
-      <div className="bg-white/5 rounded-lg p-6 backdrop-blur-sm mb-6">
+      <div className="bg-white/5 rounded-lg p-4 sm:p-6 backdrop-blur-sm mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Value History</h2>
           <button
