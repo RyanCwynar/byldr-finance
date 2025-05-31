@@ -48,7 +48,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
   };
 
   return (
-    <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
+    <div className="relative bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <h2 className="text-xl font-semibold mb-1">Debts</h2>
       <span className="block text-red-500 font-mono mb-4">
         {`Total: $${formatNumber(totalDebts)}`}
@@ -68,7 +68,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
             <Link 
               href={`/debt/${debt._id}`} 
               key={debt._id}
-              className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+              className="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <div className="flex items-center">
                 <span className="mr-3 text-xl" aria-hidden="true">{getDebtTypeIcon(debt.type)}</span>
