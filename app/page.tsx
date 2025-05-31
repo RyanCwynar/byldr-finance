@@ -17,7 +17,7 @@ export default function AboutPage() {
         <p className="text-gray-400 text-lg sm:text-2xl text-center max-w-2xl">
           Byldr Finance helps you track the real value of your wallets and plan ahead with powerful forecasting tools.
         </p>
-        <ul className="list-none pl-0 space-y-4 text-left self-start">
+        <ul className="list-none pl-0 space-y-4 text-left">
           <li className="flex items-start">
             <span className="mr-2">🪙</span>
             <span>Accurately represent unusual tokens like Aave debt tokens.</span>
