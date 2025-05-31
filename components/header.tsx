@@ -24,7 +24,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-700 bg-black/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-700 backdrop-blur-sm">
       <div className="flex flex-col">
         <div className="px-4">
           <div className="container mx-auto max-w-6xl flex h-16 items-center justify-between">

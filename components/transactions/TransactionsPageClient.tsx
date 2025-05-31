@@ -625,7 +625,7 @@ export default function TransactionsPageClient({
       {/* Pie chart drawer */}
       <button
         onClick={() => setShowChart((prev) => !prev)}
-        className="fixed top-1/4 right-0 z-30 p-2 rounded-l-md bg-blue-600"
+        className="fixed top-1/4 right-0 z-30 p-2 rounded-l-md bg-blue-600 text-white"
         aria-label="Toggle chart"
       >
         <ChartPieIcon className="w-5 h-5" />
@@ -634,7 +634,7 @@ export default function TransactionsPageClient({
         className={`fixed top-0 right-0 h-full w-96 bg-gray-900 p-6 transform transition-transform z-20 ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <button
-          className="absolute top-2 right-2 p-1"
+          className="absolute top-2 right-2 p-1 text-white"
           onClick={() => setShowChart(false)}
           aria-label="Close chart"
         >

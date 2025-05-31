@@ -72,7 +72,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
           />
         </div>
@@ -85,7 +85,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="type"
             value={type}
             onChange={(e) => setType(e.target.value as typeof type)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="real_estate">Real Estate</option>
             <option value="stocks">Stocks</option>
@@ -104,7 +104,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="value"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             min="0"
             step="0.01"
@@ -120,7 +120,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="purchasePrice"
             value={purchasePrice}
             onChange={(e) => setPurchasePrice(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             min="0"
             step="0.01"
           />
@@ -135,7 +135,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         
@@ -148,7 +148,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="ticker"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         
@@ -160,7 +160,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             rows={3}
           />
         </div>
@@ -169,7 +169,7 @@ export function AssetForm({ onClose, asset, onSubmit }: AssetFormProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-md border border-gray-600 bg-gray-800 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>

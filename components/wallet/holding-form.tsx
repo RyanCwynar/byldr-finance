@@ -65,7 +65,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="symbol"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             placeholder="ETH, BTC, USDC, etc."
             disabled={!!holding} // Disable editing symbol for existing holdings
@@ -81,7 +81,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="quantity"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             required
             step="any"
             min="0"
@@ -97,7 +97,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="chain"
             value={chain}
             onChange={(e) => setChain(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             disabled={!!holding} // Disable editing chain for existing holdings
           >
             <option value="ethereum">Ethereum</option>
@@ -146,7 +146,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="quoteSymbol"
             value={quoteSymbol}
             onChange={(e) => setQuoteSymbol(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="For price lookup, e.g. WETH → ETH"
           />
           <p className="mt-1 text-xs">
@@ -162,7 +162,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
             id="quoteType"
             value={quoteType}
             onChange={(e) => setQuoteType(e.target.value as "crypto" | "stock")}
-            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="crypto">Cryptocurrency</option>
             <option value="stock">Stock</option>
@@ -176,7 +176,7 @@ export default function HoldingForm({ walletId, onClose, holding }: HoldingFormP
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md border border-gray-600 bg-gray-800 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cancel
           </button>
