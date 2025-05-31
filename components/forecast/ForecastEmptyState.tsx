@@ -45,8 +45,8 @@ export function ForecastEmptyState({
           label="Monthly Income"
         />
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-          <a href="/transactions" className="text-sm text-blue-500 hover:underline">
-            Manage Transactions
+          <a href="/cashflow" className="text-sm text-blue-500 hover:underline">
+            Manage Cashflow
           </a>
         </div>
       </div>
