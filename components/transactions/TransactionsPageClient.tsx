@@ -194,6 +194,14 @@ export default function TransactionsPageClient({
     [monthlyTotals],
   );
 
+  const weeklyTotals = useMemo(
+    () => ({
+      income: annualTotals.income / 52,
+      expense: annualTotals.expense / 52,
+    }),
+    [annualTotals],
+  );
+
   const handleDelete = async (item: Item) => {
     if (item.kind === "recurring")
       await removeRecurring({ id: item._id as Id<"recurringTransactions"> });
@@ -234,49 +242,44 @@ export default function TransactionsPageClient({
       <div className="overflow-x-auto w-full">
         <div className="text-sm mt-2 w-full border border-gray-700 rounded-md overflow-hidden">
           <div className="grid grid-cols-4 text-center">
-            <div className="p-2" />
             <div className="p-2 font-semibold">Daily</div>
+            <div className="p-2 font-semibold">Weekly</div>
             <div className="p-2 font-semibold">Monthly</div>
             <div className="p-2 font-semibold">Annual</div>
           </div>
-          <div className="grid grid-cols-4 text-center border-t border-gray-700">
-            <div className="p-2">Income</div>
-            <div className="p-2 text-green-500">
-              {formatCurrency(dailyTotals.income)}
-            </div>
-            <div className="p-2 text-green-500">
-              {formatCurrency(monthlyTotals.income)}
-            </div>
-            <div className="p-2 text-green-500">
-              {formatCurrency(annualTotals.income)}
-            </div>
+          <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block text-gray-400 pointer-events-none">Income</div>
+            <div className="p-2 text-green-500">{formatCurrency(dailyTotals.income)}</div>
+            <div className="p-2 text-green-500">{formatCurrency(weeklyTotals.income)}</div>
+            <div className="p-2 text-green-500">{formatCurrency(monthlyTotals.income)}</div>
+            <div className="p-2 text-green-500">{formatCurrency(annualTotals.income)}</div>
           </div>
-          <div className="grid grid-cols-4 text-center border-t border-gray-700">
-            <div className="p-2">Cost</div>
-            <div className="p-2 text-red-500">
-              {formatCurrency(dailyTotals.expense)}
-            </div>
-            <div className="p-2 text-red-500">
-              {formatCurrency(monthlyTotals.expense)}
-            </div>
-            <div className="p-2 text-red-500">
-              {formatCurrency(annualTotals.expense)}
-            </div>
+          <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block text-gray-400 pointer-events-none">Cost</div>
+            <div className="p-2 text-red-500">{formatCurrency(dailyTotals.expense)}</div>
+            <div className="p-2 text-red-500">{formatCurrency(weeklyTotals.expense)}</div>
+            <div className="p-2 text-red-500">{formatCurrency(monthlyTotals.expense)}</div>
+            <div className="p-2 text-red-500">{formatCurrency(annualTotals.expense)}</div>
           </div>
-          <div className="grid grid-cols-4 text-center border-t border-gray-700">
-            <div className="p-2 font-semibold">Net</div>
+          <div className="relative grid grid-cols-4 text-center border-t border-gray-700 group">
+            <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden group-hover:block font-semibold text-gray-400 pointer-events-none">Net</div>
             <div
-              className={`p-2 ${dailyTotals.income - dailyTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+              className={`p-2 ${dailyTotals.income - dailyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}
             >
               {formatCurrency(dailyTotals.income - dailyTotals.expense)}
             </div>
             <div
-              className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+              className={`p-2 ${weeklyTotals.income - weeklyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}
+            >
+              {formatCurrency(weeklyTotals.income - weeklyTotals.expense)}
+            </div>
+            <div
+              className={`p-2 ${monthlyTotals.income - monthlyTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}
             >
               {formatCurrency(monthlyTotals.income - monthlyTotals.expense)}
             </div>
             <div
-              className={`p-2 ${annualTotals.income - annualTotals.expense >= 0 ? "text-green-500" : "text-red-500"}`}
+              className={`p-2 ${annualTotals.income - annualTotals.expense >= 0 ? 'text-green-500' : 'text-red-500'}`}
             >
               {formatCurrency(annualTotals.income - annualTotals.expense)}
             </div>
