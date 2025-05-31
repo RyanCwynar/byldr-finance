@@ -70,7 +70,7 @@ export default function Header() {
               <button
                 className="p-2 rounded focus:outline-none focus:ring-2 focus:ring-gray-500"
                 onClick={toggle}
-                aria-label="Toggle theme"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {theme === 'dark' ? (
                   <SunIcon className="w-5 h-5 text-yellow-400" />
