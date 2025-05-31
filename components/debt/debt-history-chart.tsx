@@ -38,7 +38,7 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
     const values = data.map(d => d.value);
     const minT = Math.min(...timestamps);
     const maxT = Math.max(...timestamps);
-    const minV = Math.min(...values);
+    const minV = Math.max(0, Math.min(...values));
     const maxV = Math.max(...values);
 
     const xPadding = (maxT - minT) * 0.05 || 86400000; // 1 day default
