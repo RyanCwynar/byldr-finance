@@ -2,6 +2,7 @@ import "@/app/globals.css";
 
 import ConvexClientProvider from "./ConvexProvider";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import Header from "@/components/header";
 import UserTracker from "@/components/user-tracker";
 
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en">
         <body className="min-h-screen antialiased bg-black text-white">
           <ConvexClientProvider>
