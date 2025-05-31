@@ -3,7 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { Doc } from '@/convex/_generated/dataModel';
 import { formatCompactNumber, formatCurrency } from '@/lib/formatters';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 
 export type DebtHistoryEntry = Doc<'debtHistory'>;
 
@@ -15,6 +15,15 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
   if (!history || history.length === 0) {
     return <div className="text-center text-gray-400">No history available</div>;
   }
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 640);
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
 
   const data = history
     .sort((a, b) => a.timestamp - b.timestamp)
@@ -41,9 +50,13 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
     };
   }, [data]);
 
+  const margin = isMobile
+    ? { top: 5, right: 20, left: 10, bottom: 5 }
+    : { top: 5, right: 30, left: 40, bottom: 5 };
+
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+      <LineChart data={data} margin={margin}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis
           dataKey="timestamp"
@@ -52,7 +65,11 @@ export default function DebtHistoryChart({ history }: DebtHistoryChartProps) {
           domain={xDomain}
           tickFormatter={(ts) => new Date(ts as number).toLocaleDateString()}
         />
-        <YAxis domain={yDomain} tickFormatter={(v) => formatCompactNumber(v as number)} />
+        <YAxis
+          domain={yDomain}
+          tickFormatter={(v) => formatCompactNumber(v as number)}
+          width={40}
+        />
         <Tooltip
           formatter={(v: number) => formatCurrency(v)}
           labelFormatter={(ts) => new Date(ts as number).toLocaleString()}
