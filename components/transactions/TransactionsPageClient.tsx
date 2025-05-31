@@ -15,7 +15,10 @@ import {
   TrashIcon,
   EyeIcon,
   EyeSlashIcon,
+  ChartPieIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
+import TransactionsPieChart from "./TransactionsPieChart";
 
 interface Props {
   initialRecurring: Doc<"recurringTransactions">[];
@@ -68,6 +71,7 @@ export default function TransactionsPageClient({
   );
   const [editingOneTime, setEditingOneTime] = useState<OneTime | null>(null);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [showChart, setShowChart] = useState(false);
 
   const allTags = useMemo(
     () => Array.from(new Set([...recurringTags, ...oneTimeTags])),
@@ -145,6 +149,18 @@ export default function TransactionsPageClient({
         (t) => !hiddenIds.has(t._id) && !(t.kind === 'one-time' && t.hidden)
       ),
     [combined, hiddenIds],
+  );
+
+  const pieData = useMemo(
+    () =>
+      visibleItems.map((t) => ({
+        label: t.name,
+        amount:
+          t.kind === 'recurring'
+            ? monthlyAmount(t)
+            : monthlyOneTimeAmount(t.amount),
+      })),
+    [visibleItems],
   );
 
   const monthlyTotals = useMemo(() => {
@@ -603,6 +619,26 @@ export default function TransactionsPageClient({
           />
         </Modal>
       )}
+      {/* Pie chart drawer */}
+      <button
+        onClick={() => setShowChart((prev) => !prev)}
+        className="fixed top-1/4 right-0 z-30 p-2 rounded-l-md bg-blue-600 text-white"
+        aria-label="Toggle chart"
+      >
+        <ChartPieIcon className="w-5 h-5" />
+      </button>
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-gray-900 text-gray-100 p-4 transform transition-transform z-20 ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <button
+          className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white"
+          onClick={() => setShowChart(false)}
+          aria-label="Close chart"
+        >
+          <XMarkIcon className="w-5 h-5" />
+        </button>
+        <TransactionsPieChart data={pieData} />
+      </div>
     </div>
   );
 }
