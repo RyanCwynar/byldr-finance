@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
       <html lang="en">
-        <body className="min-h-screen antialiased bg-black text-white">
+        <body className="min-h-screen antialiased bg-white text-black dark:bg-black dark:text-white">
           <ConvexClientProvider>
             <UserTracker />
             <Header />
