@@ -8,10 +8,12 @@ import {
   Bars3Icon,
   XMarkIcon,
   HomeIcon,
+  SunIcon,
+  MoonIcon,
 } from '@heroicons/react/24/outline';
 import QuotesTicker from './quotes-ticker';
 import { useState } from 'react';
-import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+// Removed the separate import for SunIcon and MoonIcon
 import { useTheme } from './theme-provider';
 
 export default function Header() {
