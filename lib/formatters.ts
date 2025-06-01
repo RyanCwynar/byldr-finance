@@ -32,9 +32,17 @@ export function formatNumber(num: number): string {
 
 /**
  * Format a currency value using the user's locale
+ * @param amount The amount to format
+ * @param currency The currency code (defaults to USD)
+ * @param roundToNearestDollar Whether to round to nearest dollar (defaults to true)
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+export function formatCurrency(amount: number, currency: string = 'USD', roundToNearestDollar: boolean = true): string {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: roundToNearestDollar ? 0 : 2,
+    maximumFractionDigits: roundToNearestDollar ? 0 : 2
+  }).format(amount);
 }
 
 /**
