@@ -24,6 +24,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
   const [month, setMonth] = useState(transaction?.month ? String(transaction.month) : '');
   const [day, setDay] = useState(transaction?.day ? String(transaction.day) : '');
   const [tags, setTags] = useState(transaction?.tags ? transaction.tags.join(',') : '');
+  const [hidden, setHidden] = useState(transaction?.hidden || false);
 
   const existingTags = useQuery(api.recurring.listRecurringTags) ?? [];
 
@@ -37,6 +38,7 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
       amount: Number(amount),
       type,
       frequency,
+      hidden,
     };
     if (frequency === 'monthly') {
       data.daysOfMonth = daysOfMonth
@@ -179,6 +181,17 @@ export function TransactionForm({ onClose, transaction, onSubmit }: TransactionF
               <option key={tag} value={tag} />
             ))}
           </datalist>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="hidden"
+            type="checkbox"
+            checked={hidden}
+            onChange={(e) => setHidden(e.target.checked)}
+          />
+          <label htmlFor="hidden" className="text-sm">
+            Hidden
+          </label>
         </div>
         <div className="flex justify-end gap-2">
           <button

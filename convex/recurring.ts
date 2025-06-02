@@ -29,6 +29,7 @@ export const addRecurringTransaction = mutation({
     month: v.optional(v.number()),
     day: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getUserId(ctx);
@@ -56,6 +57,7 @@ export const updateRecurringTransaction = mutation({
     month: v.optional(v.number()),
     day: v.optional(v.number()),
     tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   },
   handler: async (ctx, { id, ...updates }) => {
     const userId = await getUserId(ctx);
@@ -111,6 +113,7 @@ export const getMonthlyTotals = query({
     let monthlyIncome = 0;
     let monthlyCost = 0;
     recs.forEach((r) => {
+      if (r.hidden) return;
       const amt = monthlyAmount(r);
       if (r.type === "income") monthlyIncome += amt;
       else monthlyCost += amt;
