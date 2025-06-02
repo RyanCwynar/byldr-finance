@@ -9,7 +9,9 @@ export function ForecastChartView({
   dataView,
   setDataView,
   timeframe,
-  setTimeframe
+  setTimeframe,
+  metricKey,
+  setMetricKey
 }: ForecastChartViewProps) {
   const filterByTimeframe = (metrics: any[]) => {
     if (timeframe === 'all') return metrics;
@@ -22,7 +24,39 @@ export function ForecastChartView({
   const filteredProjected = filterByTimeframe(projectedMetrics);
   return (
     <>
-      <div className="flex justify-end mb-2">
+      <div className="flex justify-end mb-2 flex-wrap gap-2">
+        <div className="flex rounded-lg border border-gray-700 overflow-hidden">
+          <button
+            onClick={() => setMetricKey('netWorth')}
+            className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
+              metricKey === 'netWorth'
+                ? 'bg-blue-500 text-white'
+                : 'hover:bg-gray-800 dark:hover:bg-gray-700'
+            }`}
+          >
+            Net Worth
+          </button>
+          <button
+            onClick={() => setMetricKey('assets')}
+            className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
+              metricKey === 'assets'
+                ? 'bg-blue-500 text-white'
+                : 'hover:bg-gray-800 dark:hover:bg-gray-700'
+            }`}
+          >
+            Assets
+          </button>
+          <button
+            onClick={() => setMetricKey('debts')}
+            className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
+              metricKey === 'debts'
+                ? 'bg-blue-500 text-white'
+                : 'hover:bg-gray-800 dark:hover:bg-gray-700'
+            }`}
+          >
+            Debts
+          </button>
+        </div>
         <div className="flex rounded-lg border border-gray-700 overflow-hidden">
           <button
             onClick={() => setDataView('all')}
@@ -73,14 +107,14 @@ export function ForecastChartView({
           <div className="w-full">
             <h3 className="text-lg font-medium mb-2">Historical Data</h3>
             <div className="w-full h-[450px] md:h-[500px]">
-              <NetWorthChart metrics={filteredReal} showUncertainty={false} />
+              <NetWorthChart metrics={filteredReal} showUncertainty={false} metricKey={metricKey} />
             </div>
           </div>
           
           <div className="w-full">
             <h3 className="text-lg font-medium mb-2">Projected Data</h3>
             <div className="w-full h-[450px] md:h-[500px]">
-              <NetWorthChart metrics={filteredProjected} showUncertainty={true} />
+              <NetWorthChart metrics={filteredProjected} showUncertainty={true} metricKey={metricKey} />
             </div>
           </div>
         </div>
@@ -89,6 +123,7 @@ export function ForecastChartView({
           <NetWorthChart
             metrics={dataView === 'real' ? filteredReal : filteredProjected}
             showUncertainty={dataView === 'projected'}
+            metricKey={metricKey}
           />
         </div>
       )}

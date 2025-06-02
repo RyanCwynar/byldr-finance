@@ -33,6 +33,8 @@ export interface ForecastChartViewProps {
   setDataView: (view: 'all' | 'real' | 'projected') => void;
   timeframe: '7d' | '30d' | '90d' | 'all';
   setTimeframe: (tf: '7d' | '30d' | '90d' | 'all') => void;
+  metricKey: 'netWorth' | 'assets' | 'debts';
+  setMetricKey: (m: 'netWorth' | 'assets' | 'debts') => void;
 }
 
 export interface ForecastEmptyStateProps {
