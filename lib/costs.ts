@@ -8,6 +8,7 @@ export interface RecurringTransaction {
   daysOfMonth?: number[] | null;
   daysOfWeek?: number[] | null;
   name: string;
+  hidden?: boolean;
 }
 
 export interface OneTimeTransaction {
@@ -33,6 +34,7 @@ export function getMonthlyCostBreakdown(
   };
 
   recurring.forEach((r) => {
+    if (r.hidden) return;
     if (r.type !== 'expense') return;
     const amt = monthlyAmount(r);
     add(r.name, amt);

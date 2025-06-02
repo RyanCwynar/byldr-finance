@@ -4,7 +4,8 @@ import { getMonthlyCostBreakdown } from '../lib/costs';
 const recurring = [
   { name: 'Rent', frequency: 'monthly', amount: 1000, type: 'expense' },
   { name: 'Insurance', frequency: 'yearly', amount: 240, type: 'expense' },
-  { name: 'Coffee', frequency: 'monthly', amount: 200, type: 'expense' }
+  { name: 'Coffee', frequency: 'monthly', amount: 200, type: 'expense' },
+  { name: 'Gym', frequency: 'monthly', amount: 50, type: 'expense', hidden: true }
 ];
 
 const oneTime = [

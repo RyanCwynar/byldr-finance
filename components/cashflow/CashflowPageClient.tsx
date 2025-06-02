@@ -49,6 +49,7 @@ export default function CashflowPageClient({
   const removeRecurring = useMutation(api.recurring.deleteRecurringTransaction);
   const removeOneTime = useMutation(api.oneTime.deleteOneTimeTransaction);
   const updateOneTime = useMutation(api.oneTime.updateOneTimeTransaction);
+  const updateRecurring = useMutation(api.recurring.updateRecurringTransaction);
 
   const [views, setViews] = useState<Set<"recurring" | "one-time" | "future">>(
     new Set(["recurring", "one-time"]),
@@ -70,7 +71,6 @@ export default function CashflowPageClient({
     null,
   );
   const [editingOneTime, setEditingOneTime] = useState<OneTime | null>(null);
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [showChart, setShowChart] = useState(false);
 
   const allTags = useMemo(
@@ -144,11 +144,8 @@ export default function CashflowPageClient({
   }, [filteredRecurring, filteredOneTime, views, sortField, sortDir]);
 
   const visibleItems = useMemo(
-    () =>
-      combined.filter(
-        (t) => !hiddenIds.has(t._id) && !(t.kind === 'one-time' && t.hidden)
-      ),
-    [combined, hiddenIds],
+    () => combined.filter((t) => !t.hidden),
+    [combined],
   );
 
   const pieData = useMemo(
@@ -225,11 +222,9 @@ export default function CashflowPageClient({
         hidden: !item.hidden,
       });
     } else {
-      setHiddenIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(item._id)) next.delete(item._id);
-        else next.add(item._id);
-        return next;
+      await updateRecurring({
+        id: item._id as Id<'recurringTransactions'>,
+        hidden: !item.hidden,
       });
     }
   };
@@ -352,7 +347,7 @@ export default function CashflowPageClient({
               t.kind === "one-time" && t.date > Date.now()
                 ? "ring-2 ring-yellow-500"
                 : ""
-            } ${t.kind === 'one-time' ? (t.hidden ? 'opacity-50' : '') : hiddenIds.has(t._id) ? 'opacity-50' : ''}`}
+            } ${t.hidden ? 'opacity-50' : ''}`}
           >
             <div className="flex justify-between items-center">
               <span className="font-medium">{t.name}</span>
@@ -360,15 +355,13 @@ export default function CashflowPageClient({
                 <button
                   onClick={() => toggleHidden(t)}
                   className="p-1 rounded hover:bg-gray-700"
-                  title={t.kind === 'one-time' ? (t.hidden ? 'Show' : 'Hide') : hiddenIds.has(t._id) ? 'Show' : 'Hide'}
+                  title={t.hidden ? 'Show' : 'Hide'}
                 >
-                  {t.kind === 'one-time'
-                    ? t.hidden
-                      ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                      : <EyeIcon className="w-5 h-5 text-gray-400" />
-                    : hiddenIds.has(t._id)
-                    ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                    : <EyeIcon className="w-5 h-5 text-gray-400" />}
+                  {t.hidden ? (
+                    <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5 text-gray-400" />
+                  )}
                 </button>
                 <button
                   onClick={() => handleEdit(t)}
@@ -486,7 +479,7 @@ export default function CashflowPageClient({
                   t.kind === "one-time" && t.date > Date.now()
                     ? "bg-yellow-900/40"
                     : ""
-                } ${t.kind === 'one-time' ? (t.hidden ? 'opacity-50' : '') : hiddenIds.has(t._id) ? 'opacity-50' : ''}`}
+                } ${t.hidden ? 'opacity-50' : ''}`}
               >
                 <td className="px-2 py-1">{t.name}</td>
                 <td className="px-2 py-1">{formatCurrency(t.amount)}</td>
@@ -540,15 +533,13 @@ export default function CashflowPageClient({
                   <button
                     onClick={() => toggleHidden(t)}
                     className="p-1 rounded hover:bg-gray-700"
-                    title={t.kind === 'one-time' ? (t.hidden ? 'Show' : 'Hide') : hiddenIds.has(t._id) ? 'Show' : 'Hide'}
+                    title={t.hidden ? 'Show' : 'Hide'}
                   >
-                    {t.kind === 'one-time'
-                      ? t.hidden
-                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                        : <EyeIcon className="w-5 h-5 text-gray-400" />
-                      : hiddenIds.has(t._id)
-                        ? <EyeSlashIcon className="w-5 h-5 text-gray-400" />
-                        : <EyeIcon className="w-5 h-5 text-gray-400" />}
+                    {t.hidden ? (
+                      <EyeSlashIcon className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5 text-gray-400" />
+                    )}
                   </button>
                   <button
                     onClick={() => handleEdit(t)}

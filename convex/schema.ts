@@ -149,7 +149,8 @@ export default defineSchema({
     daysOfWeek: v.optional(v.array(v.number())),
     month: v.optional(v.number()),
     day: v.optional(v.number()),
-    tags: v.optional(v.array(v.string()))
+    tags: v.optional(v.array(v.string())),
+    hidden: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   // Store one time income or expense transactions
