@@ -23,6 +23,7 @@ type DailyMetric = Doc<'dailyMetrics'> & {
 interface NetWorthChartProps {
   metrics: DailyMetric[];
   showUncertainty?: boolean;
+  metricKey?: 'netWorth' | 'assets' | 'debts';
 }
 
 // Empty state component to display when no data is available
@@ -37,9 +38,15 @@ function EmptyChartState() {
   );
 }
 
-export default function NetWorthChart({ metrics, showUncertainty = true }: NetWorthChartProps) {
+export default function NetWorthChart({ metrics, showUncertainty = true, metricKey = 'netWorth' }: NetWorthChartProps) {
   const [uncertaintyPercent, setUncertaintyPercent] = useState(10);
   const [showMovingAverage, setShowMovingAverage] = useState(false);
+
+  const metricLabel = metricKey === 'netWorth'
+    ? 'Net Worth'
+    : metricKey === 'assets'
+      ? 'Total Assets'
+      : 'Total Debt';
 
   const { chartData, yAxisDomain, firstProjectedIndex } = useMemo(() => {
     if (!metrics || !metrics.length) return { chartData: [], yAxisDomain: [0, 0], firstProjectedIndex: -1 };
@@ -53,7 +60,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
       sortedMetrics[sortedMetrics.length - 1];
 
     const lastRealDate = sortedMetrics[sortedMetrics.length - 1].date;
-    const lastRealValue = sortedMetrics[sortedMetrics.length - 1].netWorth;
+    const lastRealValue = sortedMetrics[sortedMetrics.length - 1][metricKey];
 
     console.log('Initial setup:', {
       totalPoints: sortedMetrics.length,
@@ -78,8 +85,8 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
     const data = sortedMetrics.map((m, index) => {
       const isProjection = m.isProjected === true;
 
-      let upperProjection = m.netWorth;
-      let lowerProjection = m.netWorth;
+      let upperProjection = m[metricKey];
+      let lowerProjection = m[metricKey];
 
       if (isProjection && showUncertainty) {
         projectionCount++;
@@ -87,10 +94,10 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
         const monthsFromLastReal = daysFromLastReal / 30;
         
         // Base projection is the actual projected net worth from ForecastWrapper
-        const baseProjection = m.netWorth;
+        const baseProjection = m[metricKey];
         
         // Calculate how much total change is projected
-        const totalChange = baseProjection - lastRealPoint.netWorth;
+        const totalChange = baseProjection - lastRealPoint[metricKey];
         
         // Apply uncertainty to the change amount, not the total value
         const uncertaintyAmount = totalChange * (uncertaintyPercent / 100);
@@ -121,10 +128,10 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
 
       // Update moving average window
       while (sortedMetrics[windowStart].date < m.date - MA_WINDOW_MS) {
-        windowSum -= sortedMetrics[windowStart].netWorth;
+        windowSum -= sortedMetrics[windowStart][metricKey];
         windowStart++;
       }
-      windowSum += m.netWorth;
+      windowSum += m[metricKey];
       const windowSize = index - windowStart + 1;
       const movingAverage = windowSum / windowSize;
 
@@ -134,7 +141,7 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
       return {
         timestamp: m.date,
         date: new Date(m.date).toLocaleDateString(),
-        netWorth: m.netWorth,
+        [metricKey]: m[metricKey],
         upperProjection,
         lowerProjection,
         movingAverage,
@@ -251,10 +258,10 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
             tickFormatter={(value) => formatCompactCurrency(value)}
             tickCount={8} // Suggest number of ticks
           />
-          <Tooltip 
+          <Tooltip
             formatter={(value: number, name: string) => {
               const label = {
-                netWorth: 'Net Worth',
+                [metricKey]: metricLabel,
                 upperProjection: 'Optimistic Projection',
                 lowerProjection: 'Pessimistic Projection'
               }[name] || name;
@@ -299,8 +306,8 @@ export default function NetWorthChart({ metrics, showUncertainty = true }: NetWo
           {/* Main line */}
           <Line
             type="monotone"
-            dataKey="netWorth"
-            name="Net Worth"
+            dataKey={metricKey}
+            name={metricLabel}
             stroke="#3b82f6"
             strokeWidth={2}
             dot={{ r: 4 }}

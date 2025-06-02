@@ -55,6 +55,8 @@ export function ForecastClient({
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d' | 'all'>(
     (defaultPrefs.forecastTimeframe as '7d' | '30d' | '90d' | 'all') || 'all'
   );
+
+  const [metricKey, setMetricKey] = useState<'netWorth' | 'assets' | 'debts'>('netWorth');
   
   const [simulationData, setSimulationData] = useState<SimulationData | null>(null);
 
@@ -398,6 +400,8 @@ export function ForecastClient({
         setDataView={updateDataView}
         timeframe={timeframe}
         setTimeframe={updateTimeframe}
+        metricKey={metricKey}
+        setMetricKey={setMetricKey}
       />
       
       <ForecastControls
