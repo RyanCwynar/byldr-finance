@@ -1,6 +1,7 @@
 import { query } from './_generated/server';
 import { getUserId } from './users';
 import { monthlyAmount } from './recurring';
+import { v } from 'convex/values';
 
 export const monthlyCostBreakdown = query({
   handler: async (ctx) => {
@@ -34,6 +35,53 @@ export const monthlyCostBreakdown = query({
       const amt = o.amount / 12;
       add(o.name, amt);
     });
+
+    const total = Array.from(totals.values()).reduce((s, n) => s + n, 0);
+    const result: { label: string; amount: number }[] = [];
+    let other = 0;
+    for (const [label, amount] of totals.entries()) {
+      if (amount / total < 0.01) {
+        other += amount;
+      } else {
+        result.push({ label, amount });
+      }
+    }
+    if (other > 0) result.push({ label: 'Other', amount: other });
+    return result.sort((a, b) => b.amount - a.amount);
+  }
+});
+
+export const monthlyCostBreakdownByTag = query({
+  args: { groups: v.array(v.string()) },
+  handler: async (ctx, { groups }) => {
+    const userId = await getUserId(ctx);
+    if (!userId) return [] as { label: string; amount: number }[];
+
+    const recurring = await ctx.db
+      .query('recurringTransactions')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    const oneTime = await ctx.db
+      .query('oneTimeTransactions')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    const totals = new Map<string, number>();
+    const add = (label: string, amt: number) => {
+      totals.set(label, (totals.get(label) ?? 0) + amt);
+    };
+
+    const assign = (item: any, amt: number) => {
+      if (item.hidden) return;
+      if (item.type !== 'expense') return;
+      const tag = groups.find((g) => item.tags?.includes(g));
+      if (tag) add(tag, amt);
+      else add(item.name, amt);
+    };
+
+    recurring.forEach((r) => assign(r, monthlyAmount(r)));
+    oneTime.forEach((o) => assign(o, o.amount / 12));
 
     const total = Array.from(totals.values()).reduce((s, n) => s + n, 0);
     const result: { label: string; amount: number }[] = [];
