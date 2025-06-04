@@ -72,6 +72,7 @@ export default function CashflowPageClient({
   );
   const [editingOneTime, setEditingOneTime] = useState<OneTime | null>(null);
   const [showChart, setShowChart] = useState(false);
+  const [pieMode, setPieMode] = useState<'expense' | 'income'>('expense');
 
   const allTags = useMemo(
     () => Array.from(new Set([...recurringTags, ...oneTimeTags])),
@@ -150,14 +151,16 @@ export default function CashflowPageClient({
 
   const pieData = useMemo(
     () =>
-      visibleItems.map((t) => ({
-        label: t.name,
-        amount:
-          t.kind === 'recurring'
-            ? monthlyAmount(t)
-            : monthlyOneTimeAmount(t.amount),
-      })),
-    [visibleItems],
+      visibleItems
+        .filter((t) => t.type === pieMode)
+        .map((t) => ({
+          label: t.name,
+          amount:
+            t.kind === 'recurring'
+              ? monthlyAmount(t)
+              : monthlyOneTimeAmount(t.amount),
+        })),
+    [visibleItems, pieMode],
   );
 
   const monthlyTotals = useMemo(() => {
@@ -631,6 +634,20 @@ export default function CashflowPageClient({
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
+        <div className="flex justify-center gap-2 mb-4">
+          <button
+            onClick={() => setPieMode('expense')}
+            className={pillClass(pieMode === 'expense')}
+          >
+            Expenses
+          </button>
+          <button
+            onClick={() => setPieMode('income')}
+            className={pillClass(pieMode === 'income')}
+          >
+            Income
+          </button>
+        </div>
         <CashflowPieChart data={pieData} />
       </div>
     </div>
