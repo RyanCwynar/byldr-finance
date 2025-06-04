@@ -72,6 +72,7 @@ export default function CashflowPageClient({
   );
   const [editingOneTime, setEditingOneTime] = useState<OneTime | null>(null);
   const [showChart, setShowChart] = useState(false);
+  const [pieMode, setPieMode] = useState<'expense' | 'income'>('expense');
 
   const allTags = useMemo(
     () => Array.from(new Set([...recurringTags, ...oneTimeTags])),
@@ -150,14 +151,16 @@ export default function CashflowPageClient({
 
   const pieData = useMemo(
     () =>
-      visibleItems.map((t) => ({
-        label: t.name,
-        amount:
-          t.kind === 'recurring'
-            ? monthlyAmount(t)
-            : monthlyOneTimeAmount(t.amount),
-      })),
-    [visibleItems],
+      visibleItems
+        .filter((t) => t.type === pieMode)
+        .map((t) => ({
+          label: t.name,
+          amount:
+            t.kind === 'recurring'
+              ? monthlyAmount(t)
+              : monthlyOneTimeAmount(t.amount),
+        })),
+    [visibleItems, pieMode],
   );
 
   const monthlyTotals = useMemo(() => {
@@ -622,7 +625,7 @@ export default function CashflowPageClient({
         <ChartPieIcon className="w-5 h-5" />
       </button>
       <div
-        className={`fixed top-0 right-0 h-full w-96 bg-gray-900 text-gray-100 p-6 transform transition-transform z-20 ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed top-0 right-0 h-full w-96 bg-gray-900 text-gray-100 p-6 transform transition-transform z-[60] ${showChart ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <button
           className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white"
@@ -631,6 +634,20 @@ export default function CashflowPageClient({
         >
           <XMarkIcon className="w-5 h-5" />
         </button>
+        <div className="flex justify-center gap-2 mb-4">
+          <button
+            onClick={() => setPieMode('expense')}
+            className={pillClass(pieMode === 'expense')}
+          >
+            Expenses
+          </button>
+          <button
+            onClick={() => setPieMode('income')}
+            className={pillClass(pieMode === 'income')}
+          >
+            Income
+          </button>
+        </div>
         <CashflowPieChart data={pieData} />
       </div>
     </div>
