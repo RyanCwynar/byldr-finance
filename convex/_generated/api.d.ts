@@ -14,15 +14,15 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as assets from "../assets.js";
+import type * as costs from "../costs.js";
 import type * as crons from "../crons.js";
 import type * as debts from "../debts.js";
 import type * as holdings from "../holdings.js";
 import type * as holdingsNode from "../holdingsNode.js";
 import type * as metrics from "../metrics.js";
+import type * as oneTime from "../oneTime.js";
 import type * as quoteActions from "../quoteActions.js";
 import type * as quotes from "../quotes.js";
-import type * as costs from "../costs.js";
-import type * as oneTime from "../oneTime.js";
 import type * as recurring from "../recurring.js";
 import type * as simulations from "../simulations.js";
 import type * as userPreferences from "../userPreferences.js";
@@ -39,15 +39,15 @@ import type * as wallets from "../wallets.js";
  */
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
+  costs: typeof costs;
   crons: typeof crons;
   debts: typeof debts;
   holdings: typeof holdings;
   holdingsNode: typeof holdingsNode;
   metrics: typeof metrics;
+  oneTime: typeof oneTime;
   quoteActions: typeof quoteActions;
   quotes: typeof quotes;
-  costs: typeof costs;
-  oneTime: typeof oneTime;
   recurring: typeof recurring;
   simulations: typeof simulations;
   userPreferences: typeof userPreferences;

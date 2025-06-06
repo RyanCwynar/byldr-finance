@@ -12,6 +12,7 @@ interface DebtHistoryFormProps {
 
 export default function DebtHistoryForm({ debtId, onClose }: DebtHistoryFormProps) {
   const [value, setValue] = useState('');
+  const [change, setChange] = useState('');
   const [date, setDate] = useState('');
 
   const addEntry = useMutation(api.debts.addDebtHistoryEntry);
@@ -20,7 +21,11 @@ export default function DebtHistoryForm({ debtId, onClose }: DebtHistoryFormProp
     e.preventDefault();
 
     const timestamp = date ? new Date(date).getTime() : Date.now();
-    await addEntry({ debtId, timestamp, value: Number(value) });
+    const payload =
+      change !== ''
+        ? { debtId, timestamp, change: Number(change) }
+        : { debtId, timestamp, value: Number(value) };
+    await addEntry(payload);
     onClose();
   };
 
@@ -38,7 +43,19 @@ export default function DebtHistoryForm({ debtId, onClose }: DebtHistoryFormProp
             className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            required
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300" htmlFor="change">
+            Change (USD)
+          </label>
+          <input
+            id="change"
+            type="number"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            value={change}
+            onChange={(e) => setChange(e.target.value)}
             step="0.01"
           />
         </div>

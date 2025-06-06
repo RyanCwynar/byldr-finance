@@ -129,6 +129,7 @@ export default defineSchema({
     debtId: v.id("debts"), // Reference to the debt
     timestamp: v.number(), // When the value changed
     value: v.number(), // New debt value in USD
+    change: v.optional(v.number()), // Optional change from previous value
   })
     .index("by_debt", ["debtId"])
     .index("by_debt_and_timestamp", ["debtId", "timestamp"]),
