@@ -200,7 +200,11 @@ export default function DebtDetails({ debt: initialDebt }: DebtDetailsProps) {
             )}
           </div>
         )}
-        <DebtHistoryList history={history} onEdit={(entry) => setEditHistoryEntry(entry)} />
+        <DebtHistoryList
+          history={history}
+          currentValue={liveDebt.value}
+          onEdit={(entry) => setEditHistoryEntry(entry)}
+        />
       </div>
 
       {showAddHistoryForm && (
