@@ -108,6 +108,18 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
   const totalSim = totalAssets + totalWalletsSim;
   const displayTotal = showSimulation && simulation ? totalSim : total;
 
+  // Interest calculations for wallet totals assuming supplying USDC on Aave
+  const interestRate = 0.04; // 4% default APY
+  const currentWalletTotal = showSimulation && simulation ? totalWalletsSim : totalWallets;
+  const monthlyInterest = useMemo(
+    () => (currentWalletTotal * interestRate) / 12,
+    [currentWalletTotal]
+  );
+  const yearlyInterest = useMemo(
+    () => currentWalletTotal * interestRate,
+    [currentWalletTotal]
+  );
+
   const handleUpdateWallets = async () => {
     try {
       setIsUpdating(true);
@@ -173,6 +185,9 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
           <span className="block text-green-500 font-mono mb-2">
             {`$${formatNumber(showSimulation && simulation ? totalWalletsSim : totalWallets)}`}
           </span>
+          <div className="text-xs text-gray-400 mb-2">
+            {`Earn ~$${formatNumber(monthlyInterest)} USDC/mo or ~$${formatNumber(yearlyInterest)} USDC/yr @ 4% APY`}
+          </div>
           <div className="space-y-3 mt-6">
             {displayWallets.length === 0 ? (
               <p className="text-gray-400 text-center py-4">No wallets found. Add one to get started.</p>
