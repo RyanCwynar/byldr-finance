@@ -8,6 +8,7 @@ import { formatNumber } from '@/lib/formatters';
 import QuoteSlider from './quote-slider';
 import SimulationSummary from './simulation-summary';
 import SimulationWallets from './simulation-wallets';
+import InterestEstimate from './interest-estimate';
 
 
 type Quote = Doc<"quotes">;
@@ -346,6 +347,7 @@ export default function SimulationView({
   return (
     <div className="flex flex-col gap-8">
       <SimulationSummary summary={portfolioSummary} onReset={handleReset} />
+      <InterestEstimate assets={portfolioSummary.adjustedAssets} />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
