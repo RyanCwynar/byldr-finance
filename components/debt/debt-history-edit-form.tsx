@@ -12,6 +12,9 @@ interface DebtHistoryEditFormProps {
 
 export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditFormProps) {
   const [value, setValue] = useState(entry.value.toString());
+  const [change, setChange] = useState(
+    entry.change !== undefined ? entry.change.toString() : ''
+  );
   const [date, setDate] = useState(new Date(entry.timestamp).toISOString().split('T')[0]);
 
   const updateEntry = useMutation(api.debts.updateDebtHistoryEntry);
@@ -19,11 +22,11 @@ export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateEntry({
-      id: entry._id,
-      value: Number(value),
-      timestamp: new Date(date).getTime(),
-    });
+    const payload =
+      change !== ''
+        ? { id: entry._id, change: Number(change), timestamp: new Date(date).getTime() }
+        : { id: entry._id, value: Number(value), timestamp: new Date(date).getTime() };
+    await updateEntry(payload);
     onClose();
   };
 
@@ -46,7 +49,19 @@ export default function DebtHistoryEditForm({ entry, onClose }: DebtHistoryEditF
             className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            required
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300" htmlFor="change">
+            Change (USD)
+          </label>
+          <input
+            id="change"
+            type="number"
+            className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-gray-100 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            value={change}
+            onChange={(e) => setChange(e.target.value)}
             step="0.01"
           />
         </div>

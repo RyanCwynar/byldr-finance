@@ -238,9 +238,10 @@ export const addDebtHistoryEntry = mutation({
   args: {
     debtId: v.id("debts"),
     timestamp: v.number(),
-    value: v.number(),
+    value: v.optional(v.number()),
+    change: v.optional(v.number()),
   },
-  handler: async (ctx, { debtId, timestamp, value }) => {
+  handler: async (ctx, { debtId, timestamp, value, change }) => {
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject;
 
@@ -251,7 +252,50 @@ export const addDebtHistoryEntry = mutation({
       throw new Error("Not authorized to update this debt");
     }
 
-    return await ctx.db.insert("debtHistory", { debtId, timestamp, value });
+    const prev = await ctx.db
+      .query("debtHistory")
+      .withIndex("by_debt_and_timestamp", q =>
+        q.eq("debtId", debtId).lt("timestamp", timestamp)
+      )
+      .order("desc")
+      .first();
+
+    const prevValue = prev ? prev.value : debt.value;
+
+    let newValue: number;
+    let diff: number;
+
+    if (value !== undefined) {
+      newValue = value;
+      diff = newValue - prevValue;
+    } else if (change !== undefined) {
+      newValue = prevValue + change;
+      diff = change;
+    } else {
+      throw new Error("value or change required");
+    }
+
+    const id = await ctx.db.insert("debtHistory", {
+      debtId,
+      timestamp,
+      value: newValue,
+      change,
+    });
+
+    if (diff !== 0) {
+      const later = await ctx.db
+        .query("debtHistory")
+        .withIndex("by_debt_and_timestamp", q =>
+          q.eq("debtId", debtId).gt("timestamp", timestamp)
+        )
+        .collect();
+
+      for (const e of later) {
+        await ctx.db.patch(e._id, { value: e.value + diff });
+      }
+    }
+
+    return id;
   },
 });
 
@@ -261,6 +305,7 @@ export const updateDebtHistoryEntry = mutation({
     id: v.id("debtHistory"),
     timestamp: v.optional(v.number()),
     value: v.optional(v.number()),
+    change: v.optional(v.number()),
   },
   handler: async (ctx, { id, ...updates }) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -276,7 +321,46 @@ export const updateDebtHistoryEntry = mutation({
       throw new Error("Not authorized to update this debt");
     }
 
-    return await ctx.db.patch(id, updates);
+    const prev = await ctx.db
+      .query("debtHistory")
+      .withIndex("by_debt_and_timestamp", q =>
+        q.eq("debtId", entry.debtId).lt("timestamp", updates.timestamp ?? entry.timestamp)
+      )
+      .order("desc")
+      .first();
+
+    const prevValue = prev ? prev.value : debt.value;
+
+    let newValue = entry.value;
+    let diff = 0;
+
+    if (updates.value !== undefined) {
+      newValue = updates.value;
+      diff = newValue - entry.value;
+    } else if (updates.change !== undefined) {
+      newValue = prevValue + updates.change;
+      diff = newValue - entry.value;
+    }
+
+    const patched = await ctx.db.patch(id, {
+      ...updates,
+      value: newValue,
+    });
+
+    if (diff !== 0) {
+      const later = await ctx.db
+        .query("debtHistory")
+        .withIndex("by_debt_and_timestamp", q =>
+          q.eq("debtId", entry.debtId).gt("timestamp", updates.timestamp ?? entry.timestamp)
+        )
+        .collect();
+
+      for (const e of later) {
+        await ctx.db.patch(e._id, { value: e.value + diff });
+      }
+    }
+
+    return patched;
   },
 });
 
@@ -297,7 +381,34 @@ export const deleteDebtHistoryEntry = mutation({
       throw new Error("Not authorized to update this debt");
     }
 
+    const prev = await ctx.db
+      .query("debtHistory")
+      .withIndex("by_debt_and_timestamp", q =>
+        q.eq("debtId", entry.debtId).lt("timestamp", entry.timestamp)
+      )
+      .order("desc")
+      .first();
+
+    const prevValue = prev ? prev.value : debt.value;
+    const diff = -(
+      entry.change !== undefined ? entry.change : entry.value - prevValue
+    );
+
     await ctx.db.delete(id);
+
+    if (diff !== 0) {
+      const later = await ctx.db
+        .query("debtHistory")
+        .withIndex("by_debt_and_timestamp", q =>
+          q.eq("debtId", entry.debtId).gt("timestamp", entry.timestamp)
+        )
+        .collect();
+
+      for (const e of later) {
+        await ctx.db.patch(e._id, { value: e.value + diff });
+      }
+    }
+
     return { success: true };
   },
 });
