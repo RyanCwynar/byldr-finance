@@ -77,7 +77,7 @@ export default function CashflowPageClient({
   const [pieMode, setPieMode] = useState<'expense' | 'income'>('expense');
 
   const allTags = useMemo(
-    () => Array.from(new Set([...recurringTags, ...oneTimeTags])),
+    () => Array.from(new Set([...recurringTags, ...oneTimeTags])).sort(),
     [recurringTags, oneTimeTags],
   );
 
@@ -87,7 +87,7 @@ export default function CashflowPageClient({
     if (tagList.length === 0) return recurring;
     if (filterMode === 'include') {
       return recurring.filter((t) =>
-        tagList.every((tag) => t.tags?.includes(tag)),
+        tagList.some((tag) => t.tags?.includes(tag)),
       );
     }
     return recurring.filter(
@@ -99,7 +99,7 @@ export default function CashflowPageClient({
     if (tagList.length === 0) return oneTime;
     if (filterMode === 'include') {
       return oneTime.filter((t) =>
-        tagList.every((tag) => t.tags?.includes(tag)),
+        tagList.some((tag) => t.tags?.includes(tag)),
       );
     }
     return oneTime.filter(
