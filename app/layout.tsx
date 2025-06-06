@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import Header from "@/components/header";
 import UserTracker from "@/components/user-tracker";
+import { ThemeProvider } from "@/components/theme";
 
 import type { Metadata } from "next";
 
@@ -28,15 +29,17 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider appearance={{ baseTheme: dark }}>
-      <html lang="en">
-        <body className="min-h-screen antialiased bg-black text-white">
-          <ConvexClientProvider>
-            <UserTracker />
-            <Header />
-            <main className="flex-1">
-              {children}
-            </main>
-          </ConvexClientProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className="min-h-screen antialiased bg-background text-foreground">
+          <ThemeProvider>
+            <ConvexClientProvider>
+              <UserTracker />
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+            </ConvexClientProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

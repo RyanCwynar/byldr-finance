@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import QuotesTicker from './quotes-ticker';
 import { useState } from 'react';
+import ThemeToggle from './theme-toggle';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -62,6 +63,7 @@ export default function Header() {
                   )}
                 </button>
               )}
+              <ThemeToggle />
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/sign-in" />
               ) : (
