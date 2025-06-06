@@ -51,7 +51,7 @@ export default function DebtsCard({ debts: initialDebts }: DebtsCardProps) {
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
       <h2 className="text-xl font-semibold mb-1">Debts</h2>
       <span className="block text-red-500 font-mono mb-4">
-        {`Total: $${formatNumber(totalDebts)}`}
+        {`$${formatNumber(totalDebts)}`}
       </span>
       <button
         onClick={() => setShowAddForm(true)}

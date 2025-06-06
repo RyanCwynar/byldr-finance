@@ -13,6 +13,8 @@ import { formatNumber } from "@/lib/formatters";
 
 type Asset = Doc<"assets">;
 type Wallet = Doc<"wallets">;
+type Holding = Doc<"holdings">;
+type Quote = Doc<"quotes">;
 
 interface AssetsCardProps {
   assets: Asset[];
@@ -22,9 +24,13 @@ interface AssetsCardProps {
 export default function AssetsCard({ assets: initialAssets, wallets: initialWallets }: AssetsCardProps) {
   const assets = useQuery(api.assets.listAssets) ?? initialAssets;
   const wallets = useQuery(api.wallets.listWallets) ?? initialWallets;
+  const holdings = useQuery(api.holdings.listHoldings, { filter: { includeDebts: true } }) ?? [];
+  const quotes = useQuery(api.quotes.listQuotes) ?? [];
+  const simulation = useQuery(api.simulations.getSimulation, {});
   const [showAddAssetForm, setShowAddAssetForm] = useState(false);
   const [showAddWalletForm, setShowAddWalletForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showSimulation, setShowSimulation] = useState(false);
   const updateAllWallets = useMutation(api.wallets.updateAllWalletValues);
 
   // Sort assets by value in descending order
@@ -52,7 +58,55 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
     return wallets.reduce((sum, wallet) => sum + (wallet.value || 0), 0);
   }, [wallets]);
 
+  const quotesMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    quotes.forEach((q: Quote) => {
+      map[q.symbol] = q.price;
+    });
+    return map;
+  }, [quotes]);
+
+  const adjustedWallets = useMemo(() => {
+    if (!showSimulation || !simulation || !wallets) return wallets;
+
+    const adj = simulation.adjustments || {};
+
+    const walletHoldingsMap = new Map<string, Holding[]>();
+    holdings.forEach((h: Holding) => {
+      const wid = h.walletId.toString();
+      if (!walletHoldingsMap.has(wid)) walletHoldingsMap.set(wid, []);
+      walletHoldingsMap.get(wid)!.push(h);
+    });
+
+    return wallets.map((wallet) => {
+      const wh = walletHoldingsMap.get(wallet._id) || [];
+      let assetsVal = 0;
+      let debtsVal = 0;
+      wh.forEach((h) => {
+        const symbol = h.quoteSymbol || h.symbol;
+        const originalPrice = quotesMap[symbol] || 0;
+        const adjustedPrice = adj[symbol] !== undefined ? adj[symbol] : originalPrice;
+        const value = h.quantity * adjustedPrice;
+        if (h.isDebt) debtsVal += value; else assetsVal += value;
+      });
+      return { ...wallet, value: assetsVal - debtsVal };
+    });
+  }, [showSimulation, simulation, wallets, holdings, quotesMap]);
+
+  const sortedWalletsSim = useMemo(() => {
+    if (!adjustedWallets) return [] as Wallet[];
+    return [...adjustedWallets].sort((a, b) => (b.value || 0) - (a.value || 0));
+  }, [adjustedWallets]);
+
+  const totalWalletsSim = useMemo(() => {
+    if (!adjustedWallets) return 0;
+    return adjustedWallets.reduce((sum, w) => sum + (w.value || 0), 0);
+  }, [adjustedWallets]);
+
+  const displayWallets = showSimulation && simulation ? sortedWalletsSim : sortedWallets;
   const total = totalAssets + totalWallets;
+  const totalSim = totalAssets + totalWalletsSim;
+  const displayTotal = showSimulation && simulation ? totalSim : total;
 
   const handleUpdateWallets = async () => {
     try {
@@ -85,9 +139,15 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
 
   return (
     <div className="relative bg-white/5 rounded-lg p-6 backdrop-blur-sm">
+      <button
+        onClick={() => setShowSimulation((v) => !v)}
+        className="absolute top-2 right-2 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded"
+      >
+        {showSimulation ? 'Actual' : 'Simulated'}
+      </button>
       <h2 className="text-xl font-semibold mb-1">Assets</h2>
       <span className="block text-green-500 font-mono mb-4">
-        {`Total: $${formatNumber(total)}`}
+        {`$${formatNumber(displayTotal)}`}
       </span>
 
       <div className="space-y-6">
@@ -111,13 +171,13 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
           </div>
 
           <span className="block text-green-500 font-mono mb-2">
-            {`$${formatNumber(totalWallets)}`}
+            {`$${formatNumber(showSimulation && simulation ? totalWalletsSim : totalWallets)}`}
           </span>
           <div className="space-y-3 mt-6">
-            {sortedWallets.length === 0 ? (
+            {displayWallets.length === 0 ? (
               <p className="text-gray-400 text-center py-4">No wallets found. Add one to get started.</p>
             ) : (
-              sortedWallets.map((wallet: Wallet) => (
+              displayWallets.map((wallet: Wallet) => (
                 <Link
                   href={`/wallet/${wallet._id}`}
                   key={wallet._id}
