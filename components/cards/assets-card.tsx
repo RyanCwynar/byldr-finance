@@ -110,6 +110,9 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
             </button>
           </div>
 
+          <span className="block text-green-500 font-mono mb-2">
+            {`$${formatNumber(totalWallets)}`}
+          </span>
           <div className="space-y-3 mt-6">
             {sortedWallets.length === 0 ? (
               <p className="text-gray-400 text-center py-4">No wallets found. Add one to get started.</p>
@@ -141,6 +144,10 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
           >
             <PlusIcon className="w-5 h-5" />
           </button>
+
+          <span className="block text-green-500 font-mono mb-2">
+            {`$${formatNumber(totalAssets)}`}
+          </span>
 
           <div className="space-y-3 mt-6">
             {sortedAssets.length === 0 ? (
