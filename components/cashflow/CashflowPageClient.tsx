@@ -291,55 +291,59 @@ export default function CashflowPageClient({
           </div>
         </div>
       </div>
-      <div className="flex justify-between items-center gap-2 flex-wrap">
+      <div className="flex justify-between items-start gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">Incomes and Expenses</h1>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col items-end gap-2">
           <div className="flex gap-2">
             <button
-              onClick={() => setFilterMode('exclude')}
-              className={pillClass(filterMode === 'exclude')}
+              onClick={() => {
+                setEditingRecurring(null);
+                setShowRecurringForm(true);
+              }}
+              className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
             >
-              Exclude
+              <PlusIcon className="w-5 h-5" />
+              <span>Add Recurring</span>
             </button>
             <button
-              onClick={() => setFilterMode('include')}
-              className={pillClass(filterMode === 'include')}
+              onClick={() => {
+                setEditingOneTime(null);
+                setShowOneTimeForm(true);
+              }}
+              className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
             >
-              Include
+              <PlusIcon className="w-5 h-5" />
+              <span>Add One Time</span>
             </button>
           </div>
-          <TagCloud
-            tags={allTags}
-            selected={selectedTags}
-            onToggle={(tag) =>
-              setSelectedTags((prev) => {
-                const next = new Set(prev);
-                if (next.has(tag)) next.delete(tag);
-                else next.add(tag);
-                return next;
-              })
-            }
-          />
-          <button
-            onClick={() => {
-              setEditingRecurring(null);
-              setShowRecurringForm(true);
-            }}
-            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>Add Recurring</span>
-          </button>
-          <button
-            onClick={() => {
-              setEditingOneTime(null);
-              setShowOneTimeForm(true);
-            }}
-            className="hidden sm:flex items-center gap-1 px-4 py-2 rounded-md bg-blue-600 text-white"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>Add One Time</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilterMode('exclude')}
+                className={pillClass(filterMode === 'exclude')}
+              >
+                Exclude
+              </button>
+              <button
+                onClick={() => setFilterMode('include')}
+                className={pillClass(filterMode === 'include')}
+              >
+                Include
+              </button>
+            </div>
+            <TagCloud
+              tags={allTags}
+              selected={selectedTags}
+              onToggle={(tag) =>
+                setSelectedTags((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(tag)) next.delete(tag);
+                  else next.add(tag);
+                  return next;
+                })
+              }
+            />
+          </div>
         </div>
       </div>
       <div className="flex gap-2">
