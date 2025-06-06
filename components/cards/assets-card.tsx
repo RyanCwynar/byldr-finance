@@ -131,6 +131,9 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
               ))
             )}
           </div>
+          <div className="mt-2 text-right font-mono text-green-500">
+            {`Total: $${formatNumber(totalWallets)}`}
+          </div>
         </div>
 
         <div className="relative">
@@ -165,6 +168,9 @@ export default function AssetsCard({ assets: initialAssets, wallets: initialWall
                 </Link>
               ))
             )}
+          </div>
+          <div className="mt-2 text-right font-mono text-green-500">
+            {`Total: $${formatNumber(totalAssets)}`}
           </div>
         </div>
       </div>
