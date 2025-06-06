@@ -54,7 +54,9 @@ export function formatCompactCurrency(amount: number, currency: string = 'USD'):
     style: 'currency',
     currency,
     notation: 'compact',
-    compactDisplay: 'short'
+    compactDisplay: 'short',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
   }).format(amount);
 }
 
