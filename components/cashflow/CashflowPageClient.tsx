@@ -19,6 +19,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import CashflowPieChart from "./CashflowPieChart";
+import TagCloud from "./TagCloud";
 
 interface Props {
   initialRecurring: Doc<"recurringTransactions">[];
@@ -64,7 +65,8 @@ export default function CashflowPageClient({
   };
   const [sortField, setSortField] = useState<"amount" | "date">("amount");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [tagFilter, setTagFilter] = useState("");
+  const [filterMode, setFilterMode] = useState<'include' | 'exclude'>('exclude');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [showRecurringForm, setShowRecurringForm] = useState(false);
   const [showOneTimeForm, setShowOneTimeForm] = useState(false);
   const [editingRecurring, setEditingRecurring] = useState<Recurring | null>(
@@ -79,26 +81,31 @@ export default function CashflowPageClient({
     [recurringTags, oneTimeTags],
   );
 
-  const tagList = useMemo(
-    () =>
-      tagFilter
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    [tagFilter],
-  );
+  const tagList = useMemo(() => Array.from(selectedTags), [selectedTags]);
 
   const filteredRecurring = useMemo(() => {
     if (tagList.length === 0) return recurring;
-    return recurring.filter((t) =>
-      tagList.every((tag) => t.tags?.includes(tag)),
+    if (filterMode === 'include') {
+      return recurring.filter((t) =>
+        tagList.every((tag) => t.tags?.includes(tag)),
+      );
+    }
+    return recurring.filter(
+      (t) => !tagList.some((tag) => t.tags?.includes(tag)),
     );
-  }, [recurring, tagList]);
+  }, [recurring, tagList, filterMode]);
 
   const filteredOneTime = useMemo(() => {
     if (tagList.length === 0) return oneTime;
-    return oneTime.filter((t) => tagList.every((tag) => t.tags?.includes(tag)));
-  }, [oneTime, tagList]);
+    if (filterMode === 'include') {
+      return oneTime.filter((t) =>
+        tagList.every((tag) => t.tags?.includes(tag)),
+      );
+    }
+    return oneTime.filter(
+      (t) => !tagList.some((tag) => t.tags?.includes(tag)),
+    );
+  }, [oneTime, tagList, filterMode]);
 
   const combined = useMemo<Item[]>(() => {
     const recItems: Recurring[] = filteredRecurring.map((r) => ({
@@ -286,19 +293,33 @@ export default function CashflowPageClient({
       </div>
       <div className="flex justify-between items-center gap-2 flex-wrap">
         <h1 className="text-2xl font-bold">Incomes and Expenses</h1>
-        <div className="flex items-center gap-2">
-          <input
-            value={tagFilter}
-            onChange={(e) => setTagFilter(e.target.value)}
-            list="transaction-tag-filter"
-            placeholder="Filter tags"
-            className="px-2 py-1 rounded-md border border-gray-600 bg-gray-800"
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilterMode('exclude')}
+              className={pillClass(filterMode === 'exclude')}
+            >
+              Exclude
+            </button>
+            <button
+              onClick={() => setFilterMode('include')}
+              className={pillClass(filterMode === 'include')}
+            >
+              Include
+            </button>
+          </div>
+          <TagCloud
+            tags={allTags}
+            selected={selectedTags}
+            onToggle={(tag) =>
+              setSelectedTags((prev) => {
+                const next = new Set(prev);
+                if (next.has(tag)) next.delete(tag);
+                else next.add(tag);
+                return next;
+              })
+            }
           />
-          <datalist id="transaction-tag-filter">
-            {allTags.map((tag) => (
-              <option key={tag} value={tag} />
-            ))}
-          </datalist>
           <button
             onClick={() => {
               setEditingRecurring(null);
